@@ -25,15 +25,26 @@ app.use(cookieParser());
    between app.get and app.post; normal web requests are GETs, but
    POST is often used when submitting web forms ('method="post"'). */
 
-app.get('/', routes.get_main);
-
-// TODO You will need to replace these routes with the ones specified in the handout
-
+// login page
+app.get('/login', routes.get_login);
 app.post('/checklogin', routes.check_login);
+
+// sign up (create account) page
 app.get('/signup', routes.sign_up);
 app.post('/createaccount', routes.create_account);
 
-app.get('/restaurants', routes.get_restaurants);
+// home page for users logged in
+app.get('/home', routes.get_home);
+
+// pages for changing a user's account settings (get route to view the page, post route to modify account and redirect to settings)
+app.get('/settings', routes.get_settings);
+app.post('/updatesettings', routes.update_settings);
+
+// wall page (get route to view the page, post route to post a status update)
+app.get('/wall', routes.get_wall);
+app.post('/updatewall', routes.update_wall);
+
+// --- IGNORE THESE THREE ROUTES FOR NOW ---
 app.post('/addrestaurant', routes.add_restaurant);
 app.post('/deleterestaurant', routes.delete_restaurant);
 app.get('/restaurantsList', routes.restaurantsList);
@@ -41,12 +52,12 @@ app.get('/restaurantsList', routes.restaurantsList);
 app.get('/logout', routes.log_out);
 
 // define GET routes for users that try to break the website by accessing inaccessible URLs
-app.get('/createaccount', routes.get_main);
-app.get('/addrestaurant', routes.get_main);
-app.get('/deleterestaurant', routes.get_main);
+app.get('/createaccount', routes.get_login);
+app.get('/addrestaurant', routes.get_login);
+app.get('/deleterestaurant', routes.get_login);
 
 /* Run the server */
 
 console.log('Author: Philip Kaw (ph163k8)');
 app.listen(8080);
-console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!');
+console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!'); // should be http://localhost:8080/login
