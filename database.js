@@ -7,7 +7,7 @@ var db = new AWS.DynamoDB();
    and call that function from your routes - don't just call DynamoDB directly!
    This makes it much easier to make changes to your database schema. */
 
-// TODO Your own functions for accessing the DynamoDB tables should go here
+// TODO: modify logincheck to account for hashed passwords
 
 var my_login_check = function(username, password, callback) {
 	// create params to query for an item with the username and password
@@ -41,7 +41,7 @@ var my_login_check = function(username, password, callback) {
 	    }
 	});
 };
-
+// TODO: Hash passwords
 var create_account = function(username, password, name, email, affiliation, birthday, callback) {
 	// create params to query for an item with the username
 	var params = {
@@ -125,7 +125,7 @@ var db_getSettings = function(username, callback) {
 	});
 };
 
-var db_change_settings = function(username, callback) {
+var db_change_settings = function(username, affiliation, callback) {
 	// create params to query for an item with the username and password
 	var params = {
 			KeyConditions: {
@@ -146,9 +146,32 @@ var db_change_settings = function(username, callback) {
 			// username not found in table, or some other error
 			callback(err, null);
 		} else {
-			// Sends back affiliation of the user
+			// Sends back new affiliation of the user
 			callback(err, data.Items[0].affiliation.S);
 	    }
+	});
+
+
+	var params = {
+		TableName:"users",
+		Key:{
+			"username": username,
+		},
+		UpdateExpression: "set info.affiliation = :a",
+		ExpressionAttributeValues:{
+			":a": affiliation
+		},
+		ReturnValues:"UPDATED_NEW"
+	};
+	
+	console.log("Updating the item...");
+	docClient.update(params, function(err, data) {
+		if (err) {
+			// Something went wrong (ex: username not in table)
+			callback(err, null);
+		} else {
+			callback(null, data);
+		}
 	});
 };
 
@@ -168,67 +191,53 @@ var get_restaurants = function(callback) {
 	});
 };
 
-var add_restaurant = function(name, username, latitude, longitude, description, callback) {
-	// create params to query for an item with the restaurant name
-	var params = {
-			KeyConditions: {
-				name: {
-					ComparisonOperator: 'EQ',
-					AttributeValueList: [ { S: name } ]
-				}
+
+var db_make_post = function(postID, username, content, timestamp, hashtag, callback) {
+	// create new post with the appropriate attributes
+	var param = {
+		Item: {
+			// Is this string or number??
+			"postID": {
+				S: postID
 			},
-			TableName: "restaurants"
+			"username": {
+				S: username
+			},
+			"content": {
+				S: content
+			}, 
+			"timestamp": {
+				S: timestamp
+			},
+			"hashtag": {
+				S: hashtag
+			}
+		},
+		TableName: "posts"
 	};
 	
-	// query the table, searching for the specified restaurant name
-	db.query(params, function(err, data) {
-		if (err || data.Items.length !== 0) {
-			// restaurant name already exists in the table, or some other error
+	// add new post to table
+	db.putItem(param, function(err, data) {
+		if (err) {
 			callback(err, null);
 		} else {
-			// create new restaurant with the appropriate attributes
-			var param = {
-				Item: {
-					"name": {
-						S: name
-					},
-					"creator": {
-						S: username
-					},
-					"latitude": {
-						S: latitude
-					},
-					"longitude": {
-						S: longitude
-					},
-					"description": {
-						S: description
-					}
-				},
-				TableName: "restaurants"
-			};
-			
-			// add new restaurant to the table, returning the restaurant name if successful
-			db.putItem(param, function(err, data) {
-				if (err) {
-					callback(err, null);
-				} else {
-					callback(err, name);
-				}
-			});
-	    }
+			callback(err, data);
+		}
 	});
 };
 
-var delete_restaurant = function(name, callback) {
+
+
+var db_delete_post = function(post_id, callback) {
 	// create params containing restaurant name and table
 	var params = {
 		Key: {
-			"name": {
-				S: name
+			"postID": {
+				// Is this a number or string???
+				S: post_id
 			}
 		},
-		TableName: "restaurants"
+		TableName: "posts"
 	};
 	
 	// delete the restaurant from the table
@@ -245,7 +254,6 @@ var delete_restaurant = function(name, callback) {
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
 
-// TODO Don't forget to add any new functions to this class, so app.js can call them. 
 // (The name before the colon is the name you'd use for the function in app.js;
 // the name after the colon is the name the method has here, in this file.)
 
@@ -254,7 +262,8 @@ var database = {
   createAccount: create_account,
   getSettings: db_getSettings,
   changeSettings: db_change_settings,
-  deleteRestaurant: delete_restaurant
+  makePost: db_make_post,
+  deletePost: db_delete_post
 };
 
 module.exports = database;
