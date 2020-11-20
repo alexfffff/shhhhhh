@@ -42,7 +42,7 @@ var my_login_check = function(username, password, callback) {
 	});
 };
 
-var create_account = function(username, password, name, callback) {
+var create_account = function(username, password, name, email, affiliation, birthday, callback) {
 	// create params to query for an item with the username
 	var params = {
 			KeyConditions: {
@@ -71,6 +71,15 @@ var create_account = function(username, password, name, callback) {
 					},
 					"fullname": {
 						S: name
+					}, 
+					"email": {
+						S: email
+					},
+					"affiliation": {
+						S: affiliation
+					},
+					"birthday": {
+						S: birthday
 					}
 				},
 				TableName: "users"
@@ -87,6 +96,63 @@ var create_account = function(username, password, name, callback) {
 	    }
 	});
 };
+
+
+var db_getSettings = function(username, callback) {
+	// create params to query for an item with the username and password
+	var params = {
+			KeyConditions: {
+				// match the keyword with the username
+				username: {
+					ComparisonOperator: 'EQ',
+					AttributeValueList: [ { S: username } ]
+				}
+			},
+			TableName: "users",
+			// specify the name of the column for the attribute to get
+			AttributesToGet: [ 'affiliation' ]
+	};
+	
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			// Sends back affiliation of the user
+			callback(err, data.Items[0].affiliation.S);
+	    }
+	});
+};
+
+var db_change_settings = function(username, callback) {
+	// create params to query for an item with the username and password
+	var params = {
+			KeyConditions: {
+				// match the keyword with the username
+				username: {
+					ComparisonOperator: 'EQ',
+					AttributeValueList: [ { S: username } ]
+				}
+			},
+			TableName: "users",
+			// specify the name of the column for the attribute to get
+			AttributesToGet: [ 'affiliation' ]
+	};
+	
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			// Sends back affiliation of the user
+			callback(err, data.Items[0].affiliation.S);
+	    }
+	});
+};
+
+
 
 var get_restaurants = function(callback) {
 	// scan the restaurant table to get every item
@@ -186,8 +252,8 @@ var delete_restaurant = function(name, callback) {
 var database = { 
   loginCheck: my_login_check,
   createAccount: create_account,
-  getRestaurants: get_restaurants,
-  addRestaurant: add_restaurant,
+  getSettings: db_getSettings,
+  changeSettings: db_change_settings,
   deleteRestaurant: delete_restaurant
 };
 

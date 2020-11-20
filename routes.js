@@ -55,7 +55,8 @@ var createAccount = function(req, res) {
 		// TODO - A new user should also declare an interest in at least two news categories.
 
 		// attempt to create a new account with the requested username, password, and full name
-		db.createAccount(newUser, newPass, fullName, function(err, data) {
+		// SELENE modification: pass in email, affiliation, birthday to be added to database as well
+		db.createAccount(newUser, newPass, fullName, email, affiliation, birthday, function(err, data) {
 			if (err) {
 				res.render('signup.ejs', {message: err});
 			} else if (data) {
@@ -98,6 +99,10 @@ var getSettings = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/login');
 	} else {
+		/* (Selene) TODO: Make call to db function. Param: username. 
+			Returns the affiliation (not totally sure whats going to get returned 
+			so might need some debugging to return in right format/get the return format to work) */
+
 		// render the settings page, where a user can see and change their settings
 		res.render('settings.ejs', {message: null});
 	}
