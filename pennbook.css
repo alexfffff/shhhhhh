@@ -1,0 +1,24 @@
+/*PennBook.css
+Philip Kaw
+Di Lu*/
+
+body {
+    padding-top: 40px;
+    padding-bottom: 40px;
+    background-color: black;
+}
+
+.login-box {
+    max-width: 330px;
+    margin: 0 auto;
+}
+
+.login-box .form-control {
+    margin-bottom: 10px;
+}
+
+.posts {
+    max-width: 330px;
+    margin: 0 auto
+}
+
