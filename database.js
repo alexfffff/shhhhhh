@@ -8,7 +8,7 @@ var db = new AWS.DynamoDB();
    This makes it much easier to make changes to your database schema. */
 
 // TODO: modify logincheck to account for hashed passwords
-
+// Verifies login information and sets status to online
 var my_login_check = function(username, password, callback) {
 	// create params to query for an item with the username and password
 	var params = {
@@ -32,6 +32,8 @@ var my_login_check = function(username, password, callback) {
 		} else {
 			// check if the password attribute of the item is the same as the password argument
 			if (data.Items[0].password.S.localeCompare(password) === 0) {
+				// TODO: SET STATUS TO ACTIVE
+
 				// login successful, callback with username
 				callback(err, username);
 			} else {
@@ -41,7 +43,9 @@ var my_login_check = function(username, password, callback) {
 	    }
 	});
 };
+
 // TODO: Hash passwords
+// Creates account for user
 var create_account = function(username, password, name, email, affiliation, birthday, callback) {
 	// create params to query for an item with the username
 	var params = {
@@ -80,25 +84,28 @@ var create_account = function(username, password, name, email, affiliation, birt
 					},
 					"birthday": {
 						S: birthday
+					}, 
+					"logged_in": {
+						BOOL: true
 					}
 				},
 				TableName: "users"
 			};
 			
-			// add new account to the table, returning the username if successful
+			// add new account to the table
 			db.putItem(param, function(err, data) {
 				if (err) {
 					callback(err, null);
 				} else {
-					callback(err, username);
+					callback(err, data.Items[0]);
 				}
 			});
 	    }
 	});
 };
 
-
-var db_getSettings = function(username, callback) {
+// Gets affiliation of user
+var db_get_affiliation = function(username, callback) {
 	// create params to query for an item with the username and password
 	var params = {
 			KeyConditions: {
@@ -125,115 +132,181 @@ var db_getSettings = function(username, callback) {
 	});
 };
 
-var db_change_settings = function(username, affiliation, callback) {
-	// create params to query for an item with the username and password
+// Updates affiliation of user
+// TODO: add conditionexpression to see if affiliation isn't already that affiliation
+var db_change_affiliation = function(username, affiliation, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
-			KeyConditions: {
-				// match the keyword with the username
-				username: {
-					ComparisonOperator: 'EQ',
-					AttributeValueList: [ { S: username } ]
-				}
-			},
-			TableName: "users",
-			// specify the name of the column for the attribute to get
-			AttributesToGet: [ 'affiliation' ]
+	        TableName: "users",
+	        Key: {
+	            "username": username
+	        },
+	        UpdateExpression: "set #CurrAff = :a",
+	        ExpressionAttributeNames: {
+	            "#CurrAff": "affiliation"
+	        },
+	        ExpressionAttributeValues: {
+	            ":a": affiliation
+	        }
+	    };
+  
+  docClient.update(params).promise().then(
+		  successResult => {
+			  console.log("UPDATED");
+			  console.log(successResult);
+			  callback(null, successResult);
+		  },
+		  errResult => {
+			  console.log(errResult);
+			  callback(errResult, null);
+		  });
+};
+
+// TODO: Look at HW4MS1 og example for query a list of keys
+var db_get_homepage_posts = function(username, callback) {
+	var params = {
+		KeyConditions: {
+			// match the keyword with the username
+			yourUsername: {
+				ComparisonOperator: 'EQ',
+				AttributeValueList: [ { S: username } ]
+			}
+		},
+		TableName: "friends",
+		// specify the name of the column for the attribute to get
+		AttributesToGet: [ 'friendUsername' ]
 	};
-	
+
 	// query the table with params, searching for item with the specified username
 	db.query(params, function(err, data) {
 		if (err || data.Items.length === 0) {
 			// username not found in table, or some other error
 			callback(err, null);
 		} else {
-			// Sends back new affiliation of the user
-			callback(err, data.Items[0].affiliation.S);
-	    }
-	});
+			console.log(data.Items);
+			var usernames = data.Items.push(username);
+			// create params to query for an item with the username and password
+			var params2 = {
+				KeyConditions: {
+					// match the keyword with the username
+					username: {
+						ComparisonOperator: 'EQ',
+						AttributeValueList: [ { S: usernames } ]
+					}
+				},
+				TableName: "posts"
+				// specify the name of the column for the attribute to get
+				//AttributesToGet: [ 'password' ]
+			};
 
-
-	var params = {
-		TableName:"users",
-		Key:{
-			"username": username,
-		},
-		UpdateExpression: "set info.affiliation = :a",
-		ExpressionAttributeValues:{
-			":a": affiliation
-		},
-		ReturnValues:"UPDATED_NEW"
-	};
-	
-	console.log("Updating the item...");
-	docClient.update(params, function(err, data) {
-		if (err) {
-			// Something went wrong (ex: username not in table)
-			callback(err, null);
-		} else {
-			callback(null, data);
+			// query the table with params, searching for item with the specified username
+			db.query(params2, function(err2, data2) {
+				if (err2) {
+					// some error
+					callback(err2, null);
+				} else {
+					console.log(data2);
+					callback(null, data2);
+				}
+			});
 		}
 	});
+
+	
 };
 
 
-
-var get_restaurants = function(callback) {
-	// scan the restaurant table to get every item
+var db_get_user_posts = function(username, callback) {
+	// create params to query for an item with the username
 	var params = {
-			TableName: "restaurants"
+		KeyConditions: {
+			// match the keyword with the username
+			username: {
+				ComparisonOperator: 'EQ',
+				AttributeValueList: [ { S: username } ]
+			}
+		},
+		TableName: "posts"
 	};
-	db.scan(params, function(err, data) {
-		if (err) {
+
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
 			callback(err, null);
 		} else {
-			callback(err, data);
+			callback(err, data.Items);
 		}
 	});
 };
 
 
 var db_make_post = function(postID, username, content, timestamp, hashtag, callback) {
-	// create new post with the appropriate attributes
-	var param = {
-		Item: {
-			// Is this string or number??
-			"postID": {
-				S: postID
-			},
-			"username": {
-				S: username
-			},
-			"content": {
-				S: content
-			}, 
-			"timestamp": {
-				S: timestamp
-			},
-			"hashtag": {
-				S: hashtag
-			}
-		},
-		TableName: "posts"
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "posts",
+		Item:{
+			"username": username,
+			"postID": postID,
+			"content": content,
+			"timestamp": timestamp,
+			"hashtag": hashtag
+		}
 	};
-	
-	// add new post to table
-	db.putItem(param, function(err, data) {
-		if (err) {
+	//Only puts in the table if the username doesn't exist
+	docClient.put(params).promise().then(
+			successResult => {
+		try  {
+			console.log("Added item");
+			callback(null, successResult);
+			
+		} catch (err) {
+			console.log("Unable to add item.");
+			callback(err, null);
+		}
+	},
+	errResult => {
+		callback(errResult, null);
+	});
+};
+
+var db_get_hashtags = function(hashtag, callback) {
+	// create params to query for an item with the username
+	var params = {
+		TableName: "posts",
+		ProjectionExpression: "username, postID, content, timestamp, #ht",
+		FilterExpression: "#ht in :tag",
+		ExpressionAttributeNames: {
+			"#ht": "hashtag",
+		},
+		ExpressionAttributeValues: {
+			 ":tag": hashtag
+		}
+	};
+
+	// query the table with params, searching for item with the specified hashtag
+	db.query(params, function(err, data) {
+		// TODO: FIGURE OUT WHAT TO DO IF EMPTY
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
 			callback(err, null);
 		} else {
-			callback(err, data);
+			callback(err, data.Items);
 		}
 	});
 };
 
 
 
-var db_delete_post = function(post_id, callback) {
-	// create params containing restaurant name and table
+var db_delete_post = function(username, post_id, callback) {
+	// TODO: CHECK IF ITS THE POSTER DELETING THE POST
+	// create params with correct partition and sort key
 	var params = {
 		Key: {
+			"username": {
+				S: username
+			},
 			"postID": {
-				// Is this a number or string???
 				S: post_id
 			}
 		},
@@ -250,6 +323,226 @@ var db_delete_post = function(post_id, callback) {
 	});
 };
 
+
+var db_get_post_comments = function(postID, callback) {
+	// create params to query for an item with the postID
+	var params = {
+		KeyConditions: {
+			// match the keyword with the username
+			postID: {
+				ComparisonOperator: 'EQ',
+				AttributeValueList: [ { S: postID } ]
+			}
+		},
+		TableName: "comments"
+	};
+
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			callback(err, data.Items);
+		}
+	});
+};
+
+
+var db_add_comment = function(username, comment, postID, timestamp, callback) {
+	// create new comment with the appropriate attributes
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "comments",
+		Item:{
+			"username": username,
+			"postID": postID,
+			"comment": comment,
+			"timestamp": timestamp
+		}
+	};
+	//Only puts in the table if the username doesn't exist
+	docClient.put(params).promise().then(
+			successResult => {
+		try  {
+			console.log("Added item");
+			callback(null, successResult);
+			
+		} catch (err) {
+			console.log("Unable to add item.");
+			callback(err, null);
+		}
+	},
+	errResult => {
+		callback(errResult, null);
+	});
+};
+
+
+var db_delete_comment = function(username, post_id, callback) {
+	//TODO: QUERY AND CHECK IF USER IS THE PERSON WHO WROTE COMMENT
+	//EC IDEA: LET OG POST USER ALSO DELETE COMMENTS ON THEIR POST
+	// create params containing restaurant name and table
+	var params = {
+		Key: {
+			"postID": {
+				S: post_id
+			}
+		},
+		TableName: "comments"
+	};
+	
+	// delete the restaurant from the table
+	db.deleteItem(params, function(err, data) {
+		if (err) {
+			callback(err, null);
+		} else {
+			callback(err, data);
+		}
+	});
+};
+
+
+var db_add_friend = function(yourUsername, friendUsername, timestamp, callback) {
+	// create new post with the appropriate attributes
+	var param = {
+		Item: {
+			// Is this string or number??
+			"yourUsername": {
+				S: yourUsername
+			},
+			"friendUsername": {
+				S: friendUsername
+			}, 
+			"timestamp": {
+				N: timestamp
+			}
+		},
+		TableName: "friends"
+	};
+	
+	// add new post to table
+	db.putItem(param, function(err, data) {
+		if (err) {
+			callback(err, null);
+		} else {
+			callback(err, data);
+		}
+	});
+
+
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "friends",
+		Item:{
+			"yourUsername": yourUsername,
+			"friendUsername": friendUsername,
+			"timestamp": timestamp
+		}
+	};
+  
+  //Queries for username to see if it exists yet
+  docClient.put(params).promise().then(
+		  successResult => {
+			  try {
+				var params2 = {
+					TableName : "friends",
+					Item:{
+						"yourUsername": friendUsername,
+						"friendUsername": yourUsername,
+						"timestamp": timestamp
+					}
+				};
+				//Only puts in the table if the username doesn't exist
+				docClient.put(params2).promise().then(
+						successResult => {
+					try  {
+						console.log("Added item");
+						callback(null, successResult);
+						
+					} catch (err) {
+						console.log("Unable to add item.");
+						callback(err, null);
+					}
+				},
+				errResult => {
+					callback(errResult, null);
+				});
+			    } catch (error) {
+			        callback(error, null);
+			    }
+			  
+		  },
+		  errResult => {
+			  callback(errResult, null);
+		  });
+
+
+};
+
+
+var db_get_friends = function(username, callback) {
+	// create params to query for an item with the username
+	var params = {
+		KeyConditions: {
+			// match the keyword with the username
+			username: {
+				ComparisonOperator: 'EQ',
+				AttributeValueList: [ { S: username } ]
+			}
+		},
+		TableName: "friends"
+	};
+
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			callback(err, data.Items);
+		}
+	});
+};
+
+
+var db_unfriend = function(yourUsername, friendUsername, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+			TableName : "friends",
+			Key: {
+				"yourUsername": yourUsername,
+				"friendUsername": friendUsername
+
+			}
+	};
+  
+  docClient.delete(params).promise().then(
+		  successResult => {
+			var params2 = {
+				TableName : "friends",
+				Key: {
+					"yourUsername": friendUsername,
+					"friendUsername": yourUsername
+	
+				}
+			};
+			docClient.delete(params2).promise().then(
+				successResult => {
+					callback(null, successResult);
+				},
+				errResult => {
+					callback(errResult, null);
+				});
+		  },
+		  errResult => {
+			  callback(errResult, null);
+		  });
+
+
+};
+
+
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
@@ -260,10 +553,19 @@ var db_delete_post = function(post_id, callback) {
 var database = { 
   loginCheck: my_login_check,
   createAccount: create_account,
-  getSettings: db_getSettings,
-  changeSettings: db_change_settings,
+  getAffiliation: db_get_affiliation,
+  changeAffiliation: db_change_affiliation,
+  getHomepagePosts: db_get_homepage_posts,
+  getUserPosts: db_get_user_posts,
+  getHashtags: db_get_hashtags,
   makePost: db_make_post,
-  deletePost: db_delete_post
+  deletePost: db_delete_post,
+  getPostComments: db_get_post_comments,
+  addComment: db_add_comment,
+  deleteComment: db_delete_comment,
+  addFriend: db_add_friend,
+  getFriends: db_get_friends,
+  unfriend: db_unfriend
 };
 
 module.exports = database;
