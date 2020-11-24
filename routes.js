@@ -12,18 +12,19 @@ var getLogin = function(req, res) {
 var checkLogin = function(req, res) {
 	var username = req.body.myUsername;
 	var password = req.body.myPassword;
-	var email = req.body.myEmail;
 
-	// TODO - implement login check with username, password, and email
+	// TODO - implement login check with username and password
 	
 	db.loginCheck(username, password, function(err, data) {
 		if (err) {
+			// TODO: Handle error with db (?)
 			res.render('main.ejs', {message: err});
 		} else if (data) {
-			// set the session's username to reflect login, and redirect user to the restaurants page
+			// set the session's username to reflect login, and redirect user to the home page
 			req.session.username = data;
-			res.redirect('/restaurants');
+			res.redirect('/home');
 		} else {
+			// TODO: Handle error with invalid login
 			// login failed due to non-existent username or incorrect password
 			res.render('main.ejs', {message: 'Username or password invalid. Please try again.'});
 		}
@@ -53,16 +54,19 @@ var createAccount = function(req, res) {
 		var birthday = req.body.myNewBirthday;
 		
 		// TODO - A new user should also declare an interest in at least two news categories.
+		var interests = req.body.TODO; // how to store this ???
 
-		// attempt to create a new account with the requested username, password, and full name
-		db.createAccount(newUser, newPass, fullName, function(err, data) {
+		// attempt to create a new account with the requested username, password, full name, email, affiliation, birthday, and interests
+		db.createAccount(newUser, newPass, fullName, email, affiliation, birthday, interests, function(err, data) {
 			if (err) {
+				// TODO: Not sure how to handle error with db call?
 				res.render('signup.ejs', {message: err});
 			} else if (data) {
-				// new account successfully created, log in with new account and redirect to see restaurants
+				// new account successfully created, log in with new account and redirect to home page
 				req.session.username = data;
-				res.redirect('/restaurants');
+				res.redirect('/home');
 			} else {
+				// TODO
 				// account under the username already exists in table, re-prompt for sign up
 				res.render('signup.ejs', {message: 'Username already exists, please try a different username.'});
 			}
@@ -80,8 +84,8 @@ var getHome = function(req, res) {
 
 		// TODO - show the home page to the user
 
-		// show the restaurants page to the user
-		db.getRestaurants(function(err, data) {
+		// show the home page to the user
+		db.getHomepagePosts(req.session.username, function(err, data) {
 			if (err) {
 				res.render('restaurants.ejs', {table: null, username: req.session.username, message: "Error in retrieving table"});
 			} else {
@@ -98,12 +102,21 @@ var getSettings = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/login');
 	} else {
-		// render the settings page, where a user can see and change their settings
-		res.render('settings.ejs', {message: null});
+		// get the user's settings (current affiliation and news categories)
+		db.getSettings(req.session.username, function(err, data) {
+			if (err) {
+				// error with querying table
+				res.render('settings.ejs', {message: req.query.message, settings: null});
+			} else {
+				// TODO: Pass affiliation and news categories from "data.Items" (or other form of data) into settings.ejs
+				// render the settings page, where a user can see and change their settings
+				res.render('settings.ejs', {message: null, settings: data});
+			}
+		});
 	}
 }
 
-var updateSettings = function(req, res) {
+//var updateSettings = function(req, res) {
 	/* 
 		TODO - Users should be able to change their affiliation after the account has been created, and
 		they should be able to change the news categories they are interested in. Changes to these fields should
@@ -113,6 +126,72 @@ var updateSettings = function(req, res) {
 
 	// Automatic status update - changes to affiliation, news categories
 	// No status update - changes to email, password
+//}
+
+var updateEmail = function(req, res) {
+	// get the user's inputted old email and new email
+	var oldEmail = req.body.myOldEmail;
+	var newEmail = req.body.myNewEmail;
+	
+	// query database for the user's actual old email
+	db.changeEmail(oldEmail, newEmail, function(err, data) {
+		if (err) {
+			// error with querying database
+			res.redirect('/settings/?message=' + 'database-error');
+		} else {
+			// redirect to the settings page, email successfully updated
+			res.redirect('/settings');
+		}
+	});
+}
+
+var updatePassword = function(req, res) {
+	// get the user's inputted old password and new password
+	var oldPass = req.body.myOldPassword;
+	var newPass = req.body.myNewPassword;
+	
+	// query database for the user's actual old password
+	db.changePassword(oldPass, newPass, function(err, data) {
+		if (err) {
+			// error with querying database
+			res.redirect('/settings/?message=' + 'database-error');
+		} else {
+			// redirect to the settings page, password successfully updated
+			res.redirect('/settings');
+		}
+	});
+}
+
+var updateAffiliation = function(req, res) {
+	// get the user's inputted old affiliation and new affiliation
+	var oldAffiliation = req.body.myOldAffiliation;
+	var newAffiliation = req.body.myNewAffiliation;
+
+	// query database for the user's actual old affiliation
+	db.getAffiliation(req.session.username, function(err1, data1) {
+		if (err1) {
+			// error with querying database
+			res.redirect('/settings/?message=' + 'database-error');
+		} else {
+			if (data1.localeCompare(oldAffiliation) == 0) {
+				// update the user's affiliation in the database
+				db.changeAffiliation(req.session.username, newAffiliation, function(err2, data2) {
+					if (err2) {
+						// error with querying database
+						res.redirect('/settings/?message=' + 'database-error');
+					} else {
+						// successfully changed affiliation
+						// TODO: force a status update
+						//res.render('settings.ejs', {message: "Affiliation updated successfully.", settings: data2});
+						res.redirect('/settings');
+					}
+				});
+			} else {
+				// user's input does not match affiliation of user in database, fail to change affiliation
+				res.redirect('/settings/?message=' + 'affiliation_does_not_match');
+			}
+		}
+	});
 }
 
 var getWall = function(req, res) {
@@ -182,6 +261,7 @@ var deleteRestaurant = function(req, res) {
 	});
 };
 
+// TODO: Account for logged in / logged out status of user, need to incorporate the db method here
 var logout = function(req, res) {
 	// reset the session's username to undefined to indicate that the user has logged out, redirect to the login page
 	req.session.username = undefined;
@@ -200,7 +280,12 @@ var routes = {
 
 	get_home: getHome,
 	get_settings: getSettings,
-	update_settings: updateSettings,
+	update_email: updateEmail,
+	update_password: updatePassword,
+	update_affiliation: updateAffiliation,
+
+	// TODO: Wall is not so simple...
+
 	get_wall: getWall,
 	update_wall: updateWall,
 

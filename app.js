@@ -33,12 +33,17 @@ app.post('/checklogin', routes.check_login);
 app.get('/signup', routes.sign_up);
 app.post('/createaccount', routes.create_account);
 
-// home page for users logged in
+// home page for users logged in (unique to each user)
 app.get('/home', routes.get_home);
 
-// pages for changing a user's account settings (get route to view the page, post route to modify account and redirect to settings)
+// pages for changing a user's account settings (get route to view the page, post routes to modify account and redirect to settings)
 app.get('/settings', routes.get_settings);
-app.post('/updatesettings', routes.update_settings);
+app.post('/settings', routes.update_email);
+app.post('/settings', routes.update_password);
+app.post('/settings', routes.update_affiliation);
+// TODO: Similar route for updating news categories
+
+// TODO: Make different routes for when a user visits their own wall vs. visiting other user's walls?
 
 // wall page (get route to view the page, post route to post a status update)
 app.get('/wall', routes.get_wall);
