@@ -87,10 +87,11 @@ var getHome = function(req, res) {
 		// show the home page to the user
 		db.getHomepagePosts(req.session.username, function(err, data) {
 			if (err) {
-				res.render('restaurants.ejs', {table: null, username: req.session.username, message: "Error in retrieving table"});
+				// TODO: Not sure how to handle error???
+				//res.render('restaurants.ejs', {table: null, username: req.session.username, message: "Error in retrieving table"});
 			} else {
-				// pass the array of Items from data to the table and render the page to the user
-				res.render('restaurants.ejs', {table: data.Items, username: req.session.username, message: null});
+				// pass the data from the table and render the home page to the user
+				res.render('home.ejs', {posts: data.Items, username: req.session.username, message: null});
 			}
 		});
 	}
@@ -200,8 +201,11 @@ var getWall = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/login');
 	} else {
+		// get the username of the wall to visit
+		var wallToVisit = req.body.wallToVisit;
+
 		// redirect user to their wall, where they can post status updates
-		res.redirect('/wall');
+		res.redirect('/wall?user=' + wallToVisit);
 	}
 }
 
