@@ -11,65 +11,65 @@ var db = new AWS.DynamoDB();
 *
 * @param  username  username that user typed
 * @param  password password that user typed
-* @return      
+* @return Does not return anything
 */
 // TODO: modify logincheck to account for hashed passwords
 var my_login_check = function(username, password, callback) {
-	// create params to query for an item with the username and password
+	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
-			KeyConditions: {
-				username: {
-					ComparisonOperator: 'EQ',
-					AttributeValueList: [ { S: username } ]
-				}
-			},
-			TableName: "users",
-			// specify the name of the column for the attribute to get
-			AttributesToGet: [ 'password' ]
-	};
-	
-	// query the table with params, searching for item with the specified username
-	db.query(params, function(err, data) {
-		if (err || data.Items.length === 0) {
-			// username not found in table, or some other error
-			callback(err, null);
-		} else {
-			// check if the password attribute of the item is the same as the password argument
-			if (data.Items[0].password.S.localeCompare(password) === 0) {
-				// Set status to active
-				var docClient = new AWS.DynamoDB.DocumentClient();
-				var params = {
-	        			TableName: "users",
-	        			Key: {
-	            			"username": username
-	        			},
-	        			UpdateExpression: "set #loggedIn = :l",
-	        			ExpressionAttributeNames: {
-	            			"#loggedIn": "logged_in"
-	        			},
-	        			ExpressionAttributeValues: {
-	            			":l": true
-	        			}
-	    			};
+  		TableName : "users",
+		KeyConditionExpression: "username = :user",
+		ExpressionAttributeValues: {
+		  ":user": username
+		}
+  };
   
-  				docClient.update(params).promise().then(
-		  			successResult => {
-			  			console.log("UPDATED");
-			  			console.log(successResult);
-			  			callback(null, successResult);
-		  			},
-		  			errResult => {
-			  			console.log(errResult);
-			  			callback(errResult, null);
-		  			});
-			} else {
-				// login failed due to incorrect password
-				callback(err, null);
-			}
-	    }
-	});
+  //Queries for the username and checks if password matches
+  docClient.query(params).promise().then(
+		  successResult => {
+			  try {
+				  if (successResult === null) {
+					    throw new Error("Null result");
+					  } else if (successResult.Items[0].password != password) {
+						  throw new Error("Invalid Password");
+					  } else {
+						console.log("USERNAME PASSWORD MATCH");
+						// Set status to active
+						var docClient = new AWS.DynamoDB.DocumentClient();
+						var params = {
+								TableName: "users",
+								Key: {
+									"username": username
+								},
+								UpdateExpression: "set #loggedIn = :l",
+								ExpressionAttributeNames: {
+									"#loggedIn": "logged_in"
+								},
+								ExpressionAttributeValues: {
+									":l": true
+								}
+							};
+		  
+						  docClient.update(params).promise().then(
+							  successResult => {
+								  console.log("UPDATED");
+								  console.log(successResult);
+								  callback(null, successResult);
+							  },
+							  errResult => {
+								  console.log("Something else went wrong");
+								  callback(errResult, null);
+							  });
+					  }
+			    } catch (error) {
+			        callback(error, null);
+			    }
+			  
+		  },
+		  errResult => {
+			  callback(errResult, null);
+		  });
 };
-
 
 
 /**
@@ -158,7 +158,7 @@ var create_account = function(username, password, name, email, affiliation, birt
 * Can be used to see affiliation of a user.
 *
 * @param  username  username of some user
-* @return The affiliation of the user if the user exists. Otherwise will lead to some error
+* @return The affiliation of the user
 */
 var db_get_affiliation = function(username, callback) {
 	// create params to query for an item with the username and password
@@ -193,7 +193,7 @@ var db_get_affiliation = function(username, callback) {
 *
 * @param  username  username of current user
 * @param  affiliation new affiliation that the user wants to update to
-* @return      
+* @return Does not return anything
 */
 // TODO: add conditionexpression to see if affiliation isn't already that affiliation (already taken care of in routes???)
 var db_change_affiliation = function(username, affiliation, callback) {
@@ -292,7 +292,7 @@ var db_get_settings = function(username, callback) {
 *
 * @param  username  username of current user
 * @param  email new email that the user wants to update to
-* @return      
+* @return Does not return anything
 */
 // TODO: add conditionexpression to see if email isn't already that email (ALREADY TAKEN CARE OF IN ROUTES??)
 var db_change_email = function(username, email, callback) {
@@ -325,11 +325,46 @@ var db_change_email = function(username, email, callback) {
 
 
 /**
+* Queries the affiliation of a user with the username parameter. 
+* Can be used to see affiliation of a user.
+*
+* @param  username  username of some user
+* @return The email of the user
+*/
+var db_get_email = function(username, callback) {
+	// create params to query for an item with the username and password
+	var params = {
+			KeyConditions: {
+				// match the keyword with the username
+				username: {
+					ComparisonOperator: 'EQ',
+					AttributeValueList: [ { S: username } ]
+				}
+			},
+			TableName: "users",
+			// specify the name of the column for the attribute to get
+			AttributesToGet: [ 'email' ]
+	};
+	
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			// Sends back affiliation of the user
+			callback(err, data.Items[0].email.S);
+	    }
+	});
+};
+
+
+/**
 * Updates the email of the [current] user with the specified username to the new email. 
 *
 * @param  username  username of current user
 * @param  password new password that the user wants to update to
-* @return 
+* @return Does not return anything
 */
 // TODO: add conditionexpression to see if email isn't already that email (ALREADY DONE IN ROUTES?)
 var db_change_password = function(username, password, callback) {
@@ -360,6 +395,40 @@ var db_change_password = function(username, password, callback) {
 		  });
 };
 
+
+/**
+* Queries the affiliation of a user with the username parameter. 
+* Can be used to see affiliation of a user.
+*
+* @param  username  username of some user
+* @return The current password of the user
+*/
+var db_get_curr_password = function(username, callback) {
+	// create params to query for an item with the username and password
+	var params = {
+			KeyConditions: {
+				// match the keyword with the username
+				username: {
+					ComparisonOperator: 'EQ',
+					AttributeValueList: [ { S: username } ]
+				}
+			},
+			TableName: "users",
+			// specify the name of the column for the attribute to get
+			AttributesToGet: [ 'password' ]
+	};
+	
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			// Sends back affiliation of the user
+			callback(err, data.Items[0].password.S);
+	    }
+	});
+};
 
 
 /**
@@ -543,7 +612,7 @@ var db_get_hashtags = function(hashtag, callback) {
 		  successResult => {
 			try  {
 				console.log("Added item");
-				callback(null, successResult);
+				callback(null, successResult.Items);
 				
 			} catch (err) {
 				console.log("Unable to add item.");
@@ -690,34 +759,10 @@ var db_delete_comment = function(username, post_id, callback) {
 *
 * @param  username  username of current user
 * @param  friendUsername username of person the user friended
-* @param  timestamp timestamp of when post was made
-* @return 
+* @param  timestamp timestamp of when friend was added
+* @return Does not return anything
 */
 var db_add_friend = function(yourUsername, friendUsername, timestamp, callback) {
-	var param = {
-		Item: {
-			"yourUsername": {
-				S: yourUsername
-			},
-			"friendUsername": {
-				S: friendUsername
-			}, 
-			"timestamp": {
-				N: timestamp
-			}
-		},
-		TableName: "friends"
-	};
-	
-	db.putItem(param, function(err, data) {
-		if (err) {
-			callback(err, null);
-		} else {
-			callback(err, data);
-		}
-	});
-
-
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
 		TableName : "friends",
@@ -772,19 +817,20 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, callback) 
 * Both additions will use the same timestamp.
 *
 * @param  username  username of a user
-* @return List of all usernames of a users friends
+* @return List of usernames of all of a users friends
 */
-var db_get_friends = function(username, callback) {
+var db_get_friends = function(yourUsername, callback) {
 	// create params to query for items with the username
 	var params = {
 		KeyConditions: {
 			// match the keyword with the username
-			username: {
+			yourUsername: {
 				ComparisonOperator: 'EQ',
-				AttributeValueList: [ { S: username } ]
+				AttributeValueList: [ { S: yourUsername } ]
 			}
 		},
-		TableName: "friends"
+		TableName: "friends",
+		AttributesToGet: [ 'friendUsername' ]
 	};
 
 	// query the table with params, searching for item with the specified username
@@ -804,7 +850,7 @@ var db_get_friends = function(username, callback) {
 *
 * @param  username  username of current user
 * @param  friendUsername  username of a user that current user is trying to unfriend
-* @return 
+* @return Does not return anything
 */
 var db_unfriend = function(yourUsername, friendUsername, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
@@ -847,7 +893,7 @@ var db_unfriend = function(yourUsername, friendUsername, callback) {
 * Changes the current users logged_in status to false in "users" table
 *
 * @param  username  username of current user
-* @return 
+* @return Does not return anything
 */
 var db_logout = function(username, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
@@ -893,7 +939,9 @@ var database = {
   changeAffiliation: db_change_affiliation,
   getSettings: db_get_settings,
   changeEmail: db_change_email,
+  getEmail: db_get_email,
   changePassword: db_change_password,
+  getPassword: db_get_curr_password,
   getHomepagePosts: db_get_homepage_posts,
   getUserPosts: db_get_user_posts,
   getHashtags: db_get_hashtags,
