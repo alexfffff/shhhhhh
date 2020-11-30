@@ -1,4 +1,5 @@
 var db = require('../models/database.js');
+const { addFriend } = require('./database.js');
 
 var getLogin = function(req, res) {
 	if (req.session.username !== undefined) {
@@ -18,7 +19,8 @@ var checkLogin = function(req, res) {
 	db.loginCheck(username, password, function(err, data) {
 		if (err) {
 			// TODO: Handle error with db (?)
-			res.render('main.ejs', {message: err});
+			res.render('error.ejs');
+			//res.render('main.ejs', {message: err});
 		} else if (data) {
 			// set the session's username to reflect login, and redirect user to the home page
 			req.session.username = data;
@@ -79,7 +81,7 @@ var getHome = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
 		// redirect to the login page if not logged in
-		res.redirect('/login');
+		res.redirect('/');
 	} else {
 
 		// TODO - show the home page to the user
@@ -89,6 +91,7 @@ var getHome = function(req, res) {
 			if (err) {
 				// TODO: Not sure how to handle error???
 				//res.render('restaurants.ejs', {table: null, username: req.session.username, message: "Error in retrieving table"});
+				res.render('error.ejs');
 			} else {
 				// pass the data from the table and render the home page to the user
 				res.render('home.ejs', {posts: data.Items, username: req.session.username, message: null});
@@ -101,7 +104,7 @@ var getSettings = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
 		// redirect to the login page if not logged in
-		res.redirect('/login');
+		res.redirect('/');
 	} else {
 		// get the user's settings (current affiliation and news categories)
 		db.getSettings(req.session.username, function(err, data) {
@@ -199,22 +202,121 @@ var getWall = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
 		// redirect to the login page if not logged in
-		res.redirect('/login');
+		res.redirect('/');
 	} else {
 		// get the username of the wall to visit
 		var wallToVisit = req.body.wallToVisit;
 
+		db.getFriends(req.session.username, function(err, data) {
+			if (err) {
+				// TODO: error?
+				res.render(error.ejs);
+			} else {
+				// render the wall depending on whether or not the user is friends with the user looking at the wall
+				if (data.includes(wallToVisit)) {
+					res.render('wall.ejs', {user: wallToVisit, isFriend: true});
+				} else {
+					res.render('wall.ejs', {user: wallToVisit, isFriend: false});
+				}
+			}
+		});
+
+		//res.render('wall.ejs', {user: wallToVisit, friend: true});
+
 		// redirect user to their wall, where they can post status updates
-		res.redirect('/wall?user=' + wallToVisit);
+		//res.redirect('/wall?user=' + wallToVisit);
 	}
 }
 
-var updateWall = function(req, res) {
+var postToWall = function(req, res) {
 	/*
-		TODO - Each user should have a “wall” that contains posts and status updates in reverse chronological
-		order. Each user should be able to post status updates (“Bob is going fishing”) on their own wall, and they
+		TODO - Each user should have a "wall" that contains posts and status updates in reverse chronological
+		order. Each user should be able to post status updates ("Bob is going fishing") on their own wall, and they
 		should be able to post on their friends’ walls as well.
 	*/
+
+	// get the parameters to make the new post
+	var user = req.session.username;
+	var content = req.body.content;
+	var timestamp = req.body.timestamp;
+	var hashtag = req.body.hashtag;
+	var id = user.concat(timestamp);
+
+	db.makePost(id, user, content, timestamp, hashtag, function(err, data) {
+		if (err) {
+			// error with querying database
+			res.render('error.ejs');
+		} else {
+			// successfully made a new post
+			// TODO: either do nothing (AJAX handles it?) or res.send
+			//res.send(data);
+			res.send("success");
+		}
+	});
+}
+
+var addFriend = function(req, res) {
+	// get the user sending the friend request and the user receiving the friend request (respectively)
+	var user = req.session.username;
+	var userToFriend = req.body.userToFriend;
+	var timestamp = req.body.timestamp;
+
+	db.addFriend(user, userToFriend, timestamp, function(err, data) {
+		if (err) {
+			// error with querying database
+			res.render('error.ejs');
+		} else {
+			// successfully added a friend
+			// TODO: either do nothing (AJAX handles it?) or res.send
+			res.send("success");
+		}
+	});
+}
+
+var deleteFriend = function(req, res) {
+	// get the user sending the friend request and the user receiving the friend request (respectively)
+	var user = req.session.username;
+	var userToFriend = req.body.userToFriend;
+
+	db.unfriend(user, userToFriend, function(err, data) {
+		if (err) {
+			// error with querying database
+			res.render('error.ejs');
+		} else {
+			// successfully deleted a friend
+			// TODO: either do nothing (AJAX handles it?) or res.send
+			res.send("success");
+		}
+	});
+}
+
+var getHomePagePosts = function(req, res) {
+	// send the data from the database to display up-to-date version of the home page to the user
+	db.getHomepagePosts(req.session.username, function(err, data) {
+		if (err) {
+			res.send(err);
+		} else {
+			res.send(data);
+		}
+	});
+}
+
+var commentOnPost = function(req, res) {
+	// get the user, comment content, post ID, and timestamp
+	var user = req.session.username;
+	var content = req.body.comment;
+	// TODO: Figure out how to get ID and timestamp of a post from the comment field (ejs)
+	//var id = req ...
+	//var timestamp = req ...
+
+	db.addComment(user, content, id, timestamp, function(err, data) {
+		if (err) {
+			res.render('error.ejs');
+		} else {
+			// TODO: ideally have the comment appear immediately, with no redirect
+			res.send(data);
+		}
+	});
 }
 
 // TODO
@@ -265,11 +367,17 @@ var deleteRestaurant = function(req, res) {
 	});
 };
 
-// TODO: Account for logged in / logged out status of user, need to incorporate the db method here
 var logout = function(req, res) {
-	// reset the session's username to undefined to indicate that the user has logged out, redirect to the login page
-	req.session.username = undefined;
-	res.redirect('/login');
+	// invoke db method to set the status of user to logged off
+	db.logout(req.session.username, function(err, data) {
+		if (err) {
+			res.render('error.ejs');
+		} else {
+			// reset the session's username to undefined to indicate that the user has logged out, redirect to the login page
+			req.session.username = undefined;
+			res.redirect('/');
+		}
+	});
 };
 
 // Don't forget to add any new functions to this class, so app.js can call them. 
@@ -288,10 +396,19 @@ var routes = {
 	update_password: updatePassword,
 	update_affiliation: updateAffiliation,
 
-	// TODO: Wall is not so simple...
+	// TODO: Wall is not so simple
 
 	get_wall: getWall,
-	update_wall: updateWall,
+	post_to_wall: postToWall,
+
+	add_friend: addFriend,
+	delete_friend: deleteFriend,
+
+	home_page_posts: getHomePagePosts,
+
+	comment_on_post: commentOnPost,
+
+	// TODO: Below
 
 	log_out: logout,
 

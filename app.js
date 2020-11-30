@@ -26,7 +26,7 @@ app.use(cookieParser());
    POST is often used when submitting web forms ('method="post"'). */
 
 // login page
-app.get('/login', routes.get_login);
+app.get('/', routes.get_login);
 app.post('/checklogin', routes.check_login);
 
 // sign up (create account) page
@@ -43,11 +43,21 @@ app.post('/settings', routes.update_password);
 app.post('/settings', routes.update_affiliation);
 // TODO: Similar route for updating news categories
 
-// TODO: Make different routes for when a user visits their own wall vs. visiting other user's walls?
+// TODO: Make different routes for when a user visits their own wall vs. visiting other user's walls? Temporary answer: NO
 
 // wall page (get route to view the page, post route to post a status update)
 app.get('/wall', routes.get_wall);
-app.post('/updatewall', routes.update_wall);
+app.post('/wall', routes.post_to_wall);
+
+// routes for adding and removing friends
+app.post('/addfriend', routes.add_friend);
+app.post('/deletefriend', routes.delete_friend);
+
+// make the home page contain dynamic content by updating periodically (gets the list of posts on the home page)
+app.get('/homepageposts', routes.home_page_posts);
+
+// allow users to make comments on any post they can see (either their own post or a friend's post)
+app.post('/wall', routes.comment_on_post);
 
 // --- IGNORE THESE THREE ROUTES FOR NOW ---
 app.post('/addrestaurant', routes.add_restaurant);
@@ -65,4 +75,4 @@ app.get('/deleterestaurant', routes.get_login);
 
 console.log('Author: Philip Kaw (ph163k8)');
 app.listen(8080);
-console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!'); // should be http://localhost:8080/login
+console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!');
