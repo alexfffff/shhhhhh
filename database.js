@@ -553,7 +553,7 @@ var db_make_post = function(postID, username, content, timestamp, hashtag, callb
 			"timestamp": timestamp
 		}
 	};
-	//Only puts in the table if the username doesn't exist
+	// Only puts in the table if the username doesn't exist
 	docClient.put(params).promise().then(
 			successResult => {
 				var params2 = {
@@ -607,7 +607,7 @@ var db_get_hashtags = function(hashtag, callback) {
 			}
 	};
   
-	//Queries for the restaurant that we want to add
+	// Queries for the restaurant that we want to add
 	docClient.query(params).promise().then(
 		  successResult => {
 			try  {
