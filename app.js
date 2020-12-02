@@ -53,7 +53,7 @@ app.post('/wall', routes.post_to_wall);
 app.post('/addfriend', routes.add_friend);
 app.post('/deletefriend', routes.delete_friend);
 
-// make the home page contain dynamic content by updating periodically (gets the list of posts on the home page)
+// support dynamic content on the home page by updating it periodically (gets the list of posts to show on the home page)
 app.get('/homepageposts', routes.home_page_posts);
 
 // allow users to make comments on any post they can see (either their own post or a friend's post)
