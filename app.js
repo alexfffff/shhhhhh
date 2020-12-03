@@ -9,7 +9,6 @@ var routes = require('./routes/routes.js');
 const path = require('path');
 var app = express();
 app.use(express.urlencoded());
-//app.use(express.static('public'))
 app.use(express.static('public'));
 // handle sessions and cookies for users
 var session = require('express-session');
