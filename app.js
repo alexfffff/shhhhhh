@@ -10,7 +10,7 @@ const path = require('path');
 var app = express();
 app.use(express.urlencoded());
 
-//to avoid MIME type mismatch errors for the external CSS.
+// avoid MIME type mismatch errors for the external CSS
 app.use(express.static('public'));
 
 // handle sessions and cookies for users
