@@ -6,8 +6,12 @@
 
 var express = require('express');
 var routes = require('./routes/routes.js');
+const path = require('path');
 var app = express();
 app.use(express.urlencoded());
+
+//to avoid MIME type mismatch errors for the external CSS.
+app.use(express.static('public'));
 
 // handle sessions and cookies for users
 var session = require('express-session');

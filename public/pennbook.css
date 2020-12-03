@@ -1,0 +1,102 @@
+body {
+    padding: 40px;
+    background-color: #303030;
+}
+
+.page-title {
+    color: white;
+    font-weight: bold;
+    float:left;
+    font-size: 24px;
+}
+
+.login-box {
+    max-width: 330px;
+    margin: 0 auto;
+}
+
+.login-box .form-control {
+    margin-bottom: 10px;
+}
+
+.posts {
+   max-width: 500px;
+    max-height: 730px;
+    min-height: 330px;
+    background-color: white;
+    margin-bottom: 20px;
+    border-radius: 20px;
+}
+
+.feed-container {
+    max-height: fit-content;
+    max-width: 50%;
+    flex-direction: vertical;
+}
+
+.header-container {
+    height: 50px;
+    width: 100%;
+    border-radius: 20px; 
+    vertical-align: middle;
+    justify-content:space-around;
+}
+
+.toolbar-container {
+    height: 50px;
+    max-width: 50%;
+    float: left;
+    border-radius: 20px;
+    vertical-align: middle; 
+    margin-left:20px;
+    margin-right: 20px;
+    justify-content: space-between;
+    display: flex;
+}
+
+.button {
+    font-size: 14px;
+    background-color: #64f8d3;
+    color: black;
+    border-radius: 5px;
+    width: 100px;
+    height: min-content; 
+    text-align: center;
+    float:left;
+    margin-left: 20px;
+    margin-right: 20px;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    vertical-align: middle; 
+}
+
+.button:hover, .button:focus {
+    background-color:#FFFFFF;
+    color: #40785E;
+}
+
+.h7 {
+     font-size: 0.8rem;
+}
+
+.gedf-wrapper {
+    margin-top: 0.97rem;
+}
+
+@media (min-width: 992px) {
+    .gedf-main {
+        padding-left: 4rem;
+        padding-right: 4rem;
+    }
+    .gedf-card {
+        margin-bottom: 2.77rem;
+    }
+}
+
+/**Reset Bootstrap*/
+.dropdown-toggle::after {
+    content: none;
+    display: none;
+}
