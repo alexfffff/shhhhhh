@@ -14,6 +14,8 @@ var checkLogin = function(req, res) {
 	var password = req.body.myPassword;
 
 	// TODO - implement login check with username and password (almost done)
+	console.log(username);
+	console.log(password);
 	
 	db.loginCheck(username, password, function(err, data) {
 		if (err) {
@@ -228,6 +230,7 @@ var getWall = function(req, res) {
 			} else {
 				// render the wall depending on whether or not the user is friends with the user looking at the wall
 				if (data.includes(wallToVisit)) {
+					console.log(wallToVisit);
 					res.render('wall.ejs', {user: wallToVisit, isFriend: true});
 				} else {
 					res.render('wall.ejs', {user: wallToVisit, isFriend: false});

@@ -59,7 +59,7 @@ var my_login_check = function(username, password, callback) {
 							  successResult => {
 								  console.log("UPDATED");
 								  console.log(successResult);
-								  callback(null, successResult);
+								  callback(null, username);
 							  },
 							  errResult => {
 								  console.log(errResult);
@@ -169,7 +169,7 @@ var create_account = function(username, password, name, email, affiliation, birt
 	  						console.log(arrayOfPromises);
 	  						Promise.all(arrayOfPromises).then(
 			  					successResult => {
-									callback(null, successResult);
+									callback(null, username);
 			  					}, errResult => {
 			  						console.log(errResult);
 				  					callback(errResult, null);
