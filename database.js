@@ -59,7 +59,7 @@ var my_login_check = function(username, password, callback) {
 							  successResult => {
 								  console.log("UPDATED");
 								  console.log(successResult);
-								  callback(null, successResult);
+								  callback(null, username);
 							  },
 							  errResult => {
 								  console.log(errResult);
@@ -68,7 +68,7 @@ var my_login_check = function(username, password, callback) {
 							  });
 					  }
 			    } catch (error) {
-			        callback(error, null);
+			        callback(5, null);
 			    }
 			  
 		  },
@@ -169,7 +169,7 @@ var create_account = function(username, password, name, email, affiliation, birt
 	  						console.log(arrayOfPromises);
 	  						Promise.all(arrayOfPromises).then(
 			  					successResult => {
-									callback(null, successResult);
+									callback(null, username);
 			  					}, errResult => {
 			  						console.log(errResult);
 				  					callback(errResult, null);
@@ -182,7 +182,7 @@ var create_account = function(username, password, name, email, affiliation, birt
 					throw new Error("Already in db");
 				}
 			} catch (error) {
-				callback(error, null);
+				callback(4, null);
 			}
 			
 		},
@@ -359,7 +359,7 @@ var add_interest = function(username, interest, timestamp, callback) {
 					throw new Error("Already interested");
 				}
 			} catch (error) {
-			    callback(error, null);
+			    callback(6, null);
 			}
 			  
 		}, errResult => {
@@ -633,7 +633,10 @@ var db_change_password = function(username, currPwd, newPwd, callback) {
 					newHash.update(newPwd);
 					var newPwdResult = newHash.digest('hex');
 					console.log(newPwdResult);
-					
+					if (pwdResult === newPwdResult) {
+						throw new Error("Enter new password");
+					}
+
 					var params = {
 						TableName: "users",
 						Key: {
@@ -1212,6 +1215,70 @@ var db_logout = function(username, callback) {
 
 
 
+/**
+* Changes the current users logged_in status to false in "users" table
+*
+* @param  chatID  ID of chatroom
+* @return Returns array of the message items of chat in chronological? order
+*/
+var db_get_messages = function(chatID, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "messages",
+		KeyConditionExpression: "#ci = :chatid",
+		ScanIndexForward: true, //NOT SURE IF THIS COUNTS AS CHRONOLOGICAL OR REVERSE CHRONOLOGICAL IF YOU MAKE NEWEST POP UP AT BOTTOM
+		ExpressionAttributeNames:{
+			"#ci": "chatID"
+		},
+		ExpressionAttributeValues: {
+			":chatid": chatID
+		}
+	};
+
+	// query the table with params
+	docClient.query(params).promise().then(
+		successResult => {
+			console.log(successResult);
+			callback(null, successResult);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
+
+
+/**
+* Changes the current users logged_in status to false in "users" table
+*
+* @param  chatID  ID of chatroom
+* @param  timestamp  time that message was sent
+* @param  message  message contents
+* @param  username  username of user who sent message
+* @return Does not return anything
+*/
+var db_add_message = function(chatID, timestamp, message, username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "messages",
+		Item:{
+			"chatID": chatID,
+			"timestamp": timestamp,
+			"message": message,
+			"username": username
+		}
+	};
+	docClient.put(params).promise().then(
+		successResult => {
+			callback(null, successResult);
+		}, errResult => {
+			callback(errResult, null);
+		});
+};
+
+
+
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
@@ -1243,8 +1310,9 @@ var database = {
   addFriend: db_add_friend,
   getFriends: db_get_friends,
   unfriend: db_unfriend,
-  logout: db_logout
+  logout: db_logout,
+  getMessages: db_get_messages,
+  addMessage: db_add_message
 };
 
 module.exports = database;
-                                        
