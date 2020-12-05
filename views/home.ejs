@@ -29,12 +29,12 @@
 
     function initHomePage() {
         // TODO: ACTUALLY DISPLAY POSTS ON THE HOME PAGE SOMEHOW
-
+        var listposts;
         // iterate through all of the posts
         <% posts.forEach(post => { %>
 
             // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
-            var cardpost = 
+            document.getElementById("allposts").innerHTML = listposts;
             // add each post into the list of posts stored on the client side
             postsOnClient.push("<%=post%>");
         <% }) %>
@@ -214,7 +214,8 @@
                 </div>
                 <!-- Post /////-->
 
-				<!--- \\\\\\\Post-->
+                <!--- \\\\\\\Post-->
+                <!--uncomment: <div id="allposts"> </div>-->
 				<% for (var i = 0; i < 7; i++) { %>
 					<div class="card gedf-card">
 						<div class="card-header">
