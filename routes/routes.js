@@ -13,21 +13,22 @@ var checkLogin = function(req, res) {
 	var username = req.body.myUsername;
 	var password = req.body.myPassword;
 
-	// TODO - implement login check with username and password
+	// TODO - implement login check with username and password (almost done)
 	
 	db.loginCheck(username, password, function(err, data) {
 		if (err) {
-			// TODO: Handle error with db (?)
-			res.render('error.ejs');
-			//res.render('main.ejs', {message: err});
-		} else if (data) {
+			// check for specific error from database call
+			if (err == 5) {
+				// login failed due to non-existent username or incorrect password (same error for security purposes)
+				res.redirect('/?message=' + 'Username_or_password_invalid._Please_try_again.');
+			} else {
+				// handle error with database
+				res.render('error.ejs');
+			}
+		} else {
 			// set the session's username to reflect login, and redirect user to the home page
 			req.session.username = data;
 			res.redirect('/home');
-		} else {
-			// TODO: Handle error with invalid login
-			// login failed due to non-existent username or incorrect password
-			res.render('main.ejs', {message: 'Username or password invalid. Please try again.'});
 		}
 	});
 };
@@ -55,21 +56,35 @@ var createAccount = function(req, res) {
 		var birthday = req.body.myNewBirthday;
 		
 		// TODO - A new user should also declare an interest in at least two news categories.
-		var interests = req.body.TODO; // how to store this ???
+		// array of interests, the first two are mandatory and a new user can optionally declare a maximum of five
+		var interests = [];
+		interests.push(req.body.myFirstInterest);
+		interests.push(req.body.mySecondInterest);
+		if (req.body.myThirdInterest) {
+			interests.push(req.body.myThirdInterest);
+		}
+		if (req.body.myFourthInterest) {
+			interests.push(req.body.myFourthInterest);
+		}
+		if (req.body.myFifthInterest) {
+			interests.push(req.body.myFifthInterest);
+		}
 
 		// attempt to create a new account with the requested username, password, full name, email, affiliation, birthday, and interests
 		db.createAccount(newUser, newPass, fullName, email, affiliation, birthday, interests, function(err, data) {
 			if (err) {
-				// TODO: Not sure how to handle error with db call?
-				res.render('signup.ejs', {message: err});
-			} else if (data) {
+				// check for specific error from database call
+				if (err == 4) {
+					// account under the username already exists, redirect to login page
+					res.redirect('/?message=' + 'Username_already_exists._Please_log_in.');
+				} else {
+					// handle error with database
+					res.render('error.ejs');
+				}
+			} else {
 				// new account successfully created, log in with new account and redirect to home page
 				req.session.username = data;
 				res.redirect('/home');
-			} else {
-				// TODO
-				// account under the username already exists in table, re-prompt for sign up
-				res.render('signup.ejs', {message: 'Username already exists, please try a different username.'});
 			}
 		});
 	}
