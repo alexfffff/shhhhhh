@@ -14,8 +14,8 @@ var checkLogin = function(req, res) {
 	var password = req.body.myPassword;
 
 	// TODO - implement login check with username and password (almost done)
-	console.log("username is: " + username);
-	console.log("password is: " + password);
+	console.log(username);
+	console.log(password);
 	
 	db.loginCheck(username, password, function(err, data) {
 		if (err) {
@@ -57,11 +57,15 @@ var createAccount = function(req, res) {
 		var affiliation = req.body.myNewAffiliation;
 		var birthday = req.body.myNewBirthday;
 		
+		console.log("this is bday: " + birthday);
 		// TODO - A new user should also declare an interest in at least two news categories.
 		// array of interests, the first two are mandatory and a new user can optionally declare a maximum of five
+		console.log("first int: " + req.body.myFirstInterest);	
+		console.log("second int: " + req.body.mySecondInterest);
 		var interests = [];
 		interests.push(req.body.myFirstInterest);
 		interests.push(req.body.mySecondInterest);
+		
 		if (req.body.myThirdInterest) {
 			interests.push(req.body.myThirdInterest);
 		}
@@ -156,7 +160,6 @@ var updateEmail = function(req, res) {
 	// query database for the user's actual old email
 	db.changeEmail(oldEmail, newEmail, function(err, data) {
 		if (err) {
-			// TODO: if (err == #) { ... } else
 			// error with querying database
 			res.redirect('/settings/?message=' + 'database-error');
 		} else {
@@ -184,10 +187,9 @@ var updatePassword = function(req, res) {
 }
 
 var updateAffiliation = function(req, res) {
-	// get the user's inputted old affiliation and new affiliation, along with timestamp of submitted form
+	// get the user's inputted old affiliation and new affiliation
 	var oldAffiliation = req.body.myOldAffiliation;
 	var newAffiliation = req.body.myNewAffiliation;
-	var timestamp = req.body.timestamp;
 
 	// query database for the user's actual old affiliation
 	db.getAffiliation(req.session.username, function(err1, data1) {
@@ -195,10 +197,9 @@ var updateAffiliation = function(req, res) {
 			// error with querying database
 			res.redirect('/settings/?message=' + 'database-error');
 		} else {
-			// compare user's current affiliation to the proposed new affiliation to change to
 			if (data1.localeCompare(oldAffiliation) == 0) {
 				// update the user's affiliation in the database
-				db.changeAffiliation(req.session.username, newAffiliation, timestamp, function(err2, data2) {
+				db.changeAffiliation(req.session.username, newAffiliation, function(err2, data2) {
 					if (err2) {
 						// error with querying database
 						res.redirect('/settings/?message=' + 'database-error');
@@ -226,27 +227,25 @@ var getWall = function(req, res) {
 		// get the username of the wall to visit
 		var wallToVisit = req.body.wallToVisit;
 
-		console.log("the wall to visit is: " + wallToVisit);
-
-		// shows the user their own wall if the username matches
-		if (wallToVisit === req.session.username) {
-			res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true});
-		} else {
-			// query database for all friends of user
-			db.getFriends(req.session.username, function(err, data) {
-				if (err) {
-					// error with querying database
-					res.render(error.ejs);
+		db.getFriends(req.session.username, function(err, data) {
+			if (err) {
+				// TODO: error?
+				res.render(error.ejs);
+			} else {
+				// render the wall depending on whether or not the user is friends with the user looking at the wall
+				if (data.includes(wallToVisit)) {
+					console.log(wallToVisit);
+					res.render('wall.ejs', {user: wallToVisit, isFriend: true});
 				} else {
-					// render the wall differently depending on whether or not the user is friends with the user looking at the wall
-					if (data.includes(wallToVisit)) {
-						res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false});
-					} else {
-						res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false});
-					}
+					res.render('wall.ejs', {user: wallToVisit, isFriend: false});
 				}
-			});
-		}
+			}
+		});
+
+		//res.render('wall.ejs', {user: wallToVisit, friend: true});
+
+		// redirect user to their wall, where they can post status updates
+		//res.redirect('/wall?user=' + wallToVisit);
 	}
 }
 
@@ -260,7 +259,7 @@ var postToWall = function(req, res) {
 	// get the parameters to make the new post
 	var user = req.session.username;
 	var content = req.body.content;
-	var timestamp = req.body.timestamp;
+	var timestamp = Date.now();
 	var hashtag = req.body.hashtag;
 	var id = user.concat(timestamp);
 
@@ -281,7 +280,7 @@ var addNewFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
 	var user = req.session.username;
 	var userToFriend = req.body.userToFriend;
-	var timestamp = req.body.timestamp;
+	var timestamp = Date.now();
 
 	db.addFriend(user, userToFriend, timestamp, function(err, data) {
 		if (err) {
