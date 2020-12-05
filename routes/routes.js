@@ -114,7 +114,9 @@ var getHome = function(req, res) {
 				res.render('error.ejs');
 			} else {
 				// pass the data from the table and render the home page to the user
-				res.render('home.ejs', {posts: data.Items, username: req.session.username, message: null});
+				console.log(data);
+				console.log(data[0].Items);
+				res.render('home.ejs', {posts: data[0].Items, username: req.session.username, message: null});
 			}
 		});
 	}
@@ -259,7 +261,7 @@ var postToWall = function(req, res) {
 	// get the parameters to make the new post
 	var user = req.session.username;
 	var content = req.body.content;
-	var timestamp = Date.now();
+	var timestamp = req.body.timestamp;
 	var hashtag = req.body.hashtag;
 	var id = user.concat(timestamp);
 
@@ -280,7 +282,7 @@ var addNewFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
 	var user = req.session.username;
 	var userToFriend = req.body.userToFriend;
-	var timestamp = Date.now();
+	var timestamp = req.body.timestamp;
 
 	db.addFriend(user, userToFriend, timestamp, function(err, data) {
 		if (err) {
@@ -329,7 +331,7 @@ var commentOnPost = function(req, res) {
 	// TODO: Figure out how to get ID and timestamp of a post from the comment field (ejs)
 	//var id = req ...
 	//var timestamp = req ...
-
+	
 	db.addComment(user, content, id, timestamp, function(err, data) {
 		if (err) {
 			res.render('error.ejs');
