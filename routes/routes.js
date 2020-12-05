@@ -228,20 +228,25 @@ var getWall = function(req, res) {
 
 		console.log("the wall to visit is: " + wallToVisit);
 
-		// query database for all friends of user
-		db.getFriends(req.session.username, function(err, data) {
-			if (err) {
-				// error with querying database
-				res.render(error.ejs);
-			} else {
-				// render the wall differently depending on whether or not the user is friends with the user looking at the wall
-				if (data.includes(wallToVisit)) {
-					res.render('wall.ejs', {user: wallToVisit, isFriend: true});
+		// shows the user their own wall if the username matches
+		if (wallToVisit === req.session.username) {
+			res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true});
+		} else {
+			// query database for all friends of user
+			db.getFriends(req.session.username, function(err, data) {
+				if (err) {
+					// error with querying database
+					res.render(error.ejs);
 				} else {
-					res.render('wall.ejs', {user: wallToVisit, isFriend: false});
+					// render the wall differently depending on whether or not the user is friends with the user looking at the wall
+					if (data.includes(wallToVisit)) {
+						res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false});
+					} else {
+						res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false});
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 }
 
