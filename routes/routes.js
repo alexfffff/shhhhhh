@@ -96,47 +96,54 @@ var createAccount = function(req, res) {
 	}
 };
 
-// TODO
 var getHome = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
-
-		// TODO - show the home page to the user
-
 		// show the home page to the user
 		db.getHomepagePosts(req.session.username, function(err, data) {
 			if (err) {
-				// TODO: Not sure how to handle error???
-				//res.render('restaurants.ejs', {table: null, username: req.session.username, message: "Error in retrieving table"});
+				// handle error with database
 				res.render('error.ejs');
 			} else {
 				// pass the data from the table and render the home page to the user
-				console.log(data);
-				console.log(data[0].Items);
 				res.render('home.ejs', {posts: data[0].Items, username: req.session.username, message: null});
 			}
 		});
 	}
 };
 
+// get the user's affiliation and news interests to display on the settings page
 var getSettings = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
-		// get the user's settings (current affiliation and news categories)
-		db.getSettings(req.session.username, function(err, data) {
-			if (err) {
-				// error with querying table
-				res.render('settings.ejs', {message: req.query.message, settings: null});
+		// get the user's current affiliation
+		db.getAffiliation(req.session.username, function(err1, data1) {
+			if (err1) {
+				// error with querying database
+				res.render('settings.ejs', {message: err1, currAffiliation: null, currInterests: null});
 			} else {
-				// TODO: Pass affiliation and news categories from "data.Items" (or other form of data) into settings.ejs
-				// render the settings page, where a user can see and change their settings
-				res.render('settings.ejs', {message: null, settings: data});
+				// store the current affiliation
+				var affiliation = data1;
+
+				// get the user's current interests
+				db.getInterests(req.session.username, function(err2, data2) {
+					if (err2) {
+						// error with querying database
+						res.render('settings.ejs', {message: err2, currAffiliation: null, currInterests: null});
+					} else {
+						// store the current interests
+						var interests = data2;
+
+						// render the settings page, where a user can see and change their settings (only affiliation and interests displayed)
+						res.render('settings.ejs', {message: null, currAffiliation: affiliation, currInterests: interests});
+					}
+				});
 			}
 		});
 	}
@@ -208,7 +215,6 @@ var updateAffiliation = function(req, res) {
 					} else {
 						// successfully changed affiliation
 						// TODO: force a status update
-						//res.render('settings.ejs', {message: "Affiliation updated successfully.", settings: data2});
 						res.redirect('/settings');
 					}
 				});
@@ -261,7 +267,7 @@ var postToWall = function(req, res) {
 	// get the parameters to make the new post
 	var user = req.session.username;
 	var content = req.body.content;
-	var timestamp = req.body.timestamp;
+	var timestamp = Date.now();
 	var hashtag = req.body.hashtag;
 	var id = user.concat(timestamp);
 
@@ -282,7 +288,7 @@ var addNewFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
 	var user = req.session.username;
 	var userToFriend = req.body.userToFriend;
-	var timestamp = req.body.timestamp;
+	var timestamp = Date.now();
 
 	db.addFriend(user, userToFriend, timestamp, function(err, data) {
 		if (err) {
@@ -331,7 +337,7 @@ var commentOnPost = function(req, res) {
 	// TODO: Figure out how to get ID and timestamp of a post from the comment field (ejs)
 	//var id = req ...
 	//var timestamp = req ...
-	
+
 	db.addComment(user, content, id, timestamp, function(err, data) {
 		if (err) {
 			res.render('error.ejs');
