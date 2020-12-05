@@ -156,6 +156,7 @@ var updateEmail = function(req, res) {
 	// query database for the user's actual old email
 	db.changeEmail(oldEmail, newEmail, function(err, data) {
 		if (err) {
+			// TODO: if (err == #) { ... } else
 			// error with querying database
 			res.redirect('/settings/?message=' + 'database-error');
 		} else {
@@ -183,9 +184,10 @@ var updatePassword = function(req, res) {
 }
 
 var updateAffiliation = function(req, res) {
-	// get the user's inputted old affiliation and new affiliation
+	// get the user's inputted old affiliation and new affiliation, along with timestamp of submitted form
 	var oldAffiliation = req.body.myOldAffiliation;
 	var newAffiliation = req.body.myNewAffiliation;
+	var timestamp = req.body.timestamp;
 
 	// query database for the user's actual old affiliation
 	db.getAffiliation(req.session.username, function(err1, data1) {
@@ -193,9 +195,10 @@ var updateAffiliation = function(req, res) {
 			// error with querying database
 			res.redirect('/settings/?message=' + 'database-error');
 		} else {
+			// compare user's current affiliation to the proposed new affiliation to change to
 			if (data1.localeCompare(oldAffiliation) == 0) {
 				// update the user's affiliation in the database
-				db.changeAffiliation(req.session.username, newAffiliation, function(err2, data2) {
+				db.changeAffiliation(req.session.username, newAffiliation, timestamp, function(err2, data2) {
 					if (err2) {
 						// error with querying database
 						res.redirect('/settings/?message=' + 'database-error');
@@ -223,25 +226,22 @@ var getWall = function(req, res) {
 		// get the username of the wall to visit
 		var wallToVisit = req.body.wallToVisit;
 
+		console.log("the wall to visit is: " + wallToVisit);
+
+		// query database for all friends of user
 		db.getFriends(req.session.username, function(err, data) {
 			if (err) {
-				// TODO: error?
+				// error with querying database
 				res.render(error.ejs);
 			} else {
-				// render the wall depending on whether or not the user is friends with the user looking at the wall
+				// render the wall differently depending on whether or not the user is friends with the user looking at the wall
 				if (data.includes(wallToVisit)) {
-					console.log("the wall to visit is: " + wallToVisit);
 					res.render('wall.ejs', {user: wallToVisit, isFriend: true});
 				} else {
 					res.render('wall.ejs', {user: wallToVisit, isFriend: false});
 				}
 			}
 		});
-
-		//res.render('wall.ejs', {user: wallToVisit, friend: true});
-
-		// redirect user to their wall, where they can post status updates
-		//res.redirect('/wall?user=' + wallToVisit);
 	}
 }
 
