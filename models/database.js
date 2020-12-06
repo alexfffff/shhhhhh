@@ -377,25 +377,47 @@ var add_interest = function(username, interest, timestamp, callback) {
 * @return Does not return anything
 */
 var db_remove_interest = function(username, interest, callback) {
-	var params = {
-		Key: {
-			"interest": {
-				S: interest
-			},
-			"username": {
-				S: username
-			}
-		},
-		TableName: "interests"
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params1 = {
+		TableName: "interests",
+		 IndexName: "username-index",
+		 KeyConditionExpression: "username = :key",
+		 ExpressionAttributeValues: {
+			 ":key": username
+    	}
 	};
 	
-	db.deleteItem(params, function(err, data) {
-		if (err) {
-			callback(err, null);
-		} else {
-			callback(err, data);
+	docClient.query(params1).promise().then(
+		successResult => {
+			try {
+				var params2 = {
+					Key: {
+						"interest": {
+							S: interest
+						},
+						"username": {
+							S: username
+						}
+					},
+					TableName: "interests"
+				};
+				
+				db.deleteItem(params2, function(err, data) {
+					if (err) {
+						callback(err, null);
+					} else {
+						callback(null, data);
+					}
+				});
+
+				callback(null, successResult.Items);
+			} catch (error) {
+			    callback(9, null);
+			}
+		}, errResult => {
+				callback(errResult, null);
 		}
-	});
+	);
 };
 
 
@@ -551,7 +573,7 @@ var db_change_email = function(username, currEmail, newEmail, callback) {
 
 				}
 			} catch (error) {
-			    callback(error, null);
+			    callback(8, null);
 			}
 			  
 		}, errResult => {
@@ -663,7 +685,7 @@ var db_change_password = function(username, currPwd, newPwd, callback) {
 
 				}
 			} catch (error) {
-			    callback(error, null);
+			    callback(7, null);
 			}
 			  
 		}, errResult => {
@@ -823,7 +845,7 @@ var db_get_user_posts = function(username, callback) {
 * @param  hashtags hashtags (if any) of the post. Must be in form of an array
 * @return Does not return anything
 */
-var db_make_post = function(postID, username, content, timestamp, hashtags, callback) {
+var db_make_post = function(postID, username, content, timestamp, poster, hashtags, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
 		TableName : "posts",
@@ -831,7 +853,8 @@ var db_make_post = function(postID, username, content, timestamp, hashtags, call
 			"username": username,
 			"postID": postID,
 			"content": content,
-			"timestamp": timestamp
+			"timestamp": timestamp,
+			"poster": poster
 		}
 	};
 	docClient.put(params).promise().then(
@@ -843,7 +866,7 @@ var db_make_post = function(postID, username, content, timestamp, hashtags, call
 					var params2 = {
 						TableName : "hashtags",
 						Item:{
-							"username": username,
+							"username": poster,
 							"postID": postID,
 							"content": content,
 							"timestamp": timestamp,
@@ -1214,6 +1237,46 @@ var db_logout = function(username, callback) {
 };
 
 
+/**
+* Changes the current users logged_in status to false in "users" table
+*
+* @param  chatID  ID of chatroom
+* @param  chatName  name of the chat
+* @param  username  username of user who sent message
+* @return Does not return anything
+*/
+var db_start_chat = function(chatID, chatName, username, friendUsername, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "chats",
+		Item:{
+			"chatID": chatID,
+			"chatName": chatName
+		}
+	};
+	docClient.put(params).promise().then(
+		successResult => {
+			var params2 = {
+				TableName : "chatUsers",
+				Item:{
+					"chatID": chatID,
+					"username": username
+				}
+			};
+			docClient.put(params2).promise().then(
+				successResult2 => {
+					callback(null, successResult2);
+				}, errResult2 => {
+					callback(errResult2, null);
+				}
+			);
+		}, errResult => {
+			callback(errResult, null);
+		}
+	);
+};
+
+
 
 /**
 * Changes the current users logged_in status to false in "users" table
@@ -1278,6 +1341,142 @@ var db_add_message = function(chatID, timestamp, message, username, callback) {
 };
 
 
+/**
+* Changes the current users logged_in status to false in "users" table
+*
+* @param  chatID  ID of chatroom
+* @return Returns array of the usernames in that chat
+*/
+var db_get_chat_users = function(chatID, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "chatUsers",
+		KeyConditionExpression: "#ci = :chatid",
+		ExpressionAttributeNames:{
+			"#ci": "chatID"
+		},
+		ExpressionAttributeValues: {
+			":chatid": chatID
+		}
+	};
+
+	// query the table with params
+	docClient.query(params).promise().then(
+		successResult => {
+			console.log(successResult);
+			callback(null, successResult);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
+
+
+/**
+* Changes the current users logged_in status to false in "users" table
+*
+* @param  chatID  ID of chatroom
+* @param  username  username of user who sent message
+* @return Does not return anything
+*/
+var db_join_chat = function(chatID, username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "chatUsers",
+		Item:{
+			"chatID": chatID,
+			"username": username
+		}
+	};
+	docClient.put(params).promise().then(
+		successResult => {
+			var params2 = {
+				TableName : "chatInvitations",
+				Key: {
+					"username": username,
+					"chatID": chatID
+				}
+			};
+		
+			docClient.delete(params2).promise().then(
+				successResult2 => {
+					callback(null, successResult2);
+				}, errResult => {
+					callback(errResult, null);
+				}
+			);
+		}, errResult => {
+			callback(errResult, null);
+		});
+};
+
+
+/**
+* Removes both instances of the friendship from the "friends" table
+*
+* @param  chatID  id of chat user is trying to leave
+* @param  username  username of user who wants to leave chat
+* @return Does not return anything
+*/
+var db_leave_chat = function(chatID, username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "chatUsers",
+		Key: {
+			"chatID": chatID,
+			"username": username
+		}
+	};
+
+  	docClient.delete(params).promise().then(
+	  	successResult => {
+		  	callback(null, successResult);
+		}, errResult => {
+			callback(errResult, null);
+		}
+	);
+};
+
+
+/**
+* Changes the current users logged_in status to false in "users" table
+*
+* @param  chatID  ID of chatroom
+* @param  newName  new chat name
+* @return Returns array of the usernames in that chat
+*/
+var db_rename_chat = function(chatID, newName, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+	    TableName: "chats",
+	    Key: {
+	        "chatID": chatID
+	    },
+	    UpdateExpression: "set #newName = :nN",
+	    ExpressionAttributeNames: {
+	        "#newName": "newName"
+	    },
+	    ExpressionAttributeValues: {
+	        ":nN": newName
+	    }
+	};
+  
+  	docClient.update(params).promise().then(
+		successResult => {
+			console.log("UPDATED");
+			console.log(successResult);
+			callback(null, successResult);
+		}, errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
+
+
+
 
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
@@ -1312,7 +1511,12 @@ var database = {
   unfriend: db_unfriend,
   logout: db_logout,
   getMessages: db_get_messages,
-  addMessage: db_add_message
+  addMessage: db_add_message,
+  startChat: db_start_chat,
+  getChatUsers: db_get_chat_users,
+  joinChat: db_join_chat,
+  leaveChat: db_leave_chat,
+  renameChat: db_rename_chat
 };
 
 module.exports = database;
