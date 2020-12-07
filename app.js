@@ -45,7 +45,9 @@ app.get('/settings', routes.get_settings);
 app.post('/settings', routes.update_email);
 app.post('/settings', routes.update_password);
 app.post('/settings', routes.update_affiliation);
-// TODO: Similar route for updating news categories
+// TODO: Similar route for updating news categories (these should work now)
+app.post('/settings', routes.add_interest);
+app.post('/settings', routes.remove_interest);
 
 // TODO: Make different routes for when a user visits their own wall vs. visiting other user's walls? Temporary answer: NO
 
