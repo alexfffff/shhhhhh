@@ -126,7 +126,7 @@ var getSettings = function(req, res) {
 		db.getAffiliation(req.session.username, function(err1, data1) {
 			if (err1) {
 				// error with querying database
-				res.render('settings.ejs', {message: err1, currAffiliation: null, currInterests: null});
+				res.render('settings.ejs', {message: err1, currAffiliation: null, currInterests: null, success: null});
 			} else {
 				// store the current affiliation
 				var affiliation = data1;
@@ -135,13 +135,13 @@ var getSettings = function(req, res) {
 				db.getInterests(req.session.username, function(err2, data2) {
 					if (err2) {
 						// error with querying database
-						res.render('settings.ejs', {message: err2, currAffiliation: null, currInterests: null});
+						res.render('settings.ejs', {message: err2, currAffiliation: null, currInterests: null, success: null});
 					} else {
 						// store the current interests
 						var interests = data2;
 
 						// render the settings page, where a user can see and change their settings (only affiliation and interests displayed)
-						res.render('settings.ejs', {message: null, currAffiliation: affiliation, currInterests: interests});
+						res.render('settings.ejs', {message: null, currAffiliation: affiliation, currInterests: interests, success: null});
 					}
 				});
 			}
@@ -179,7 +179,7 @@ var updateEmail = function(req, res) {
 			}
 		} else {
 			// redirect to the settings page, email successfully updated
-			res.redirect('/settings');
+			res.redirect('/settings?message=' + 'Email_successfully_updated' + '&success=true');
 		}
 	});
 };
@@ -202,7 +202,7 @@ var updatePassword = function(req, res) {
 			}
 		} else {
 			// redirect to the settings page, password successfully updated
-			res.redirect('/settings');
+			res.redirect('/settings?message=' + 'Password_successfully_updated' + '&success=true');
 		}
 	});
 };
@@ -227,7 +227,7 @@ var updateAffiliation = function(req, res) {
 					} else {
 						// successfully changed affiliation
 						// TODO: force a status update
-						res.redirect('/settings');
+						res.redirect('/settings?message=' + 'Affiliation_successfully_updated' + '&success=true');
 					}
 				});
 			} else {
@@ -257,7 +257,7 @@ var addNewInterest = function(req, res) {
 		} else {
 			// successfully added an interest
 			// TODO: force a status update
-			res.redirect('/settings');
+			res.redirect('/settings?message=' + 'Interest_successfully_added' + '&success=true');
 		}
 	});
 };
@@ -278,9 +278,9 @@ var removeOldInterest = function(req, res) {
 				res.redirect('/settings/?message=' + 'Database_error');
 			}
 		} else {
-			// successfully added an interest
+			// successfully removed an interest
 			// TODO: force a status update
-			res.redirect('/settings');
+			res.redirect('/settings?message=' + 'Interest_successfully_removed' + '&success=true');
 		}
 	});
 };
@@ -329,7 +329,19 @@ var postToWall = function(req, res) {
 	var poster = req.session.username;
 	var content = req.body.content;
 	var timestamp = Date.now();
-	var hashtags = req.body.hashtags;
+
+	// generate the hashtags array from the post content
+	var hashtags = [];
+	// match alphanumeric characters after a hashtag, assumes that no user posts nested hashtags
+	var matches = content.match(/#([A-Z0-9]|[0-9A-Z])+( |$)/gi);
+	if (matches !== null) {
+		// get rid of whitespaces and # symbols before sending array to the database
+		for (var word of matches) {
+			hashtags.push(word.replace(/\s+/g, '').replace('#', ''));
+		}
+	}
+
+	// create the post ID from the poster and timestamp
 	var id = poster.concat(timestamp);
 
 	// the username of the current wall that the poster is looking at
@@ -473,7 +485,7 @@ var getNews = function(req, res) {
 
 			// TODO: Call some db method that returns the articles ??? data1 is array of interests
 			// render the news recommendations page for this user based on their interests
-			res.render('news.ejs', {interests: myInterests});
+			res.render('news.ejs', {username: req.session.username, interests: myInterests});
 		}
 	});
 };
@@ -483,7 +495,11 @@ var searchNews = function(req, res) {
 	// TODO - search news
 	var keyword = req.body.keyword;
 
+	console.log("YOU SEARCHED FOR: " + keyword);
+
 	// call db method
+	// temporarily does nothing
+	res.redirect('/news');
 }
 
 var logout = function(req, res) {
