@@ -14,8 +14,8 @@ var checkLogin = function(req, res) {
 	var password = req.body.myPassword;
 
 	// TODO - implement login check with username and password (almost done)
-	console.log(username);
-	console.log(password);
+	console.log("username is: " + username);
+	console.log("password is: " + password);
 	
 	db.loginCheck(username, password, function(err, data) {
 		if (err) {
@@ -44,7 +44,6 @@ var signUp = function(req, res) {
 	}
 };
 
-// TODO
 var createAccount = function(req, res) {
 	if (req.session.username !== undefined) {
 		// users logged in cannot attempt to create an account, redirect to home page
@@ -58,10 +57,11 @@ var createAccount = function(req, res) {
 		var birthday = req.body.myNewBirthday;
 		
 		console.log("this is bday: " + birthday);
-		// TODO - A new user should also declare an interest in at least two news categories.
-		// array of interests, the first two are mandatory and a new user can optionally declare a maximum of five
 		console.log("first int: " + req.body.myFirstInterest);	
 		console.log("second int: " + req.body.mySecondInterest);
+
+		// TODO - A new user should also declare an interest in at least two news categories.
+		// array of interests, the first two are mandatory and a new user can optionally declare a maximum of five
 		var interests = [];
 		interests.push(req.body.myFirstInterest);
 		interests.push(req.body.mySecondInterest);
@@ -169,8 +169,14 @@ var updateEmail = function(req, res) {
 	// query database for the user's actual old email
 	db.changeEmail(oldEmail, newEmail, function(err, data) {
 		if (err) {
-			// error with querying database
-			res.redirect('/settings/?message=' + 'database-error');
+			// check for the type of error
+			if (err == 8) {
+				// user's old email does not match, or their new email is the same as their old one
+				res.redirect('/settings/?message=' + 'Please_enter_the_correct_old_email_and_a_valid_new_email');
+			} else {
+				// error with querying database
+				res.redirect('/settings/?message=' + 'Database_error');
+			}
 		} else {
 			// redirect to the settings page, email successfully updated
 			res.redirect('/settings');
@@ -186,8 +192,14 @@ var updatePassword = function(req, res) {
 	// query database for the user's actual old password
 	db.changePassword(oldPass, newPass, function(err, data) {
 		if (err) {
-			// error with querying database
-			res.redirect('/settings/?message=' + 'database-error');
+			// check for the type of error
+			if (err == 7) {
+				// user's old password does not match, or their new password is the same as their old one
+				res.redirect('/settings/?message=' + 'Please_enter_the_correct_old_password_and_a_valid_new_password');
+			} else {
+				// error with querying database
+				res.redirect('/settings/?message=' + 'Database_error');
+			}
 		} else {
 			// redirect to the settings page, password successfully updated
 			res.redirect('/settings');
@@ -204,14 +216,14 @@ var updateAffiliation = function(req, res) {
 	db.getAffiliation(req.session.username, function(err1, data1) {
 		if (err1) {
 			// error with querying database
-			res.redirect('/settings/?message=' + 'database-error');
+			res.redirect('/settings/?message=' + 'Database_error');
 		} else {
 			if (data1.localeCompare(oldAffiliation) == 0) {
 				// update the user's affiliation in the database
 				db.changeAffiliation(req.session.username, newAffiliation, function(err2, data2) {
 					if (err2) {
 						// error with querying database
-						res.redirect('/settings/?message=' + 'database-error');
+						res.redirect('/settings/?message=' + 'Database_error');
 					} else {
 						// successfully changed affiliation
 						// TODO: force a status update
@@ -220,8 +232,55 @@ var updateAffiliation = function(req, res) {
 				});
 			} else {
 				// user's input does not match affiliation of user in database, fail to change affiliation
-				res.redirect('/settings/?message=' + 'affiliation_does_not_match');
+				res.redirect('/settings/?message=' + 'Affiliation_does_not_match');
 			}
+		}
+	});
+}
+
+var addNewInterest = function(req, res) {
+	// get the user's selected new interest and the timestamp of submission
+	var newInterest = req.body.myNewInterest;
+	var timestamp = Date.now();
+
+	// attempt to add the new interest to the user's interests
+	db.addInterest(req.session.username, newInterest, timestamp, function(err, data) {
+		if (err) {
+			// check for the type of error
+			if (err == 6) {
+				// user attempted to add an interest that they are already interested in
+				res.redirect('/settings/?message=' + 'Already_interested_in_this._Please_add_a_new_interest.');
+			} else {
+				// error with querying database
+				res.redirect('/settings/?message=' + 'Database_error');
+			}
+		} else {
+			// successfully added an interest
+			// TODO: force a status update
+			res.redirect('/settings');
+		}
+	});
+}
+
+var removeOldInterest = function(req, res) {
+	// get the user's selected old interest
+	var oldInterest = req.body.myOldInterest;
+
+	// attempt to remove the old interest from the user's interests
+	db.removeInterest(req.session.username, oldInterest, function(err, data) {
+		if (err) {
+			// check for the type of error
+			if (err == 9) {
+				// user attempted to remove an interest when they have two interests (two interests is the minimum number allowed)
+				res.redirect('/settings/?message=' + 'Must_have_at_least_two_interests.');
+			} else {
+				// error with querying database
+				res.redirect('/settings/?message=' + 'Database_error');
+			}
+		} else {
+			// successfully added an interest
+			// TODO: force a status update
+			res.redirect('/settings');
 		}
 	});
 }
@@ -235,25 +294,27 @@ var getWall = function(req, res) {
 		// get the username of the wall to visit
 		var wallToVisit = req.body.wallToVisit;
 
-		db.getFriends(req.session.username, function(err, data) {
-			if (err) {
-				// TODO: error?
-				res.render(error.ejs);
-			} else {
-				// render the wall depending on whether or not the user is friends with the user looking at the wall
-				if (data.includes(wallToVisit)) {
-					console.log(wallToVisit);
-					res.render('wall.ejs', {user: wallToVisit, isFriend: true});
+		console.log(wallToVisit);
+
+		// render the user's own page if they click on their own page
+		if (wallToVisit === req.session.username) {
+			res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true});
+		} else {
+			// query database for user's friends
+			db.getFriends(req.session.username, function(err, data) {
+				if (err) {
+					// handle database error
+					res.render(error.ejs);
 				} else {
-					res.render('wall.ejs', {user: wallToVisit, isFriend: false});
+					// render the wall depending on whether or not the user is friends with the user looking at the wall
+					if (data.includes(wallToVisit)) {
+						res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false});
+					} else {
+						res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false});
+					}
 				}
-			}
-		});
-
-		//res.render('wall.ejs', {user: wallToVisit, friend: true});
-
-		// redirect user to their wall, where they can post status updates
-		//res.redirect('/wall?user=' + wallToVisit);
+			});
+		}
 	}
 }
 
@@ -265,13 +326,16 @@ var postToWall = function(req, res) {
 	*/
 
 	// get the parameters to make the new post
-	var user = req.session.username;
+	var poster = req.session.username;
 	var content = req.body.content;
 	var timestamp = Date.now();
-	var hashtag = req.body.hashtag;
-	var id = user.concat(timestamp);
+	var hashtags = req.body.hashtags;
+	var id = poster.concat(timestamp);
 
-	db.makePost(id, user, content, timestamp, hashtag, function(err, data) {
+	// the username of the current wall that the poster is looking at
+	var username = req.body.currentWall;
+
+	db.makePost(id, username, content, timestamp, poster, hashtags, function(err, data) {
 		if (err) {
 			// error with querying database
 			res.render('error.ejs');
@@ -420,10 +484,13 @@ var routes = {
 	create_account: createAccount,
 
 	get_home: getHome,
+
 	get_settings: getSettings,
 	update_email: updateEmail,
 	update_password: updatePassword,
 	update_affiliation: updateAffiliation,
+	add_interest: addNewInterest,
+	remove_interest: removeOldInterest,
 
 	// TODO: Wall is not so simple
 
