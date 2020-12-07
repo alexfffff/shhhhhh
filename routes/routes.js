@@ -147,7 +147,7 @@ var getSettings = function(req, res) {
 			}
 		});
 	}
-}
+};
 
 //var updateSettings = function(req, res) {
 	/* 
@@ -182,7 +182,7 @@ var updateEmail = function(req, res) {
 			res.redirect('/settings');
 		}
 	});
-}
+};
 
 var updatePassword = function(req, res) {
 	// get the user's inputted old password and new password
@@ -205,7 +205,7 @@ var updatePassword = function(req, res) {
 			res.redirect('/settings');
 		}
 	});
-}
+};
 
 var updateAffiliation = function(req, res) {
 	// get the user's inputted old affiliation and new affiliation
@@ -236,7 +236,7 @@ var updateAffiliation = function(req, res) {
 			}
 		}
 	});
-}
+};
 
 var addNewInterest = function(req, res) {
 	// get the user's selected new interest and the timestamp of submission
@@ -260,7 +260,7 @@ var addNewInterest = function(req, res) {
 			res.redirect('/settings');
 		}
 	});
-}
+};
 
 var removeOldInterest = function(req, res) {
 	// get the user's selected old interest
@@ -283,7 +283,7 @@ var removeOldInterest = function(req, res) {
 			res.redirect('/settings');
 		}
 	});
-}
+};
 
 var getWall = function(req, res) {
 	// check if user is logged in
@@ -316,7 +316,7 @@ var getWall = function(req, res) {
 			});
 		}
 	}
-}
+};
 
 var postToWall = function(req, res) {
 	/*
@@ -346,7 +346,7 @@ var postToWall = function(req, res) {
 			res.send("success");
 		}
 	});
-}
+};
 
 var addNewFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
@@ -364,7 +364,7 @@ var addNewFriend = function(req, res) {
 			res.send("success");
 		}
 	});
-}
+};
 
 var deleteFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
@@ -381,7 +381,7 @@ var deleteFriend = function(req, res) {
 			res.send("success");
 		}
 	});
-}
+};
 
 var getHomePagePosts = function(req, res) {
 	// send the data from the database to display up-to-date version of the home page to the user
@@ -392,7 +392,7 @@ var getHomePagePosts = function(req, res) {
 			res.send(data);
 		}
 	});
-}
+};
 
 var commentOnPost = function(req, res) {
 	// get the user, comment content, post ID, and timestamp
@@ -404,13 +404,14 @@ var commentOnPost = function(req, res) {
 
 	db.addComment(user, content, id, timestamp, function(err, data) {
 		if (err) {
+			// error with querying database
 			res.render('error.ejs');
 		} else {
 			// TODO: ideally have the comment appear immediately, with no redirect
 			res.send(data);
 		}
 	});
-}
+};
 
 // TODO
 var restaurantsList = function(req, res) {
@@ -460,6 +461,31 @@ var deleteRestaurant = function(req, res) {
 	});
 };
 
+// TODO - news
+var getNews = function(req, res) {
+	// get the user's interests
+	db.getInterests(req.session.username, function(err1, data1) {
+		if (err1) {
+			// handle error with querying database
+			res.render('error.ejs');
+		} else {
+			var myInterests = data1;
+
+			// TODO: Call some db method that returns the articles ??? data1 is array of interests
+			// render the news recommendations page for this user based on their interests
+			res.render('news.ejs', {interests: myInterests});
+		}
+	});
+};
+
+// TODO - news
+var searchNews = function(req, res) {
+	// TODO - search news
+	var keyword = req.body.keyword;
+
+	// call db method
+}
+
 var logout = function(req, res) {
 	// invoke db method to set the status of user to logged off
 	db.logout(req.session.username, function(err, data) {
@@ -502,9 +528,14 @@ var routes = {
 
 	home_page_posts: getHomePagePosts,
 
+	// TODO: Comment and other stuff below
+
 	comment_on_post: commentOnPost,
 
-	// TODO: Below :(
+	// TODO: News
+
+	get_news: getNews,
+	search_news: searchNews,
 
 	log_out: logout,
 
