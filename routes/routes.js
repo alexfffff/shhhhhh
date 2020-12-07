@@ -65,7 +65,6 @@ var createAccount = function(req, res) {
 		var interests = [];
 		interests.push(req.body.myFirstInterest);
 		interests.push(req.body.mySecondInterest);
-		
 		if (req.body.myThirdInterest) {
 			interests.push(req.body.myThirdInterest);
 		}
@@ -126,7 +125,7 @@ var getSettings = function(req, res) {
 		db.getAffiliation(req.session.username, function(err1, data1) {
 			if (err1) {
 				// error with querying database
-				res.render('settings.ejs', {message: err1, currAffiliation: null, currInterests: null, success: null});
+				res.render('settings.ejs', {message: err1, currAffiliation: null, currInterests: null, success: null, username: req.session.username});
 			} else {
 				// store the current affiliation
 				var affiliation = data1;
@@ -135,13 +134,13 @@ var getSettings = function(req, res) {
 				db.getInterests(req.session.username, function(err2, data2) {
 					if (err2) {
 						// error with querying database
-						res.render('settings.ejs', {message: err2, currAffiliation: null, currInterests: null, success: null});
+						res.render('settings.ejs', {message: err2, currAffiliation: null, currInterests: null, success: null, username: req.session.username});
 					} else {
 						// store the current interests
 						var interests = data2;
 
 						// render the settings page, where a user can see and change their settings (only affiliation and interests displayed)
-						res.render('settings.ejs', {message: null, currAffiliation: affiliation, currInterests: interests, success: null});
+						res.render('settings.ejs', {message: null, currAffiliation: affiliation, currInterests: interests, success: null, username: req.session.username});
 					}
 				});
 			}
@@ -499,8 +498,20 @@ var searchNews = function(req, res) {
 
 	// call db method
 	// temporarily does nothing
-	res.redirect('/news');
+	res.render('/newsresults.ejs', {username: req.session.username, articles: null}); // not sure about fields for ejs, need "articles" though
 }
+
+var newsFeedUpdate = function(req, res) {
+	// send the data from the database to display up-to-date version of the news page to the user
+	// TODO: CHANGE THIS DB METHOD TO WHATEVER RETURNS THE ARTICLES EVERY HOUR
+	db.getHomepagePosts(req.session.username, function(err, data) {
+		if (err) {
+			res.send(err);
+		} else {
+			res.send(data);
+		}
+	});
+};
 
 var logout = function(req, res) {
 	// invoke db method to set the status of user to logged off
@@ -552,6 +563,8 @@ var routes = {
 
 	get_news: getNews,
 	search_news: searchNews,
+
+	news_feed_update: newsFeedUpdate,
 
 	log_out: logout,
 
