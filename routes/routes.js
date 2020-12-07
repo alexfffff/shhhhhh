@@ -297,7 +297,7 @@ var getWall = function(req, res) {
 
 		// render the user's own page if they click on their own page
 		if (wallToVisit === req.session.username) {
-			res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true});
+			res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true, username: req.session.username});
 		} else {
 			// query database for user's friends
 			db.getFriends(req.session.username, function(err, data) {
@@ -307,9 +307,9 @@ var getWall = function(req, res) {
 				} else {
 					// render the wall depending on whether or not the user is friends with the user looking at the wall
 					if (data.includes(wallToVisit)) {
-						res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false});
+						res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false, username: req.session.username});
 					} else {
-						res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false});
+						res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false, username: req.session.username});
 					}
 				}
 			});
