@@ -67,7 +67,7 @@ app.post('/wall', routes.comment_on_post);
 
 // show the user their own personalized news recommendations page and allow them to search for news articles
 app.get('/news', routes.get_news);
-app.post('/newssearch', routes.search_news);
+app.post('/searchnews', routes.search_news);
 
 // --- IGNORE THESE THREE ROUTES FOR NOW ---
 app.post('/addrestaurant', routes.add_restaurant);

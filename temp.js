@@ -1,5 +1,13 @@
 /* TEMPORARY FILE WITH CODE TO BE INTEGRATED INTO home.ejs WHEN READY */
 
+// ---------- UPDATE AS OF 12/7 ----------
+// see the following line, copy and paste it whenever there is a "message" field to display in an ejs file
+
+// replaces every underscore in the server-side message with a space to effectively display it on the page
+<%=message%> = <%=message%>.replace(/_/g, ' ');
+
+// ---------- END OF UPDATE 12/7 ----------
+
 // Include this code somewhere within script tags
 //<script> [UNCOMMENT THIS LINE]
 
@@ -13,7 +21,7 @@ function initHomePage() {
 
         // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
 
-        // add each post into the list of posts stored on the client side
+        // add each post from the server into the list of posts stored on the client side
         postsOnClient.push("<%=post%>");
     <% }) %>
 }
