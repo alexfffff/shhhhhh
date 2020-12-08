@@ -26,7 +26,7 @@
         <a class="button" href="/home" role="button">
             Home
         </a>
-        <a class="button" href="/wall?wallToVisit=<%=username%>&isFriends=false&isSelf=true" role="button">
+        <a class="button" href="/wall?user=<%=username%>&isFriends=false&isSelf=true" role="button">
             My Wall
         </a>
         <a class="button" href="/settings" role="button">
@@ -51,13 +51,102 @@
 		</div>
     </form>
 </nav>
+
     <!--News / Affi-->
     <div class="container-fluid gedf-wrapper">
         <div class="row">
             <div class="col-md-6 gedf-main">
                 <div class="card gedf-card">
                     <div class="card-header" style="font-size:20px">
-                        Current Settings
+                        Current Settings for <%=username%>
+                    </div>
+                    <div class="card-body">
+                        <% if (currAffiliation != null) { %>
+                            <label><font color="black">Current Affiliation: <%=currAffiliation%></font></label><br>
+                        <% } %>
+                        <label><font color="black">Current Interests:</font></label>
+                        <%for (var i = 0; i < currInterests.length; i++) { %>
+                            <li><%=currInterests[i]%></li>
+                        <% } %>
+                    </div>
+                </div>
+                <div class="card gedf-card">
+                    <div class="card-header" style="font-size:20px">
+                        Change Settings
+                    </div>
+                    <div class="card-body">
+                        <form action="/settings" method="post">
+                            <label><font color="black">Enter Old Email: </font></label><input type="text" name="myOldEmail" required size="20" class="form-control">
+                            <label><font color="black">Enter New Email: </font></label><input type="text" name="myNewEmail" required size="20" class="form-control">
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <form action="/settings" method="post">
+                            <label><font color="black">Enter Old Password: </font></label><input type="text" name="myOldPassword" required size="20" class="form-control">
+                            <label><font color="black">Enter New Password: </font></label><input type="text" name="myNewPassword" required size="20" class="form-control">
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <form aciton="/settings" method="post">
+                            <label><font color="black">Enter Old Affiliation: </font></label><input type="text" name="myOldAffiliation" required size="20" class="form-control">
+                            <label><font color="black">Enter New Affiliation: </font></label><input type="text" name="myNewAffiliation" required size="20" class="form-control">
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <form action="/settings" method="post">
+                            <label><font color="black">Add New Interest: </font></label>
+                            <select name="myNewInterest" required>
+                                <option value=""></option> 
+                                <option value="ARTS">Arts</option>
+                                <option value="ARTS & CULTURE">Arts & Culture</option>
+                                <option value="BLACK VOICES">Black Voices</option>
+                                <option value="BUSINESS">Business</option>
+                                <option value="CRIME">Crime</option>
+                                <option value="COLLEGE">College</option>
+                                <option value="COMEDY">Comedy</option>
+                                <option value="CULTURE & ARTS">Culture & Arts</option>
+                                <option value="DIVORCE">Divorce</option>
+                                <option value="EDUCATION">Education</option>
+                                <option value="ENTERTAINMENT">Entertainment</option>
+                                <option value="ENVIRONMENT">Environment</option>
+                                <option value="FIFTY">Fifty</option>
+                                <option value="FOOD & DRINK">Food & Drink</option>
+                                <option value="GOOD NEWS">Good News</option>
+                                <option value="GREEN">Green</option>
+                                <option value="HEALTY LIVING">Healthy Living</option>
+                                <option value="HOME & LIVING">Home & Living</option>
+                                <option value="IMPACT">Impact</option>
+                                <option value="LATINO VOICES">Latino Voices</option>
+                                <option value="MEDIA">Media</option>
+                                <option value="MONEY">Money</option>
+                                <option value="PARENTING">Parenting</option>
+                                <option value="PARENTS">Parents</option>
+                                <option value="POLITICS">Politics</option>
+                                <option value="QUEER VOICES">Queer Voices</option>
+                                <option value="RELIGION">Religion</option>
+                                <option value="SCIENCE">Science</option>
+                                <option value="SPORTS">Sports</option>
+                                <option value="STYLE">Style</option>
+                                <option value="STYLE & BEAUTY">Style & Beauty</option>
+                                <option value="TASTE">Taste</option>
+                                <option value="TECH">Tech</option>
+                                <option value="TRAVEL">Travel</option>
+                                <option value="WEDDINGS">Weddings</option> 
+                                <option value="WEIRD NEWS">Weird News</option>
+                                <option value="WELLNESS">Wellness</option>
+                                <option value="WOMEN">Women</option>
+                                <option value="WORLD NEWS">World News</option>
+                                <option value="WORLDPOST">Worldpost</option> 
+                                <option value="THE WORLDPOST">The Worldpost</option> 
+                            </select>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <form action="/settings" method="post">
+                            <label><font color="black">Remove Old Interest: </font></label>
+                            <select name="myOldInterest" required>
+                                <%for (var i = 0; i < currInterests.length; i++) { %>
+                                    <option value="<%=currInterests[i]%>"><%=currInterests[i]%></option>
+                                <% } %>
+                            </select>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
                     </div>
                 </div>
             </div>

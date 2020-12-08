@@ -36,6 +36,11 @@
 
             // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
             // add each post into the list of posts stored on the client side
+            console.log(<%=post%>);
+            console.log("" + JSON.stringify(<%=post%>));
+            console.log("<%=post.username%>");
+            
+            console.log("<%=post.content%>");
             const content = 
                     <div class="card gedf-card">
 						<div class="card-header">
@@ -45,7 +50,7 @@
 										<img class="rounded-circle" width="45" src="https://picsum.photos/50/50" alt="">
 									</div>
 									<div class="ml-2">
-										<div class="h5 m-0">@<%=post.username.S%></div>
+										<div class="h5 m-0">@<%=post.username%></div>
 									</div>
 								</div>
 								<div>
@@ -66,11 +71,11 @@
 						<div class="card-body">
 							<div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i>TIME ELAPSED</div>
 							<a class="card-link" href="#">
-								<h5 class="card-title"><%=post.postID.S%>.</h5>
+								<h5 class="card-title"><%=post.postID%>.</h5>
 							</a>
 	
 							<p class="card-text">
-								<%=post.content.S%>
+								<%=post.content%>
 							</p>
 						</div>
 						<div class="card-footer">
@@ -169,7 +174,7 @@
 			<a class="button" href="/home" role="button">
 				Home
 			</a>
-			<a class="button" href="/wall?wallToVisit=<%=username%>&isFriends=false&isSelf=true" role="button">
+			<a class="button" href="/wall?user=<%=username%>&isFriends=false&isSelf=true" role="button">
 				My Wall
 			</a>
 			<a class="button" href="/settings" role="button">
