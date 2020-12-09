@@ -69,6 +69,9 @@ app.post('/wall', routes.comment_on_post);
 app.get('/news', routes.get_news);
 app.post('/searchnews', routes.search_news);
 
+// support dynamic content on the news page by updating it hourly (gets the list of articles to show on the news page)
+app.get('/newsfeedupdate', routes.news_feed_update);
+
 // --- IGNORE THESE THREE ROUTES FOR NOW ---
 app.post('/addrestaurant', routes.add_restaurant);
 app.post('/deleterestaurant', routes.delete_restaurant);
