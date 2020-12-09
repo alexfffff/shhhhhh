@@ -75,6 +75,8 @@ var createAccount = function(req, res) {
 			interests.push(req.body.myFifthInterest);
 		}
 
+		// TODO - check that all interests are unique
+
 		// attempt to create a new account with the requested username, password, full name, email, affiliation, birthday, and interests
 		db.createAccount(newUser, newPass, fullName, email, affiliation, birthday, interests, function(err, data) {
 			if (err) {
@@ -138,6 +140,9 @@ var getSettings = function(req, res) {
 					} else {
 						// store the current interests
 						var interests = data2;
+
+						// TODO - fix this since they show up as [object Object] 
+						// var interests = JSON.stringify(data2)
 
 						// render the settings page, where a user can see and change their settings (only affiliation and interests displayed)
 						res.render('settings.ejs', {message: null, currAffiliation: affiliation, currInterests: interests, success: null, username: req.session.username});
