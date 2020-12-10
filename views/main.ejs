@@ -9,13 +9,25 @@
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 	</head>
+	<script>
+		function showPassword() {
+			var pass = document.getElementById("myPassword");
+			if (pass.type === "password") {
+				pass.type = "text";
+			} else {
+				pass.type = "password";
+			}
+		}
+	</script>
 <body>
     <!-- Login page with username and password forms -->
 	<div class="login-box">
 		<h1><center><b><p style="color:white">Login to PennBook</p></b></center></h1>
 		<form action="/checklogin" method="post">
 			<input type="text" autocomplete="off" name="myUsername" required size="20" class="form-control" placeholder="Username">
-			<input type="password" name="myPassword" required size="20" class="form-control" placeholder="Password">
+			<input type="password" id="myPassword" name="myPassword" required size="20" class="form-control" placeholder="Password">
+			<input type="checkbox" onclick="showPassword()">
+			<label><font color="white"> Show Password </font></label>
 			<input type="submit" value="Login" class="btn btn-lg btn-primary btn-block">
 		</form>
 	</div>
