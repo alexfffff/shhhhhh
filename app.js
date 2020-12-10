@@ -42,14 +42,12 @@ app.get('/home', routes.get_home);
 
 // pages for changing a user's account settings (get route to view the page, post routes to modify account and redirect to settings)
 app.get('/settings', routes.get_settings);
-app.post('/settings', routes.update_email);
-app.post('/settings', routes.update_password);
-app.post('/settings', routes.update_affiliation);
+app.post('/updateemail', routes.update_email);
+app.post('/updatepassword', routes.update_password);
+app.post('/updateaffiliation', routes.update_affiliation);
 // TODO: Similar route for updating news categories (these should work now)
-app.post('/settings', routes.add_interest);
-app.post('/settings', routes.remove_interest);
-
-// TODO: Make different routes for when a user visits their own wall vs. visiting other user's walls? Temporary answer: NO
+app.post('/addinterest', routes.add_interest);
+app.post('/removeinterest', routes.remove_interest);
 
 // wall page (get route to view the page, post route to post a status update)
 app.get('/wall', routes.get_wall);
@@ -69,6 +67,9 @@ app.post('/wall', routes.comment_on_post);
 app.get('/news', routes.get_news);
 app.post('/searchnews', routes.search_news);
 
+// support dynamic content on the news page by updating it hourly (gets the list of articles to show on the news page)
+app.get('/newsfeedupdate', routes.news_feed_update);
+
 // --- IGNORE THESE THREE ROUTES FOR NOW ---
 app.post('/addrestaurant', routes.add_restaurant);
 app.post('/deleterestaurant', routes.delete_restaurant);
@@ -76,8 +77,25 @@ app.get('/restaurantsList', routes.restaurantsList);
 
 app.get('/logout', routes.log_out);
 
-// define GET routes for users that try to break the website by accessing inaccessible URLs
-app.get('/createaccount', routes.get_login);
+/* 
+ * Define GET routes for users that try to break the website by accessing inaccessible URLs
+ * Uses home route for users not logged in (redirects to login page)
+ * Uses login route for users logged in (redirects to home page)
+ */
+app.get('/createaccount', routes.get_home);
+app.get('/checklogin', routes.get_home);
+
+app.get('/updateemail', routes.get_login);
+app.get('/updatepassword', routes.get_login);
+app.get('/updateaffiliation', routes.get_login);
+app.get('/addinterest', routes.get_login);
+app.get('/removeinterest', routes.get_login);
+
+app.get('/searchnews', routes.get_login);
+app.get('/addfriend', routes.get_login);
+app.get('/deletefriend', routes.get_login);
+
+// IGNORE BELOW
 app.get('/addrestaurant', routes.get_login);
 app.get('/deleterestaurant', routes.get_login);
 

@@ -35,9 +35,9 @@
         <a class="button" href="/news" role="button">
             News
         </a>
-        <a class="button">
-            Button (???)
-        </a>
+        <a class="button" href="/logout" role="button">
+			Log Out
+		</a>
     </div>
 	<!--Search Bar-->
 	<form class="form-inline">
@@ -52,7 +52,7 @@
     </form>
 </nav>
 
-    <!--News / Affi-->
+    <!--News / Affiliation-->
     <div class="container-fluid gedf-wrapper">
         <div class="row">
             <div class="col-md-6 gedf-main">
@@ -66,7 +66,7 @@
                         <% } %>
                         <label><font color="black">Current Interests:</font></label>
                         <%for (var i = 0; i < currInterests.length; i++) { %>
-                            <li><%=currInterests[i]%></li>
+                            <li><%=currInterests[i].interest%></li>
                         <% } %>
                     </div>
                 </div>
@@ -75,22 +75,22 @@
                         Change Settings
                     </div>
                     <div class="card-body">
-                        <form action="/settings" method="post">
-                            <label><font color="black">Enter Old Email: </font></label><input type="text" name="myOldEmail" required size="20" class="form-control">
-                            <label><font color="black">Enter New Email: </font></label><input type="text" name="myNewEmail" required size="20" class="form-control">
+                        <form action="/updateemail" method="post">
+                            <label><font color="black">Enter Old Email: </font></label><input type="text" autocomplete="off" name="myOldEmail" required size="20" class="form-control">
+                            <label><font color="black">Enter New Email: </font></label><input type="text" autocomplete="off" name="myNewEmail" required size="20" class="form-control">
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
-                        <form action="/settings" method="post">
-                            <label><font color="black">Enter Old Password: </font></label><input type="text" name="myOldPassword" required size="20" class="form-control">
-                            <label><font color="black">Enter New Password: </font></label><input type="text" name="myNewPassword" required size="20" class="form-control">
+                        <form action="/updatepassword" method="post">
+                            <label><font color="black">Enter Old Password: </font></label><input type="password" autocomplete="current-password" name="myOldPassword" required size="20" class="form-control">
+                            <label><font color="black">Enter New Password: </font></label><input type="password" autocomplete="new-password" name="myNewPassword" required size="20" class="form-control">
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
-                        <form aciton="/settings" method="post">
-                            <label><font color="black">Enter Old Affiliation: </font></label><input type="text" name="myOldAffiliation" required size="20" class="form-control">
-                            <label><font color="black">Enter New Affiliation: </font></label><input type="text" name="myNewAffiliation" required size="20" class="form-control">
+                        <form action="/updateaffiliation" method="post">
+                            <label><font color="black">Enter Old Affiliation: </font></label><input type="text" autocomplete="off" name="myOldAffiliation" required size="20" class="form-control">
+                            <label><font color="black">Enter New Affiliation: </font></label><input type="text" autocomplete="off" name="myNewAffiliation" required size="20" class="form-control">
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
-                        <form action="/settings" method="post">
+                        <form action="/addinterest" method="post">
                             <label><font color="black">Add New Interest: </font></label>
                             <select name="myNewInterest" required>
                                 <option value=""></option> 
@@ -138,11 +138,11 @@
                             </select>
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
-                        <form action="/settings" method="post">
+                        <form action="/removeinterest" method="post">
                             <label><font color="black">Remove Old Interest: </font></label>
                             <select name="myOldInterest" required>
                                 <%for (var i = 0; i < currInterests.length; i++) { %>
-                                    <option value="<%=currInterests[i]%>"><%=currInterests[i]%></option>
+                                    <option value="<%=currInterests[i].interest%>"><%=currInterests[i].interest%></option>
                                 <% } %>
                             </select>
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
@@ -155,8 +155,8 @@
 
     <!--Error message-->
     <%if (message != null) { %>
-        <%=message%> = <%=message%>.replace(/_/g, ' ');
-        <%if(success) {%>
+        <%=message = message.replace(/_/g, ' ');%>
+        <%if (success) {%>
             <center><b><p style="color:green"><%= message %></p></b></center>
         <% } else { %>
             <center><b><p style="color:red"><%= message %></p></b></center>

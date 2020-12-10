@@ -75,6 +75,8 @@ var createAccount = function(req, res) {
 			interests.push(req.body.myFifthInterest);
 		}
 
+		// TODO - check that all interests are unique
+
 		// attempt to create a new account with the requested username, password, full name, email, affiliation, birthday, and interests
 		db.createAccount(newUser, newPass, fullName, email, affiliation, birthday, interests, function(err, data) {
 			if (err) {
@@ -166,7 +168,7 @@ var updateEmail = function(req, res) {
 	var newEmail = req.body.myNewEmail;
 	
 	// query database for the user's actual old email
-	db.changeEmail(oldEmail, newEmail, function(err, data) {
+	db.changeEmail(req.session.username, oldEmail, newEmail, function(err, data) {
 		if (err) {
 			// check for the type of error
 			if (err == 8) {
@@ -189,7 +191,7 @@ var updatePassword = function(req, res) {
 	var newPass = req.body.myNewPassword;
 	
 	// query database for the user's actual old password
-	db.changePassword(oldPass, newPass, function(err, data) {
+	db.changePassword(req.session.username, oldPass, newPass, function(err, data) {
 		if (err) {
 			// check for the type of error
 			if (err == 7) {
@@ -474,19 +476,28 @@ var deleteRestaurant = function(req, res) {
 
 // TODO - news
 var getNews = function(req, res) {
-	// get the user's interests
-	db.getInterests(req.session.username, function(err1, data1) {
-		if (err1) {
-			// handle error with querying database
-			res.render('error.ejs');
-		} else {
-			var myInterests = data1;
-
-			// TODO: Call some db method that returns the articles ??? data1 is array of interests
-			// render the news recommendations page for this user based on their interests
-			res.render('news.ejs', {username: req.session.username, interests: myInterests});
-		}
-	});
+	// check if user is logged in
+	if (req.session.username === undefined) {
+		// redirect to the login page if not logged in
+		res.redirect('/');
+	} else {
+		// get the user's interests
+		db.getInterests(req.session.username, function(err1, data1) {
+			if (err1) {
+				// handle error with querying database
+				res.render('error.ejs');
+			} else {
+				var myInterests = data1;
+				
+				// TODO: change later
+				var myArticles = [];
+	
+				// TODO: Call some db method that returns the articles ??? data1 is array of interests
+				// render the news recommendations page for this user based on their interests
+				res.render('news.ejs', {username: req.session.username, interests: myInterests, articles: myArticles});
+			}
+		});
+	}
 };
 
 // TODO - news
@@ -514,16 +525,22 @@ var newsFeedUpdate = function(req, res) {
 };
 
 var logout = function(req, res) {
-	// invoke db method to set the status of user to logged off
-	db.logout(req.session.username, function(err, data) {
-		if (err) {
-			res.render('error.ejs');
-		} else {
-			// reset the session's username to undefined to indicate that the user has logged out, redirect to the login page
-			req.session.username = undefined;
-			res.redirect('/');
-		}
-	});
+	// check if user is logged in
+	if (req.session.username === undefined) {
+		// redirect to the login page if not logged in
+		res.redirect('/');
+	} else {
+		// invoke db method to set the status of user to logged off
+		db.logout(req.session.username, function(err, data) {
+			if (err) {
+				res.render('error.ejs');
+			} else {
+				// reset the session's username to undefined to indicate that the user has logged out, redirect to the login page
+				req.session.username = undefined;
+				res.redirect('/');
+			}
+		});
+	}
 };
 
 // Don't forget to add any new functions to this class, so app.js can call them. 

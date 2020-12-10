@@ -29,7 +29,6 @@
 <div id="clock"><center><font color="black">Please wait 5 seconds for the time to appear.</font></center></div><br></br>
 
 <body>
-<div id="allposts"><p>here</p></div>
 <!--Top Header bar: Title of page, Toolbar, Search bar-->      
 <nav class="navbar">
 	<!--Title-->
@@ -145,7 +144,7 @@
 							</a>
 	
 							<p class="card-text">
-								
+								<div id="allposts"></div>
 							</p>
                     </div>
                 </div>
@@ -346,7 +345,7 @@
         console.log("initHomePage called");
         var container = document.getElementById('allposts');
         <%for (var i = 0; i < posts.length; i++) { %>
-            var content = "<p>POST</p>";
+            var content = "<p><%=posts.postID%></p>";
             container.innerHTML += content;
         <% } %>
         console.log(container);
