@@ -4,12 +4,14 @@
     - username
     Pages linked:
     - wall.ejs
+    - logout
+
+    FOR FUTURE REFERENCE IN CHANGING COLOR SCHEME
+    style="background-color: #303030; border:1px solid #303030"
 -->
 
 <head>
     <title>Pennbook</title>
-	<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-	<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<!------ Include the above in your HEAD tag ---------->
 	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
@@ -32,31 +34,31 @@
 <!--Top Header bar: Title of page, Toolbar, Search bar-->      
 <nav class="navbar">
 	<!--Title-->
-	<a href="/home" class="navbar-brand" style="font-size:36px">PennBook</a>
+	<a href="/home" class="navbar-brand" style="font-size:36px; color:#93FFDD">PennBook</a>
 	<!--Toolbar-->
-	<div class="toolbar-container">
-			<a class="button" href="/home" role="button">
-				Home
-			</a>
-			<a class="button" href="/wall?user=<%=username%>&isFriends=false&isSelf=true" role="button">
-				My Wall
-			</a>
-			<a class="button" href="/settings" role="button">
-				Settings
-			</a>
-			<a class="button" href="/news" role="button">
-				News
-			</a>
-			<a class="button">
-				Button (???)
-			</a>
-		</div>
+    <div class="toolbar-container">
+        <a class="button btn-primary" href="/home" role="button">
+            Home
+        </a>
+        <a class="button btn-primary" href="/wall?user=<%=username%>&isFriends=false&isSelf=true" role="button">
+            My Wall
+        </a>
+        <a class="button btn-primary" href="/settings" role="button">
+            Settings
+        </a>
+        <a class="button btn-primary" href="/news" role="button">
+            News
+        </a>
+        <a class="button btn-primary" href="/logout" role="button">
+            Log Out
+        </a>
+    </div>
 	<!--Search Bar-->
 	<form class="form-inline">
 		<div class="input-group">
 			<input type="text" class="form-control" aria-label="Recipient's username" aria-describedby="button-addon2">
 			<div class="input-group-append">
-				<button class="btn btn-outline-primary" type="button" id="button-addon2">
+				<button class="btn btn-outline-primary" type="button" id="button-addon2" style="color:#535353">
 					<i class="fa fa-search"></i>
 				</button>
 			</div>
@@ -70,13 +72,12 @@
 
             <!--Left col-->
             <div class="col-md-3">
-                <div class="card">
+                <div class="card" >
                     <div class="card-body">
                         <!--Links to the wall-->
-                        <a href="/wall"class="h5">@<%=username%></a>
-                        <div class="h7 text-muted">Fullname : FULL NAME</div>
-                        <div class="h7"> BIO GOES HERE
-                        </div>
+                        <a href="/wall?user=<%=username%>&isFriends=false&isSelf=true" class="h5">@<%=username%></a>
+                        <div class="h7 text-muted" >Fullname : FULL NAME</div>
+                        <div class="h7"> BIO GOES HERE</div>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
@@ -90,9 +91,6 @@
                     </ul>
                 </div>
                 <br>
-                <div class="login-box">
-                   <center><a class="btn btn-primary btn-lg btn-block" href="/logout" role="button">Log Out</a></center>
-                </div>
             </div>
 
             <!--Center posts col-->
@@ -105,7 +103,7 @@
                     <div class="card-body">
                         <div class="tab-content" id="myTabContent">
                            <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
-                               <form action="/wall" method="post" href="/currentWall=<%=username%>">
+                               <form action="/wall" method="post">
                                 <div class="form-group">
                                     <label class="sr-only" for="message">post</label>
                                     <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" required></textarea>

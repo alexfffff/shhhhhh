@@ -8,9 +8,7 @@
 -->
 
 <head>
-    <title>Pennbook</title>
-	<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-	<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <title><%=user%></title>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<!------ Include the above in your HEAD tag ---------->
 	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
@@ -30,7 +28,7 @@
 	<!--Title-->
 	<a href="/home" class="navbar-brand" style="font-size:36px">PennBook</a>
 	<!--Toolbar-->
-	<div class="toolbar-container">
+    <div class="toolbar-container">
         <a class="button" href="/home" role="button">
             Home
         </a>
@@ -43,8 +41,8 @@
         <a class="button" href="/news" role="button">
             News
         </a>
-        <a class="button">
-            Button (???)
+        <a class="button" href="/logout" role="button">
+            Log Out
         </a>
     </div>
 	<!--Search Bar-->
