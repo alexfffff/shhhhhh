@@ -936,14 +936,14 @@ var db_get_user_Wall = function(username, callback) {
 * Adds post info to "posts" and "hashtags". For when user posts on someone elses wall
 *
 * @param  wallsUser  username of the user's wall that's getting posted on
+* @param  posterID  username of the current user (person trying to make post)
 * @param  postID generated postID
 * @param  content post content
 * @param  timestamp timestamp of when post was made
 * @param  hashtags hashtags (if any) of the post. Must be in form of an array
-* @param  poster  username of current user
 * @return Does not return anything
 */
-var db_make_wall_post = function(postID, wallsUser, content, timestamp, poster, hashtags, callback) {
+var db_make_wall_post = function(wallsUser, posterID, postID, content, timestamp, hashtags, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var userName;
 	var posterName;
@@ -983,7 +983,7 @@ var db_make_wall_post = function(postID, wallsUser, content, timestamp, poster, 
 					"postID": postID,
 					"content": content,
 					"timestamp": timestamp,
-					"posterID": poster,
+					"posterID": posterID,
 					"userName": successResultA[0].Items[0].fullname,
 					"posterName": successResultA[1].Items[0].fullname,
 					"friend": false
@@ -1047,7 +1047,7 @@ var db_make_wall_post = function(postID, wallsUser, content, timestamp, poster, 
 * @return Does not return anything
 */
 // FOR SOME REASON THIS WORKS BUT THE PREVIOUS DIDNT?
-var db_make_post = function(postID, username, content, timestamp, hashtags, callback) {
+var db_make_post = function(username, postID, content, timestamp, hashtags, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var userName;
 	var getNameParam = {
@@ -1286,7 +1286,7 @@ var db_delete_comment = function(username, post_id, callback) {
 * once with yourUsername as partition key, once with friendUsername as partition key.
 * Both additions will use the same timestamp.
 *
-* @param  username  username of current user
+* @param  yourUsername  username of current user
 * @param  friendUsername username of person the user friended
 * @param  timestamp timestamp of when friend was added
 * @param  postID  id of post
@@ -1381,7 +1381,7 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, ca
 * once with yourUsername as partition key, once with friendUsername as partition key.
 * Both additions will use the same timestamp.
 *
-* @param  username  username of a user
+* @param  yourUsername  username of a user
 * @return List of usernames of all of a users friends
 */
 var db_get_friends = function(yourUsername, callback) {
@@ -1411,7 +1411,7 @@ var db_get_friends = function(yourUsername, callback) {
 /**
 * Removes both instances of the friendship from the "friends" table
 *
-* @param  username  username of current user
+* @param  yourUsername  username of current user
 * @param  friendUsername  username of a user that current user is trying to unfriend
 * @return Does not return anything
 */
