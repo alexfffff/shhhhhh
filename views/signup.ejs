@@ -1,16 +1,5 @@
 <!DOCTYPE html>
 
-<!-- 
-	THIS FILE MUST INCLUDE THE FOLLOWING NAMES FOR TEXT INPUTS 
-	<input type="text" name="myNewUsername">
-	<input type="text" name="myNewPassword">
-	<input type="text" name="myNewFullName">
-	<input type="text" name="myNewEmail">
-	<input type="text" name="myNewAffiliation">
-	<input type="text" name="myNewBirthday">
-	<form action="/createaccount" method="post"> (with all of the information above)
--->
-
 <html lang="en">
 	<html lang="en">
 		<head>
@@ -27,17 +16,18 @@
   	<div class="login-box">
 		<h1><center><b><p style="color:white">Sign Up</p></b></center></h1>
 		<form action="/createaccount" method="post">
-			<label><font color="white">Create a new username: </font></label><input type="text" name="myNewUsername" required size="20" class="form-control">
-			<label><font color="white">Create a new password: </font></label><input type="text" name="myNewPassword" required size="20" class="form-control">
-			<label><font color="white">Full name: </font></label><input type="text" name="myNewFullName" required size="20" class="form-control">
-			<label><font color="white">Birthday: </font></label><input type="date" id="start" name="myNewBirthday" required size="20" value="2000-07-22" min="1900-01-01" max="2007-12-31" class="form-control">
-			<label><font color="white">Enter a new email: </font></label><input type="text" name="myNewEmail" required size="20" class="form-control">
+			<label><font color="white">Create a new username: </font></label><input type="text" autocomplete="off" name="myNewUsername" required size="20" class="form-control">
+			<label><font color="white">Create a new password: </font></label><input type="password" autocomplete="new-password" name="myNewPassword" required size="20" class="form-control">
+			<label><font color="white">Full name: </font></label><input type="text" autocomplete="off" name="myNewFullName" required size="20" class="form-control">
+			<label><font color="white">Birthday: </font></label><input type="date" id="start" name="myNewBirthday" required size="20" value="2000-01-01" min="1900-01-01" max="2007-12-31" class="form-control">
+			<label><font color="white">Enter a new email: </font></label><input type="text" autocomplete="off" name="myNewEmail" required size="20" class="form-control">
 			<label><font color="white">Enter your affiliation: </font></label><input type="text" name="myNewAffiliation" required size="20" class="form-control"><br>
 			<!--Select 5 Interests-->
-			<font color="white"><label>Select at least 2 interests</label>
+			<font color="white"><label>Select at least 2 interests.</label>
 			<br>
-			<label>Interest 1:  </label>
+			<label>Interest 1: </label>
 			<select name="myFirstInterest" required>
+				<option value="">Select an Interest</option>
 				<option value="ARTS">Arts</option>
 				<option value="ARTS & CULTURE">Arts & Culture</option>
 				<option value="BLACK VOICES">Black Voices</option>
@@ -81,7 +71,9 @@
 				<option value="THE WORLDPOST">The Worldpost</option> 
 			</select>
 			<br>
-			<label>Interest 2:  </label><select name="mySecondInterest" required>
+			<label>Interest 2: </label>
+			<select name="mySecondInterest" required>
+				<option value="">Select an Interest</option>
 				<option value="ARTS">Arts</option>
 				<option value="ARTS & CULTURE">Arts & Culture</option>
 				<option value="BLACK VOICES">Black Voices</option>
@@ -125,93 +117,9 @@
 				<option value="THE WORLDPOST">The Worldpost</option> 
 			</select>
 			<br>
-			<label>Interest 3:  </label><select name="myThirdInterest">
-				<option value="ARTS">Arts</option>
-				<option value="ARTS & CULTURE">Arts & Culture</option>
-				<option value="BLACK VOICES">Black Voices</option>
-				<option value="BUSINESS">Business</option>
-				<option value="CRIME">Crime</option>
-				<option value="COLLEGE">College</option>
-				<option value="COMEDY">Comedy</option>
-				<option value="CULTURE & ARTS">Culture & Arts</option>
-				<option value="DIVORCE">Divorce</option>
-				<option value="EDUCATION">Education</option>
-				<option value="ENTERTAINMENT">Entertainment</option>
-				<option value="ENVIRONMENT">Environment</option>
-				<option value="FIFTY">Fifty</option>
-				<option value="FOOD & DRINK">Food & Drink</option>
-				<option value="GOOD NEWS">Good News</option>
-				<option value="GREEN">Green</option>
-				<option value="HEALTY LIVING">Healthy Living</option>
-				<option value="HOME & LIVING">Home & Living</option>
-				<option value="IMPACT">Impact</option>
-				<option value="LATINO VOICES">Latino Voices</option>
-				<option value="MEDIA">Media</option>
-				<option value="MONEY">Money</option>
-				<option value="PARENTING">Parenting</option>
-				<option value="PARENTS">Parents</option>
-				<option value="POLITICS">Politics</option>
-				<option value="QUEER VOICES">Queer Voices</option>
-				<option value="RELIGION">Religion</option>
-				<option value="SCIENCE">Science</option>
-				<option value="SPORTS">Sports</option>
-				<option value="STYLE">Style</option>
-				<option value="STYLE & BEAUTY">Style & Beauty</option>
-				<option value="TASTE">Taste</option>
-				<option value="TECH">Tech</option>
-				<option value="TRAVEL">Travel</option>
-				<option value="WEDDINGS">Weddings</option> 
-				<option value="WEIRD NEWS">Weird News</option>
-				<option value="WELLNESS">Wellness</option>
-				<option value="WOMEN">Women</option>
-				<option value="WORLD NEWS">World News</option>
-				<option value="WORLDPOST">Worldpost</option> 
-				<option value="THE WORLDPOST">The Worldpost</option> 
-			</select><br>
-			<label>Interest 4:  </label><select name="myFourthInterest">
-				<option value="ARTS">Arts</option>
-				<option value="ARTS & CULTURE">Arts & Culture</option>
-				<option value="BLACK VOICES">Black Voices</option>
-				<option value="BUSINESS">Business</option>
-				<option value="CRIME">Crime</option>
-				<option value="COLLEGE">College</option>
-				<option value="COMEDY">Comedy</option>
-				<option value="CULTURE & ARTS">Culture & Arts</option>
-				<option value="DIVORCE">Divorce</option>
-				<option value="EDUCATION">Education</option>
-				<option value="ENTERTAINMENT">Entertainment</option>
-				<option value="ENVIRONMENT">Environment</option>
-				<option value="FIFTY">Fifty</option>
-				<option value="FOOD & DRINK">Food & Drink</option>
-				<option value="GOOD NEWS">Good News</option>
-				<option value="GREEN">Green</option>
-				<option value="HEALTY LIVING">Healthy Living</option>
-				<option value="HOME & LIVING">Home & Living</option>
-				<option value="IMPACT">Impact</option>
-				<option value="LATINO VOICES">Latino Voices</option>
-				<option value="MEDIA">Media</option>
-				<option value="MONEY">Money</option>
-				<option value="PARENTING">Parenting</option>
-				<option value="PARENTS">Parents</option>
-				<option value="POLITICS">Politics</option>
-				<option value="QUEER VOICES">Queer Voices</option>
-				<option value="RELIGION">Religion</option>
-				<option value="SCIENCE">Science</option>
-				<option value="SPORTS">Sports</option>
-				<option value="STYLE">Style</option>
-				<option value="STYLE & BEAUTY">Style & Beauty</option>
-				<option value="TASTE">Taste</option>
-				<option value="TECH">Tech</option>
-				<option value="TRAVEL">Travel</option>
-				<option value="WEDDINGS">Weddings</option> 
-				<option value="WEIRD NEWS">Weird News</option>
-				<option value="WELLNESS">Wellness</option>
-				<option value="WOMEN">Women</option>
-				<option value="WORLD NEWS">World News</option>
-				<option value="WORLDPOST">Worldpost</option> 
-				<option value="THE WORLDPOST">The Worldpost</option> 
-			</select><br>
-			<label>Interest 5:  </label><select name="myFifthInterest">
+			<label>Interest 3: </label>
+			<select name="myThirdInterest">
+				<option value=""></option>
 				<option value="ARTS">Arts</option>
 				<option value="ARTS & CULTURE">Arts & Culture</option>
 				<option value="BLACK VOICES">Black Voices</option>
@@ -255,6 +163,98 @@
 				<option value="THE WORLDPOST">The Worldpost</option> 
 			</select>
 			<br>
+			<label>Interest 4: </label>
+			<select name="myFourthInterest">
+				<option value=""></option>
+				<option value="ARTS">Arts</option>
+				<option value="ARTS & CULTURE">Arts & Culture</option>
+				<option value="BLACK VOICES">Black Voices</option>
+				<option value="BUSINESS">Business</option>
+				<option value="CRIME">Crime</option>
+				<option value="COLLEGE">College</option>
+				<option value="COMEDY">Comedy</option>
+				<option value="CULTURE & ARTS">Culture & Arts</option>
+				<option value="DIVORCE">Divorce</option>
+				<option value="EDUCATION">Education</option>
+				<option value="ENTERTAINMENT">Entertainment</option>
+				<option value="ENVIRONMENT">Environment</option>
+				<option value="FIFTY">Fifty</option>
+				<option value="FOOD & DRINK">Food & Drink</option>
+				<option value="GOOD NEWS">Good News</option>
+				<option value="GREEN">Green</option>
+				<option value="HEALTY LIVING">Healthy Living</option>
+				<option value="HOME & LIVING">Home & Living</option>
+				<option value="IMPACT">Impact</option>
+				<option value="LATINO VOICES">Latino Voices</option>
+				<option value="MEDIA">Media</option>
+				<option value="MONEY">Money</option>
+				<option value="PARENTING">Parenting</option>
+				<option value="PARENTS">Parents</option>
+				<option value="POLITICS">Politics</option>
+				<option value="QUEER VOICES">Queer Voices</option>
+				<option value="RELIGION">Religion</option>
+				<option value="SCIENCE">Science</option>
+				<option value="SPORTS">Sports</option>
+				<option value="STYLE">Style</option>
+				<option value="STYLE & BEAUTY">Style & Beauty</option>
+				<option value="TASTE">Taste</option>
+				<option value="TECH">Tech</option>
+				<option value="TRAVEL">Travel</option>
+				<option value="WEDDINGS">Weddings</option> 
+				<option value="WEIRD NEWS">Weird News</option>
+				<option value="WELLNESS">Wellness</option>
+				<option value="WOMEN">Women</option>
+				<option value="WORLD NEWS">World News</option>
+				<option value="WORLDPOST">Worldpost</option> 
+				<option value="THE WORLDPOST">The Worldpost</option> 
+			</select>
+			<br>
+			<label>Interest 5: </label>
+			<select name="myFifthInterest">
+				<option value=""></option>
+				<option value="ARTS">Arts</option>
+				<option value="ARTS & CULTURE">Arts & Culture</option>
+				<option value="BLACK VOICES">Black Voices</option>
+				<option value="BUSINESS">Business</option>
+				<option value="CRIME">Crime</option>
+				<option value="COLLEGE">College</option>
+				<option value="COMEDY">Comedy</option>
+				<option value="CULTURE & ARTS">Culture & Arts</option>
+				<option value="DIVORCE">Divorce</option>
+				<option value="EDUCATION">Education</option>
+				<option value="ENTERTAINMENT">Entertainment</option>
+				<option value="ENVIRONMENT">Environment</option>
+				<option value="FIFTY">Fifty</option>
+				<option value="FOOD & DRINK">Food & Drink</option>
+				<option value="GOOD NEWS">Good News</option>
+				<option value="GREEN">Green</option>
+				<option value="HEALTY LIVING">Healthy Living</option>
+				<option value="HOME & LIVING">Home & Living</option>
+				<option value="IMPACT">Impact</option>
+				<option value="LATINO VOICES">Latino Voices</option>
+				<option value="MEDIA">Media</option>
+				<option value="MONEY">Money</option>
+				<option value="PARENTING">Parenting</option>
+				<option value="PARENTS">Parents</option>
+				<option value="POLITICS">Politics</option>
+				<option value="QUEER VOICES">Queer Voices</option>
+				<option value="RELIGION">Religion</option>
+				<option value="SCIENCE">Science</option>
+				<option value="SPORTS">Sports</option>
+				<option value="STYLE">Style</option>
+				<option value="STYLE & BEAUTY">Style & Beauty</option>
+				<option value="TASTE">Taste</option>
+				<option value="TECH">Tech</option>
+				<option value="TRAVEL">Travel</option>
+				<option value="WEDDINGS">Weddings</option> 
+				<option value="WEIRD NEWS">Weird News</option>
+				<option value="WELLNESS">Wellness</option>
+				<option value="WOMEN">Women</option>
+				<option value="WORLD NEWS">World News</option>
+				<option value="WORLDPOST">Worldpost</option> 
+				<option value="THE WORLDPOST">The Worldpost</option> 
+			</select>
+			<br><br>
 			</font>
 			<input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
 		</form>

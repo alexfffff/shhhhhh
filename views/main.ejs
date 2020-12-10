@@ -14,15 +14,15 @@
 	<div class="login-box">
 		<h1><center><b><p style="color:white">Login to PennBook</p></b></center></h1>
 		<form action="/checklogin" method="post">
-			<input type="text" name="myUsername" required size="20" class="form-control" placeholder="Username">
-			<input type="text" name="myPassword" required size="20" class="form-control" placeholder="Password">
+			<input type="text" autocomplete="off" name="myUsername" required size="20" class="form-control" placeholder="Username">
+			<input type="password" name="myPassword" required size="20" class="form-control" placeholder="Password">
 			<input type="submit" value="Login" class="btn btn-lg btn-primary btn-block">
 		</form>
 	</div>
 	<br>
-	<!-- Display error message if it exists -->
+	<!-- Display error message if it exists -->	
 	<%if (message != null) { %>
-		<%=message%> = <%=message%>.replace(/_/g, ' ');
+		<%message = message.replace(/_/g, ' ');%>
 		<center><b><p style="color:red"><%= message %></p></b></center>
 	<% } %>
 	<br><br><br>
