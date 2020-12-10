@@ -16,6 +16,26 @@
         crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
         crossorigin="anonymous"></script>
+
+<script>
+	function showOldPassword() {
+		var pass = document.getElementById("myOldPassword");
+		if (pass.type === "password") {
+			pass.type = "text";
+		} else {
+			pass.type = "password";
+		}
+	}
+	function showNewPassword() {
+		var pass = document.getElementById("myNewPassword");
+		if (pass.type === "password") {
+			pass.type = "text";
+		} else {
+			pass.type = "password";
+		}
+	}
+</script>
+
 <body>
 <!--Top Header bar: Title of page, Toolbar, Search bar-->      
 <nav class="navbar">
@@ -81,8 +101,12 @@
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
                         <form action="/updatepassword" method="post">
-                            <label><font color="black">Enter Old Password: </font></label><input type="password" autocomplete="current-password" name="myOldPassword" required size="20" class="form-control">
-                            <label><font color="black">Enter New Password: </font></label><input type="password" autocomplete="new-password" name="myNewPassword" required size="20" class="form-control">
+                            <label><font color="black">Enter Old Password: </font></label><input type="password" autocomplete="current-password" id="myOldPassword" name="myOldPassword" required size="20" class="form-control">
+                            <input type="checkbox" onclick="showOldPassword()">
+							<label> Show Old Password </label><br>
+                            <label><font color="black">Enter New Password: </font></label><input type="password" autocomplete="new-password" id="myNewPassword" name="myNewPassword" required size="20" class="form-control">
+                            <input type="checkbox" onclick="showNewPassword()">
+							<label> Show New Password </label><br>
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
                         <form action="/updateaffiliation" method="post">
