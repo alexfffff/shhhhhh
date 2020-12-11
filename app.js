@@ -7,6 +7,7 @@
 var express = require('express');
 var routes = require('./routes/routes.js');
 const path = require('path');
+const stemmer = require('stemmer');
 var app = express();
 app.use(express.urlencoded());
 
@@ -45,7 +46,6 @@ app.get('/settings', routes.get_settings);
 app.post('/updateemail', routes.update_email);
 app.post('/updatepassword', routes.update_password);
 app.post('/updateaffiliation', routes.update_affiliation);
-// TODO: Similar route for updating news categories (these should work now)
 app.post('/addinterest', routes.add_interest);
 app.post('/removeinterest', routes.remove_interest);
 
@@ -90,6 +90,9 @@ app.get('/updatepassword', routes.get_login);
 app.get('/updateaffiliation', routes.get_login);
 app.get('/addinterest', routes.get_login);
 app.get('/removeinterest', routes.get_login);
+
+app.get('/postonwall', routes.get_login);
+app.get('/commentonpost', routes.get_login);
 
 app.get('/searchnews', routes.get_login);
 app.get('/addfriend', routes.get_login);
