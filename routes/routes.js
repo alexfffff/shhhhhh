@@ -122,6 +122,14 @@ var getHome = function(req, res) {
 				// handle error with database
 				res.render('error.ejs');
 			} else {
+				var allPosts = [];
+				
+				// iterate through all posts from the database
+				for (let i = 0; i < data.length; i++) {
+					allPosts.push(data[i].Items);
+				}
+				
+				// POSTS ARE CURRENTLY UNSORTED
 
 				// TODO - no idea wtf this is, need to debug (!!!)
 				console.log("data");
@@ -135,9 +143,12 @@ var getHome = function(req, res) {
 
 				console.log("data 0 items");
 				console.log(data[0].Items);
+				
+				console.log("all posts");
+				console.log(allPosts);
 
 				// pass the data from the table and render the home page to the user
-				res.render('home.ejs', {posts: data[0].Items, username: req.session.username, message: null});
+				res.render('home.ejs', {posts: allPosts, username: req.session.username, message: null});
 			}
 		});
 	}
