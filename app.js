@@ -101,6 +101,6 @@ app.get('/deleterestaurant', routes.get_login);
 
 /* Run the server */
 
-console.log('Author: Philip Kaw (ph163k8)');
+console.log('Author: Philip Kaw (ph163k8), Selene Li<seleneli>, Alex Dong <adong9>, Di Lu <dlu36>');
 app.listen(8080);
 console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!');

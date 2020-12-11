@@ -109,7 +109,7 @@
                                     <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" required></textarea>
                                     <br>
                                     <input type="hidden" name="currentWall" value="<%=username%>">
-                                    <input type="submit" value="Post" class="btn btn-lg btn-primary btn-block">
+                                    <input type="submit" value="Post" class="btn btn-lg btn-primary btn-block" onclick="makeNewPost()">
                                 </div>
                                </form>
                            </div>
@@ -134,20 +134,7 @@
                 <!-- Post /////-->
 
                 <!--- \\\\\\\Post--> 
-                <div class="card gedf-card">
-                    <div class="card-header">
-                        HERE IS THE POST
-                    </div>
-                    <div class="card-body">
-                        <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i>TIME ELAPSED</div>
-							<a class="card-link" href="#">
-								<h5 class="card-title">UH</h5>
-							</a>
-	
-							<p class="card-text">
-                                <div id="allposts"><p>here</p></div>	
-							</p>
-                    </div>
+                <div id="allposts">
                 </div>
 
                 
@@ -341,12 +328,23 @@
 
     function initHomePage() {
         // TODO: ACTUALLY DISPLAY POSTS ON THE HOME PAGE SOMEHOW
-        var listposts = [];
         // iterate through all of the posts
         console.log("initHomePage called");
         var container = document.getElementById('allposts');
         <% for (var i = 0; i < posts.length; i++) { %>
-            var content = "<p><%=posts[i].content%></p>";
+            var content = "<div class="card gedf-card">
+                            <div class="card-header"> HERE IS THE POST</div>
+                            <div class="card-body">
+                                <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i>TIME ELAPSED</div>
+                                <a class="card-link" href="#">
+                                    <h5 class="card-title">UH</h5>
+                                </a>
+                                <p class="card-text">
+                                    <p><%=posts[i].content%></p>
+                                </p>
+                            </div>
+                           </div>";
+            postsOnClient.push(posts[i]);
             container.innerHTML += content;
         <% } %>
         console.log(container);
