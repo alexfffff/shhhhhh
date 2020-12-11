@@ -29,11 +29,11 @@
 	<!--Title-->
 	<a href="/home" class="navbar-brand" style="font-size:36px">PennBook</a>
 	<!--Toolbar-->
-    <div class="toolbar-container">
+	<div class="toolbar-container">
         <a class="button" href="/home" role="button">
             Home
         </a>
-        <a class="button" href="/wall?user=<%=username%>&isFriends=false&isSelf=true" role="button">
+        <a class="button" href="/wall?wallToVisit=<%=username%>" role="button">
             My Wall
         </a>
         <a class="button" href="/settings" role="button">
@@ -43,8 +43,8 @@
             News
         </a>
         <a class="button" href="/logout" role="button">
-            Log Out
-        </a>
+			Log Out
+		</a>
     </div>
 	<!--Search Bar-->
 	<form class="form-inline">
@@ -65,7 +65,7 @@
             <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
-                        <a href="/wall"class="h5">@<%=user%></a>
+                        <a href="/wall?wallToVisit=<%=username%>" class="h5">@<%=user%></a>
                         <div class="h7 text-muted">Fullname : FULL NAME</div>  
                         <div class="h7"> BIO GOES HERE
                         </div>
@@ -73,7 +73,11 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <div class="h6 text-muted">Friends</div>
-                            <div class="h5">#FRIENDS</div>
+                            <div class="h5">
+                                <div class="friend-list">
+
+                                </div>
+                            </div>
                         </li>
                         <li class="list-group-item">
                             <div class="h6 text-muted">Network</div>
@@ -121,55 +125,9 @@
 
                 <!--- \\\\\\\Post-->
                 <!--Only render posts submitted by current user-->
-                <!--For loop assumes the list of posts are returned in timestamp order-->
-				<% for (var i = 0; i < 7; i++) { %>
-					<div class="card gedf-card">
-						<div class="card-header">
-							<div class="d-flex justify-content-between align-items-center">
-								<div class="d-flex justify-content-between align-items-center">
-									<div class="mr-2">
-                                        <!--CHANGE THIS PHOTO, THIS SEEMS TO BE RANDOMLY GENERATED-->
-										<img class="rounded-circle" width="45" src="https://picsum.photos/50/50" alt="">
-									</div>
-									<div class="ml-2">
-										<div class="h5 m-0">@POSTER USERNAME</div>
-										<div class="h7 text-muted">POSTER'S FULL NAME</div>
-									</div>
-								</div>
-								<div>
-									<div class="dropdown">
-										<button class="btn btn-link dropdown-toggle" type="button" id="gedf-drop1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-											<i class="fa fa-ellipsis-h"></i>
-										</button>
-										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="gedf-drop1">
-											<div class="h6 dropdown-header">Configuration</div>
-											<a class="dropdown-item" href="#">Save</a>
-											<a class="dropdown-item" href="#">Hide</a>
-											<a class="dropdown-item" href="#">Report</a>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="card-body">
-							<div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i>TIME ELAPSED</div>
-							<a class="card-link" href="#">
-								<h5 class="card-title">Lorem ipsum dolor sit amet, consectetur adip.</h5>
-							</a>
-	
-							<p class="card-text">
-								Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo recusandae nulla rem eos ipsa praesentium esse magnam nemo dolor
-								sequi fuga quia quaerat cum, obcaecati hic, molestias minima iste voluptates.
-							</p>
-						</div>
-						<div class="card-footer">
-							<a href="#" class="card-link"><i class="fa fa-gittip"></i> Like</a>
-							<a href="#" class="card-link"><i class="fa fa-comment"></i> Comment</a>
-							<a href="#" class="card-link"><i class="fa fa-mail-forward"></i> Share</a>
-						</div>
-					</div>
-				<% } %>
-                <!-- Post /////-->
+                <div class="user-posts">
+
+                </div>
                 <!--///// POST-->
                 <div class="card gedf-card">
                     <div class="card-header">
@@ -285,6 +243,120 @@
     </div>
 </body>
 <script>
-    console.log("isSelf:" + isSelf);
-    console.log("")
+    var postsOnClient = [];
+
+function initWall() {
+    // TODO: ACTUALLY DISPLAY POSTS ON THE HOME PAGE SOMEHOW
+    // iterate through all of the posts
+    console.log("initWall called");
+    var container = document.getElementById('user-posts');
+    var i;
+    <% wallPosts.forEach(post => { %>
+        var content = "<div class=\"card gedf-card\">" +
+                    "<div class=\"card-header\">" +
+                        "<div class=\"d-flex justify-content-between align-items-center\">" +
+                            "<div class=\"d-flex justify-content-between align-items-center\">" +
+                                "<div class=\"mr-2\">" +
+                                    "<img class=\"rounded-circle\" width=\"45\" src=\"https://picsum.photos/50/50\">" +
+                                "</div>";
+        <% if(post.friend) { %>
+            content += "<div class=\"ml-2\">" +
+                            "<div class=\"h5 m-0\">@<%=post.posterName%> posted on @<%=post.userName%>'s wall</div>" +
+                        "</div>";
+        <%} else { %>
+            content += "<div class=\"ml-2\">" +
+                            "<div class=\"h5 m-0\">@<%=post.posterName%> </div>" +
+                        "</div>";
+        <% } %>
+            content +=      "</div>" +
+                        "</div>" +
+                    "</div>" +
+                    "<div class=\"card-body\">" +
+                        "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i><%=post.timestamp%></div>" +
+                        "<a class=\"card-link\" href=\"#\">" +
+                            "<h5 class=\"card-title\"><%=post.postID%></h5>" +
+                        "</a>" +
+                        "<p class=\"card-text\"> <%=post.content%></p>";
+            content += "</div>" +
+                   "</div>";
+        postsOnClient.push("<%=post%>");
+        container.innerHTML += content;
+
+    // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
+
+    // add each post from the server into the list of posts stored on the client side
+    <% }); %>
+    console.log(container);
+}
+
+// TODO: ejs form submit button (for making a new post) should have: onclick="makeNewPost()"
+// makes a new post when the user submits the form for creating a post
+function makeNewPost() {
+    // get the user's inputted fields
+    var postContent = $('input[name="newPostContent"]').val();
+    // TODO: get the timestamp that the user pressed the "post" button when they create a post
+    var postTimestamp = Date.now();
+    // TODO: get the hashtags from a user's post (if present)
+    //var postHashtags = ...
+    $.ajax({
+        url: "/wall",
+        type: "POST",
+        data:
+            {
+                content: postContent,
+                timestamp: postTimestamp,
+                hashtag: postHashtags
+            },
+        success: function(data) {
+            // TODO: SHOW THE NEW POST ON THE USER'S HOME PAGE
+
+            // add the new post to the list of posts on the client side
+            //postsOnClient.push(theNewPost);
+            // TODO: var theNewPost -> THIS MUST BE IN THE SAME FORM AS THE POSTS THAT RETURN FROM THE ARRAY OF POSTS SENT FROM THE DATABASE
+        }
+    })
+}
+
+// automatic refresh every 5 seconds to update home page
+var refreshTime = function() {
+    // set clock to refresh every 5000 ms
+    $("#clock").html((new Date()).toString());
+    setTimeout(refreshTime, 5000);
+    // make AJAX call to get the home page posts and compare the data from the server to the data on the client
+    $.ajax({
+            url: "/homepageposts",
+            type: "GET",
+            success: function(data) {
+                // list containing the differences between the server and client
+                var newPosts = [];
+                    
+                // iterate through data (posts) sent from server
+                data.forEach(p => {
+                    // put the post in the list if it's from the server but not on the client
+                    if (!postsOnClient.includes(p)) {
+                        newPosts.push(p);
+                        // update the client-side list to contain new posts from the server
+                        postsOnClient.push(p);
+                    }
+                });
+                    
+                // TODO: ACTUALLY DISPLAY THE NEW POSTS THAT THE SERVER HAS SENT TO THE CLIENT
+                newPosts.forEach(newPost => {
+                    // SEE ABOVE
+                });
+            },
+            error: function(err) {
+                // TODO: HANDLE ERRORS WITH AJAX CALLING DATABASE
+                alert(err);
+            }
+        })
+};
+
+initWall();
+
+$(document).ready(function() {
+    // CAN CHANGE CSS CODE (THE LINE BELOW) IF THERE ARE CONFLICTS
+    $("#clock").css("color", "white");
+    setTimeout(refreshTime, 5000);
+});
 </script>
