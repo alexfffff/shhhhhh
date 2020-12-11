@@ -129,20 +129,36 @@ var getHome = function(req, res) {
 					allPosts.push(data[i].Items);
 				}
 				
-				// POSTS ARE CURRENTLY UNSORTED
-
-				// TODO - no idea wtf this is, need to debug (!!!)
-				console.log("data");
-				console.log(data);
-
-				console.log("json stringify data");
-				console.log(JSON.stringify(data));
-
-				console.log("data items");
-				console.log(data.Items);
-
-				console.log("data 0 items");
-				console.log(data[0].Items);
+				// map from timestamp to a post
+				let timestampToPost = new Map();
+				
+				// add every (non-empty) post to the map, keyed by timestamp
+				for (let j = 0; j < allPosts.length; j++) {
+					let currPosts = allPosts[j];
+					if (currPosts.length != 0) {
+						// map every post by timestamp
+						for (let k = 0; k < currPosts.length; k++) {
+							timestampToPost.set(currPosts[k].timestamp, currPosts[k]);
+						}
+					}
+				}
+				
+				console.log("map is below");
+				console.log(timestampToPost);
+				
+				// get array of timestamps and sort them, more recent timestamps appear first
+				let timestamps = Array.from(timestampToPost.keys());
+				timestamps.sort();
+				timestamps.reverse();
+				
+				console.log("timestamps below, sorted")
+				console.log(timestamps);
+				
+				// reset all posts and push them into the array in sorted order
+				allPosts = [];
+				for (let t = 0; t < timestamps.length; t++) {
+					allPosts.push(timestampToPost.get(timestamps[t]));
+				}
 				
 				console.log("all posts");
 				console.log(allPosts);
@@ -507,7 +523,41 @@ var getHomePagePosts = function(req, res) {
 		if (err) {
 			res.send(err);
 		} else {
-			res.send(data);
+			// TODO - not sure if I should also sort them before res.send
+			var allPosts = [];
+			
+			// iterate through all posts from the database
+			for (let i = 0; i < data.length; i++) {
+				allPosts.push(data[i].Items);
+			}
+			
+			// map from timestamp to a post
+			let timestampToPost = new Map();
+			
+			// add every (non-empty) post to the map, keyed by timestamp
+			for (let j = 0; j < allPosts.length; j++) {
+				let currPosts = allPosts[j];
+				if (currPosts.length != 0) {
+					// map every post by timestamp
+					for (let k = 0; k < currPosts.length; k++) {
+						timestampToPost.set(currPosts[k].timestamp, currPosts[k]);
+					}
+				}
+			}
+			
+			// get array of timestamps and sort them, more recent timestamps appear first
+			let timestamps = Array.from(timestampToPost.keys());
+			timestamps.sort();
+			timestamps.reverse();
+			
+			// reset all posts and push them into the array in sorted order
+			allPosts = [];
+			for (let t = 0; t < timestamps.length; t++) {
+				allPosts.push(timestampToPost.get(timestamps[t]));
+			}
+			
+			// send the posts
+			res.send(allPosts);
 		}
 	});
 };
