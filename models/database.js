@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 AWS.config.update({region:'us-east-1'});
 var db = new AWS.DynamoDB();
+const stemmer = require('stemmer');
 
 
 
@@ -442,7 +443,7 @@ var add_interest = function(username, interest, timestamp, postID, callback) {
 * @param  interest  interest of current user
 * @return Does not return anything
 */
-var db_remove_interest = function(username, interest, callback) {
+var db_remove_interest = function(username, interest, timestamp, postID, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params1 = {
 		TableName: "interests",
@@ -1050,7 +1051,7 @@ var db_make_wall_post = function(wallsUser, posterID, postID, content, timestamp
 									"content": content,
 									"timestamp": timestamp,
 									"hashtag": hashtags[i],
-									"posterID": poster,
+									"posterID": posterID,
 									"userName": userName,
 									"posterName": posterName
 								}
@@ -1340,67 +1341,72 @@ var db_delete_comment = function(username, post_id, callback) {
 * @return Does not return anything
 */
 var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, callback) {
+	var userName; //full name of yourUsername
+	var posterName; //full name of friendUsername
 	var docClient = new AWS.DynamoDB.DocumentClient();
-	var arrayOfPromises = [];
-	var yourParam = {
-		TableName : "friends",
-		Item:{
-			"yourUsername": yourUsername,
-			"friendUsername": friendUsername
+	var arrayOfPromisesNames = [];
+	var getyouNameParam = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": yourUsername
 		}
 	};
-	//Promise to add the keyword is pushed to array of promises
-	arrayOfPromises.push(docClient.put(yourParam).promise());
+	arrayOfPromisesNames.push(docClient.query(getyouNameParam).promise());
 
-	var friendParam = {
-		TableName : "friends",
-		Item:{
-			"yourUsername": friendUsername,
-			"friendUsername": yourUsername
+	var getfriendNameParam = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": friendUsername
 		}
 	};
-	arrayOfPromises.push(docClient.put(friendParam).promise());
-
-	Promise.all(arrayOfPromises).then(
+	arrayOfPromisesNames.push(docClient.query(getfriendNameParam).promise());
+	Promise.all(arrayOfPromisesNames).then(
 		successResult => {
-			var userName;
-			var posterName;
-			var arrayOfPromisesNames = [];
-			var getyouNameParam = {
-				TableName : "users",
-				KeyConditionExpression: "#un = :username",
-				ExpressionAttributeNames:{
-					"#un": "username"
-				},
-				ExpressionAttributeValues: {
-					":username": yourUsername
+			userName = successResult[0].Items[0].fullname;
+			posterName = successResult[1].Items[0].fullname;
+			
+			var arrayOfPromises = [];
+			var yourParam = {
+				TableName : "friends",
+				Item:{
+					"yourUsername": yourUsername,
+					"friendUsername": friendUsername,
+					"fullname": posterName
 				}
 			};
-			arrayOfPromisesNames.push(docClient.query(getyouNameParam).promise());
+			//Promise to add the keyword is pushed to array of promises
+			arrayOfPromises.push(docClient.put(yourParam).promise());
 
-			var getfriendNameParam = {
-				TableName : "users",
-				KeyConditionExpression: "#un = :username",
-				ExpressionAttributeNames:{
-					"#un": "username"
-				},
-				ExpressionAttributeValues: {
-					":username": friendUsername
+			var friendParam = {
+				TableName : "friends",
+				Item:{
+					"yourUsername": friendUsername,
+					"friendUsername": yourUsername,
+					"fullname": userName
 				}
 			};
-			arrayOfPromisesNames.push(docClient.query(getfriendNameParam).promise());
-			Promise.all(arrayOfPromisesNames).then(
+			arrayOfPromises.push(docClient.put(friendParam).promise());
+
+			Promise.all(arrayOfPromises).then(
 				successResult => {
 					var param = {
 						TableName : "posts",
 						Item:{
 							"userID": yourUsername,
 							"postID": postID,
-							"content": yourUsername + " is now friends with " + friendUsername,
+							"content": userName + " is now friends with " + posterName,
 							"timestamp": timestamp,
 							"posterID": friendUsername,
-							"userName": successResult[0].Items[0].fullname,
-							"posterName": successResult[1].Items[0].fullname,
+							"userName": userName,
+							"posterName": posterName,
 							"friend": true
 						}
 					};
@@ -1412,15 +1418,21 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, ca
 							callback(errResult, null);
 						}
 					);
+				
 				}, errResult => {
 					callback(errResult, null);
 				}
-			);	
+			);
+
+
 		}, errResult => {
 			callback(errResult, null);
 		}
 	);
+	
 };
+
+
 
 
 /**
@@ -1453,6 +1465,7 @@ var db_get_friends = function(yourUsername, callback) {
 		}
 	);
 };
+
 
 
 /**
@@ -1534,243 +1547,6 @@ var db_logout = function(username, callback) {
 };
 
 
-/**
-* Adds users to a chat
-*
-* @param  chatID  ID of chatroom
-* @param  chatName  name of the chat
-* @param  username  username of user who sent message
-* @return Does not return anything
-*/
-var db_start_chat = function(chatID, chatName, username, friendUsername, callback) {
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "chats",
-		Item:{
-			"chatID": chatID,
-			"chatName": chatName
-		}
-	};
-	docClient.put(params).promise().then(
-		successResult => {
-			var params2 = {
-				TableName : "chatUsers",
-				Item:{
-					"chatID": chatID,
-					"username": username
-				}
-			};
-			docClient.put(params2).promise().then(
-				successResult2 => {
-					callback(null, successResult2);
-				}, errResult2 => {
-					callback(errResult2, null);
-				}
-			);
-		}, errResult => {
-			callback(errResult, null);
-		}
-	);
-};
-
-
-
-/**
-* Gets the message history of that chat
-*
-* @param  chatID  ID of chatroom
-* @return Returns array of the message items of chat in chronological? order
-*/
-var db_get_messages = function(chatID, callback) {
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "messages",
-		KeyConditionExpression: "#ci = :chatid",
-		ScanIndexForward: true, //NOT SURE IF THIS COUNTS AS CHRONOLOGICAL OR REVERSE CHRONOLOGICAL IF YOU MAKE NEWEST POP UP AT BOTTOM
-		ExpressionAttributeNames:{
-			"#ci": "chatID"
-		},
-		ExpressionAttributeValues: {
-			":chatid": chatID
-		}
-	};
-
-	// query the table with params
-	docClient.query(params).promise().then(
-		successResult => {
-			console.log(successResult);
-			callback(null, successResult);
-		},
-		errResult => {
-			console.log(errResult);
-			callback(errResult, null);
-		}
-	);
-};
-
-
-/**
-* Changes the current users logged_in status to false in "users" table
-*
-* @param  chatID  ID of chatroom
-* @param  timestamp  time that message was sent
-* @param  message  message contents
-* @param  username  username of user who sent message
-* @return Does not return anything
-*/
-var db_add_message = function(chatID, timestamp, message, username, callback) {
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "messages",
-		Item:{
-			"chatID": chatID,
-			"timestamp": timestamp,
-			"message": message,
-			"username": username
-		}
-	};
-	docClient.put(params).promise().then(
-		successResult => {
-			callback(null, successResult);
-		}, errResult => {
-			callback(errResult, null);
-		});
-};
-
-
-/**
-* Changes the current users logged_in status to false in "users" table
-*
-* @param  chatID  ID of chatroom
-* @return Returns array of the usernames in that chat
-*/
-var db_get_chat_users = function(chatID, callback) {
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "chatUsers",
-		KeyConditionExpression: "#ci = :chatid",
-		ExpressionAttributeNames:{
-			"#ci": "chatID"
-		},
-		ExpressionAttributeValues: {
-			":chatid": chatID
-		}
-	};
-
-	// query the table with params
-	docClient.query(params).promise().then(
-		successResult => {
-			console.log(successResult);
-			callback(null, successResult);
-		},
-		errResult => {
-			console.log(errResult);
-			callback(errResult, null);
-		}
-	);
-};
-
-
-/**
-* Changes the current users logged_in status to false in "users" table
-*
-* @param  chatID  ID of chatroom
-* @param  username  username of user who sent message
-* @return Does not return anything
-*/
-var db_join_chat = function(chatID, username, callback) {
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "chatUsers",
-		Item:{
-			"chatID": chatID,
-			"username": username
-		}
-	};
-	docClient.put(params).promise().then(
-		successResult => {
-			var params2 = {
-				TableName : "chatInvitations",
-				Key: {
-					"username": username,
-					"chatID": chatID
-				}
-			};
-		
-			docClient.delete(params2).promise().then(
-				successResult2 => {
-					callback(null, successResult2);
-				}, errResult => {
-					callback(errResult, null);
-				}
-			);
-		}, errResult => {
-			callback(errResult, null);
-		});
-};
-
-
-/**
-* Removes both instances of the friendship from the "friends" table
-*
-* @param  chatID  id of chat user is trying to leave
-* @param  username  username of user who wants to leave chat
-* @return Does not return anything
-*/
-var db_leave_chat = function(chatID, username, callback) {
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "chatUsers",
-		Key: {
-			"chatID": chatID,
-			"username": username
-		}
-	};
-
-  	docClient.delete(params).promise().then(
-	  	successResult => {
-		  	callback(null, successResult);
-		}, errResult => {
-			callback(errResult, null);
-		}
-	);
-};
-
-
-/**
-* Changes the current users logged_in status to false in "users" table
-*
-* @param  chatID  ID of chatroom
-* @param  newName  new chat name
-* @return Returns array of the usernames in that chat
-*/
-var db_rename_chat = function(chatID, newName, callback) {
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-	    TableName: "chats",
-	    Key: {
-	        "chatID": chatID
-	    },
-	    UpdateExpression: "set #newName = :nN",
-	    ExpressionAttributeNames: {
-	        "#newName": "newName"
-	    },
-	    ExpressionAttributeValues: {
-	        ":nN": newName
-	    }
-	};
-  
-  	docClient.update(params).promise().then(
-		successResult => {
-			console.log("UPDATED");
-			console.log(successResult);
-			callback(null, successResult);
-		}, errResult => {
-			console.log(errResult);
-			callback(errResult, null);
-		}
-	);
-};
 
 
 /**
@@ -1806,6 +1582,152 @@ var db_search_name = function(typedName, callback) {
 	);
 };
 
+
+
+/**
+* Gets all articles that match the keywords extracted from the search 
+*
+* @param  searchStr  what the user entered into the search bar
+* @return Array with the results of the search in the correct order
+*/
+var db_news_search = function(searchStr, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	//Makes all lowercase and stems the word
+	var key = searchStr.toLowerCase();
+	var keyArr = key.split(" ");
+	//Create arrays that will need to be accessed later
+	var queryResults = [];
+	var idPromises = [];
+	var results = [];
+	var repeats = [];
+	var arrayOfPromises = [];
+	
+	//Iterates through the keywords and creates params for that keyword
+	for (var i = 0; i < keyArr.length; i++) {
+		keyArr[i] = stemmer(keyArr[i]);
+		var params = {
+			TableName : "inverted",
+			KeyConditionExpression: "keyword = :terms",
+			ExpressionAttributeValues: {
+				":terms": keyArr[i]
+			}
+		};
+		//Promise to query the keyword is pushed to array of promises
+		idPromises.push(docClient.query(params).promise());
+	}
+	Promise.all(idPromises).then(
+		successResult1 => {
+			//Adds each talk_id from each keyword query to an array of ids
+			successResult1.forEach(function (item) {
+				item.Items.forEach(function (talk) {
+					queryResults.push(talk.inxid);
+				})
+			});
+		},errResult => {
+			console.log("failed to get ids");
+			callback(errResult, null);
+		}
+	).then(
+		successResult2 => {
+			//Iterates through each id and pushes promise to query for the talk to array of promises
+			for (var i = 0; i < queryResults.length; i++) {
+				var params = {
+					TableName: 'ted_talks',
+					KeyConditionExpression: "talk_id = :id",
+					ExpressionAttributeValues: {
+						":id": parseInt(queryResults[i])
+					}
+				};
+				var newPromise = docClient.query(params).promise();
+				arrayOfPromises.push(newPromise);
+			}
+		},errResult => {
+			console.log("failed to get create array of promises");
+			callback(errResult, null);
+		}
+	).then(function(successResult2) {
+		//Promise.all to resolve promises in array of promises
+		Promise.all(arrayOfPromises).then(
+			successResult => {
+				//Filters and retrieves the talk info for each talk and pushes it to "results" array
+				successResult.forEach(function (item) {
+					try {
+						item.Items[0].topics = JSON5.parse(item.Items[0].topics);
+						item.Items[0].related_talks = item.Items[0].related_talks.replace(/(\d)*(?:\d: )/g, '"$&');
+						item.Items[0].related_talks = item.Items[0].related_talks.replace(/(^\d)*(: \B['"a-zA-z])/g, '"$&');
+						item.Items[0].related_talks = JSON5.parse(item.Items[0].related_talks);
+						item.Items[0].url = item.Items[0].url.replace(/(https:\/\/w{3})/g, '');
+						repeats.push(item.Items[0]);
+					} catch(e) {
+						console.log("JSON5 parsing error caught");
+						callback(e, null);
+					}
+				});
+				//Finds how many of each talk there are to see which has repeats
+				var talkFreqs = repeats.reduce((arr, talk) => 
+					(arr[talk.talk_id] = (arr[talk.talk_id] || 0) + 1, arr), {});
+						  						
+					//For loop based on number of keywords searched. Each iteration will just address
+					//talks with 'i' keyword matches
+					for (var i = keyArr.length; i > 0; i--) {
+						//Array that will only hold talks that had 'i' keyword matches
+						var tempArr = [];
+						for (let [key, value] of Object.entries(talkFreqs)) {
+						  	if (value == i) {
+								  tempArr.push(key);
+								}
+						}
+						
+						//Goes through the temp array that only holds talks of 'i' keyword
+						//matches and adds the talk just once to results array
+						var tempTalks = [];
+						tempArr.forEach(function(id) {
+							var alreadyThere = false;
+							repeats.forEach(function(talk) {
+								if (talk.talk_id == id) {
+									for (var i = 0; i < tempTalks.length; i++) {
+						  				if (tempTalks[i].talk_id == id) {
+											  alreadyThere = true;
+											  break;
+											}
+										}
+										if (!alreadyThere) {
+											tempTalks.push(talk);
+										}
+									}
+								});
+							});
+							//Sorts the talks based on descending views
+						  	tempTalks.sort(function(a,b) {
+						  		return b.views - a.views
+							  });
+							  //Adds talks until there are 15 in results
+						  		tempTalks.forEach(function(talk) {
+									  if (results.length < 15) {
+										  results.push(talk);
+										}
+									});
+					}
+					callback(null, results);
+					
+			}, errResult => {
+				console.log("failed to get talk info"); 
+				callback(errResult, null);
+			}
+		);
+	});
+};
+
+
+
+
+
+
+
+
+
+
+
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
@@ -1839,14 +1761,8 @@ var database = {
   getFriends: db_get_friends,
   unfriend: db_unfriend,
   logout: db_logout,
-  getMessages: db_get_messages,
-  addMessage: db_add_message,
-  startChat: db_start_chat,
-  getChatUsers: db_get_chat_users,
-  joinChat: db_join_chat,
-  leaveChat: db_leave_chat,
-  renameChat: db_rename_chat,
-  searchName: db_search_name
+  searchName: db_search_name,
+  newsSearch: db_news_search
 };
 
 module.exports = database;
