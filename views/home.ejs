@@ -134,8 +134,22 @@
                 <!-- Post /////-->
 
                 <!--- \\\\\\\Post--> 
-                <div id="allposts">
-                </div>
+                
+                    <div class="card gedf-card">
+                        <div class="card-header"> HERE IS THE POST</div>
+                        <div class="card-body">
+                            <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i>TIME ELAPSED</div>
+                            <a class="card-link" href="#">
+                                <h5 class="card-title">UH</h5>
+                            </a>
+                            <p class="card-text">
+                                <div id="allposts">
+
+                                </div>
+                            </p>
+                        </div>
+                       </div>
+                
 
                 
                 <% for (var i = 0; i < 3; i++) { %>
@@ -331,22 +345,17 @@
         // iterate through all of the posts
         console.log("initHomePage called");
         var container = document.getElementById('allposts');
-        <% for (var i = 0; i < posts.length; i++) { %>
-            var content = "<div class="card gedf-card">
-                            <div class="card-header"> HERE IS THE POST</div>
-                            <div class="card-body">
-                                <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i>TIME ELAPSED</div>
-                                <a class="card-link" href="#">
-                                    <h5 class="card-title">UH</h5>
-                                </a>
-                                <p class="card-text">
-                                    <p><%=posts[i].content%></p>
-                                </p>
-                            </div>
-                           </div>";
-            postsOnClient.push(posts[i]);
+        console.log("size: " + <%=posts.length%>);
+        var i;
+        <% posts.forEach(post => { %>
+            var content = "<p><%=post.content%></p>";
+            postsOnClient.push("<%=post%>");
             container.innerHTML += content;
-        <% } %>
+
+        // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
+
+        // add each post from the server into the list of posts stored on the client side
+        <% }) %>
         console.log(container);
     }
 
