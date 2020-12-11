@@ -422,12 +422,6 @@ var getWall = function(req, res) {
 };
 
 var postToWall = function(req, res) {
-	/*
-		TODO - Each user should have a "wall" that contains posts and status updates in reverse chronological
-		order. Each user should be able to post status updates ("Bob is going fishing") on their own wall, and they
-		should be able to post on their friends’ walls as well.
-	*/
-
 	// get the parameters to make the new post
 	var poster = req.session.username;
 	var content = req.body.content;
@@ -447,8 +441,8 @@ var postToWall = function(req, res) {
 	// create the post ID from the poster and timestamp
 	var id = poster.concat(timestamp);
 
-	// the username of the current wall that the poster is looking at
-	var username = req.body.currentWall;
+	// the username of the current wall that the poster is looking at (extracted from URL)
+	var username = req.query.wallToVisit;
 
 	// separates posts on a user's own wall and posts on other users' walls
 	if (poster === username) {
