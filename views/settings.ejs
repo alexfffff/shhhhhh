@@ -35,6 +35,17 @@
 </script>
 
 <body>
+
+	<!--Display error or success message -->
+    <%if (message != null) { %>
+        <% message = message.replace(/_/g, ' ');%>
+        <%if (success) {%>
+            <center><b><p style="color:green"><%= message %>.</p></b></center>
+        <% } else { %>
+            <center><b><p style="color:red"><%= message %>.</p></b></center>
+        <% } %>
+    <% } %>
+
 <!--Top Header bar: Title of page, Toolbar, Search bar-->      
 <nav class="navbar">
 	<!--Title-->
@@ -44,7 +55,7 @@
         <a class="button" href="/home" role="button">
             Home
         </a>
-        <a class="button" href="/wall?user=<%=username%>&isFriends=false&isSelf=true" role="button">
+        <a class="button" href="/wall?wallToVisit=<%=username%>" role="button">
             My Wall
         </a>
         <a class="button" href="/settings" role="button">
@@ -175,14 +186,5 @@
         </div>
     </div>
 
-    <!--Error message-->
-    <%if (message != null) { %>
-        <%=message = message.replace(/_/g, ' ');%>
-        <%if (success) {%>
-            <center><b><p style="color:green"><%= message %></p></b></center>
-        <% } else { %>
-            <center><b><p style="color:red"><%= message %></p></b></center>
-        <% } %>
-    <% } %>
 </body>
     

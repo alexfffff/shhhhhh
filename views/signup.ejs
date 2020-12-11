@@ -12,12 +12,24 @@
 			<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 		</head>
 	<script>
+		<!-- Function to toggle password visibility -->
 		function showPassword() {
 			var pass = document.getElementById("myNewPassword");
 			if (pass.type === "password") {
 				pass.type = "text";
 			} else {
 				pass.type = "password";
+			}
+		}
+		
+		<!-- Check if the first two interests are unique, re-prompts user if not -->
+		function checkInterestUnique() {
+			var interest1 = document.getElementById("myFirstInterest").value;
+			var interest2 = document.getElementById("mySecondInterest").value;
+			if (interest1 === interest2) {
+				alert("You must select at least two unique interests.");
+				document.getElementById("myFirstInterest").value = "";
+				document.getElementById("mySecondInterest").value = "";
 			}
 		}
 	</script>
@@ -33,12 +45,12 @@
 			<label><font color="white">Full name: </font></label><input type="text" autocomplete="off" name="myNewFullName" required size="20" class="form-control">
 			<label><font color="white">Birthday: </font></label><input type="date" id="start" name="myNewBirthday" required size="20" value="2000-01-01" min="1900-01-01" max="2007-12-31" class="form-control">
 			<label><font color="white">Enter a new email: </font></label><input type="text" autocomplete="off" name="myNewEmail" required size="20" class="form-control">
-			<label><font color="white">Enter your affiliation: </font></label><input type="text" name="myNewAffiliation" required size="20" class="form-control"><br>
+			<label><font color="white">Enter your affiliation: </font></label><input type="text" autocomplete="off" name="myNewAffiliation" required size="20" class="form-control"><br>
 			<!--Select 5 Interests-->
 			<font color="white"><label>Select at least 2 interests.</label>
 			<br>
 			<label>Interest 1: </label>
-			<select name="myFirstInterest" required>
+			<select name="myFirstInterest" id="myFirstInterest" onchange="checkInterestUnique()" required>
 				<option value="">Select an Interest</option>
 				<option value="ARTS">Arts</option>
 				<option value="ARTS & CULTURE">Arts & Culture</option>
@@ -84,7 +96,7 @@
 			</select>
 			<br>
 			<label>Interest 2: </label>
-			<select name="mySecondInterest" required>
+			<select name="mySecondInterest" id="mySecondInterest" onchange="checkInterestUnique()" required>
 				<option value="">Select an Interest</option>
 				<option value="ARTS">Arts</option>
 				<option value="ARTS & CULTURE">Arts & Culture</option>
@@ -268,15 +280,10 @@
 			</select>
 			<br><br>
 			</font>
-			<input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+			<input type="submit" value="Submit" onclick="checkInterestUnique()" class="btn btn-lg btn-primary btn-block">
 		</form>
 	</div>
-	<br><br>
-  	<!-- Display error message if it exists -->
-	<%if (message != null) { %>
-	  	<center><b><p style="color:red"><%= message %></p></b></center>
-	<% } %>
- 	<br><br><br>
+	<br><br><br><br><br>
   	<!-- Button with link back to login page -->
 	<div class="login-box">
 		<center><a class="btn btn-primary btn-lg btn-block" href="/" role="button">Back to Login Page</a></center>

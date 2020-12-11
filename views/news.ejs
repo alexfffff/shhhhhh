@@ -52,6 +52,7 @@
 					// TODO: ACTUALLY DISPLAY THE NEW ARTICLES THAT THE SERVER HAS SENT TO THE CLIENT
 					newArticles.forEach(newArticle => {
 						// SEE ABOVE
+						alert("AJAX test " + newArticle);
 					});
 				},
 				error: function(err) {
@@ -79,7 +80,7 @@
 			<a class="button" href="/home" role="button">
 				Home
 			</a>
-			<a class="button" href="/wall?user=<%=username%>&isFriends=false&isSelf=true" role="button">
+			<a class="button" href="/wall?wallToVisit=<%=username%>" role="button">
 				My Wall
 			</a>
 			<a class="button" href="/settings" role="button">
@@ -95,7 +96,8 @@
 		<!-- News Search Bar-->
 		<form action="/searchnews" method="post" class="form-inline">
 			<div class="input-group">
-				<label><font color="white">Search for an article: </font></label><input type="text" name="keyword" required class="form-control" aria-describedby="button-addon2">
+				<label for="keyword"><font color="white">Search for an article:&nbsp</font></label>
+				<input type="text" name="keyword" required class="form-control" aria-describedby="button-addon2">
 				<div class="input-group-append">
 					<button class="btn btn-outline-primary" type="submit" id="button-addon2">
 						<i class="fa fa-search"></i>
