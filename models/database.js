@@ -1,5 +1,6 @@
 var AWS = require('aws-sdk');
-var crypto = require("crypto");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 AWS.config.update({region:'us-east-1'});
 var db = new AWS.DynamoDB();
 
@@ -14,7 +15,6 @@ var db = new AWS.DynamoDB();
 * @param  password password that user typed
 * @return Does not return anything
 */
-// TODO: modify logincheck to account for hashed passwords
 var my_login_check = function(username, password, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
@@ -28,20 +28,14 @@ var my_login_check = function(username, password, callback) {
   //Queries for the username and checks if password matches
   docClient.query(params).promise().then(
 		  successResult => {
-			  try {
-				const hash = crypto.createHash('sha256');
-				hash.update(password);
-				var pwdResult = hash.digest('hex');
-				console.log(pwdResult);
-
-				if (successResult === null) {
-					throw new Error("Null result");
-				} else if (successResult.Items[0].password != pwdResult) {
-					throw new Error("Invalid Password");
+				if (successResult.Count === 0) {
+					callback(5, null);
 				} else {
-					// Set status to active
-					var docClient = new AWS.DynamoDB.DocumentClient();
-					var params = {
+					let hash = successResult.Items[0].password;
+					bcrypt.compare(password, hash, function (err, res) {
+					if (res === true) {
+						var docClient = new AWS.DynamoDB.DocumentClient();
+						var params = {
 								TableName: "users",
 								Key: {
 									"username": username
@@ -66,15 +60,15 @@ var my_login_check = function(username, password, callback) {
 								  console.log("Something else went wrong");
 								  callback(errResult, null);
 							  });
-					  }
-			    } catch (error) {
-			        callback(5, null);
-			    }
-			  
-		  },
-		  errResult => {
-			  callback(errResult, null);
-		  });
+					} else {
+						callback("Wrong username or password", false);
+					}
+				});
+				}
+			}, errResult => {
+			  	callback(errResult, null);
+		  	}
+		);
 };
 
 
@@ -94,7 +88,6 @@ var my_login_check = function(username, password, callback) {
 * @param  interests array of all of the intersts that user selected
 * @return Does not return anything
 */
-// TODO: Hash passwords
 var create_account = function(username, password, name, email, affiliation, birthday, interests, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	// create params to query for an item with the username
@@ -112,70 +105,94 @@ var create_account = function(username, password, name, email, affiliation, birt
 			try {
 				//Checks if username exists in table
 				if (successResult.Count === 0) {
-					const hash = crypto.createHash('sha256');
-					hash.update(password);
-					var pwdResult = hash.digest('hex');
-					console.log(pwdResult);
-					console.log(typeof(pwdResult));
-					// create new account with appropriate attributes
-					var param = {
-						Item: {
-							"username": {
-								S: username
-							},
-							"password": {
-								S: pwdResult
-							},
-							"fullname": {
-								S: name
-							}, 
-							"email": {
-								S: email
-							},
-							"affiliation": {
-								S: affiliation
-							},
-							"birthday": {
-								S: birthday
-							}, 
-							"logged_in": {
-								BOOL: true
-							}
-						},
-						TableName: "users"
-					};
-			
-					// add new account to the table
-					db.putItem(param, function(err, data) {
+
+					bcrypt.hash(password, saltRounds, function (err, hash) {
 						if (err) {
-							console.log(err);
-							callback(err, null);
-						} else {
-							var docClient = new AWS.DynamoDB.DocumentClient();
-							var arrayOfPromises = [];
-	  						//Iterates through the keywords and creates params for that keyword
-	  						for (var i = 0; i < interests.length; i++) {
-		  					var param2 = {
-								Item: {
-									"interest": interests[i],
-									"username": username
-								},
-							TableName: "interests"
-							};
-		  					console.log(param2);
-		  					//Promise to query the keyword is pushed to array of promises
-		  					arrayOfPromises.push(docClient.put(param2).promise());
-	  						}
-	  						console.log(arrayOfPromises);
-	  						Promise.all(arrayOfPromises).then(
-			  					successResult => {
-									callback(null, username);
-			  					}, errResult => {
-			  						console.log(errResult);
-				  					callback(errResult, null);
-								  }
-							);
+							callback(err, false);
+							return;
 						}
+
+						// create new account with appropriate attributes
+						var param = {
+							Item: {
+								"username": {
+									S: username
+								},
+								"password": {
+									S: hash
+								},
+								"fullname": {
+									S: name
+								}, 
+								"email": {
+									S: email
+								},
+								"affiliation": {
+									S: affiliation
+								},
+								"birthday": {
+									S: birthday
+								}, 
+								"logged_in": {
+									BOOL: true
+								}
+							},
+							TableName: "users"
+						};
+						
+						// add new account to the table
+						db.putItem(param, function(err, data) {
+							if (err) {
+								console.log(err);
+								callback(err, null);
+							} else {
+								var docClient = new AWS.DynamoDB.DocumentClient();
+								var arrayOfPromises = [];
+		  						//Iterates through the keywords and creates params for that keyword
+		  						for (var i = 0; i < interests.length; i++) {
+			  					var param2 = {
+									Item: {
+										"interest": interests[i],
+										"username": username
+									},
+								TableName: "interests"
+								};
+			  					console.log(param2);
+			  					//Promise to query the keyword is pushed to array of promises
+		  						arrayOfPromises.push(docClient.put(param2).promise());
+	  							}
+	  							console.log(arrayOfPromises);
+	  							Promise.all(arrayOfPromises).then(
+			  						successResult => {
+										var nameParam = {
+											Item: {
+												"fullname": {
+													S: name
+												},
+												"username": {
+													S: username
+												}
+											},
+											TableName: "fullnames"
+										};
+										docClient.put(nameParam, function(err, data) {
+											if (err) {
+												console.log(err);
+												callback(err, null);
+											} else {
+												callback(null, username);
+											}
+										});
+			  						}, errResult => {
+			  							console.log(errResult);
+				  						callback(errResult, null);
+								  	}
+								);
+							}
+						});
+
+
+
 					});
 
 				} else {
@@ -188,7 +205,8 @@ var create_account = function(username, password, name, email, affiliation, birt
 		},
 		errResult => {
 			callback(errResult, null);
-		});
+		}
+	);
 };
 
 
@@ -234,10 +252,11 @@ var db_get_affiliation = function(username, callback) {
 * @param  username  username of current user
 * @param  affiliation new affiliation that the user wants to update to
 * @param  timestamp timestamp of when affiliation was changed
+* @param  postID id of post
 * @return Does not return anything
 */
 // TODO: add conditionexpression to see if affiliation isn't already that affiliation (already taken care of in routes???)
-var db_change_affiliation = function(username, affiliation, timestamp, callback) {
+var db_change_affiliation = function(username, affiliation, timestamp, postID, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
 	        TableName: "users",
@@ -250,33 +269,55 @@ var db_change_affiliation = function(username, affiliation, timestamp, callback)
 	        },
 	        ExpressionAttributeValues: {
 	            ":a": affiliation
-	        }
+			}
 	    };
   
   	docClient.update(params).promise().then(
 		  successResult => {
-			var param = {
-				TableName : "posts",
-				Item:{
-					"username": username,
-					"content": username + " is now affiliated with " + affiliation,
-					"timestamp": timestamp
+			var nameParam = {
+				TableName: "users",
+				 KeyConditionExpression: "username = :key",
+				 ExpressionAttributeValues: {
+					 ":key": username
 				}
 			};
 			
-			// add new interest to the table
-			docClient.put(param).promise().then(
-				successResult2 => {
-					try  {
-						console.log("Added item");
-						callback(null, successResult2);
-				
-					} catch (err) {
-						console.log("Unable to add item.");
-						callback(err, null);
+			docClient.query(nameParam).promise().then(
+				successResult => {
+					try {
+						var param = {
+							TableName : "posts",
+							Item:{
+								"userID": username,
+								"postID": postID,
+								"content": successResult.Items[0].fullname + " is now affiliated with " + affiliation,
+								"timestamp": timestamp, 
+								"userName": successResult.Items[0].fullname,
+								"friend": false
+			
+							}, 
+						};
+						
+						// add new interest to the table
+						docClient.put(param).promise().then(
+							successResult2 => {
+								try  {
+									console.log("Added item");
+									callback(null, successResult2);
+							
+								} catch (err) {
+									console.log("Unable to add item.");
+									callback(err, null);
+								}
+							}, errResult => {
+								callback(errResult, null);
+							}
+						);
+					} catch (error) {
+						callback(error, null);
 					}
 				}, errResult => {
-					callback(errResult, null);
+						callback(errResult, null);
 				}
 			);
 		}, errResult => {
@@ -294,9 +335,10 @@ var db_change_affiliation = function(username, affiliation, timestamp, callback)
 * @param  username  username that user typed
 * @param  interest a single additional interest
 * @param  timestamp timestamp of when interest was added
+* @param  postID id of this post
 * @return Does not return anything
 */
-var add_interest = function(username, interest, timestamp, callback) {
+var add_interest = function(username, interest, timestamp, postID, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
   		TableName : "interests",
@@ -323,28 +365,52 @@ var add_interest = function(username, interest, timestamp, callback) {
 					docClient.put(param1).promise().then(
 						successResult => {
 							try  {
-								var param = {
-									TableName : "posts",
-									Item:{
-										"username": username,
-										"content": username + " is now interested in " + interest,
-										"timestamp": timestamp
+								var getNameParam = {
+									TableName: "users",
+									 KeyConditionExpression: "username = :key",
+									 ExpressionAttributeValues: {
+										 ":key": username
 									}
 								};
 								
-								// add new interest to the table
-								docClient.put(param).promise().then(
-									successResult2 => {
-										try  {
-											console.log("Added item");
-											callback(null, successResult2);
-									
-										} catch (err) {
-											console.log("Unable to add item.");
-											callback(err, null);
+								docClient.query(getNameParam).promise().then(
+									successResult => {
+										try {
+											console.log(successResult);
+											//NEED TO GET THE USERS FUCKING NAME
+											var param = {
+												TableName : "posts",
+												Item:{
+													"userID": username,
+													"postID": postID,
+													"content": successResult.Items[0].fullname + " is now interested in " + interest,
+													"timestamp": timestamp,
+													"userName": successResult.Items[0].fullname,
+													"friend": false
+												}
+											};
+											// add new interest to the table
+											docClient.put(param).promise().then(
+												successResult2 => {
+													try  {
+														console.log("Added item");
+														callback(null, successResult2);
+												
+													} catch (err) {
+														console.log("Unable to add item.");
+														callback(err, null);
+													}
+												}, errResult => {
+													callback(errResult, null);
+												}
+											);
+
+
+										} catch (error) {
+											callback(error, null);
 										}
 									}, errResult => {
-										callback(errResult, null);
+											callback(errResult, null);
 									}
 								);
 							} catch (err) {
@@ -389,7 +455,11 @@ var db_remove_interest = function(username, interest, callback) {
 	
 	docClient.query(params1).promise().then(
 		successResult => {
+			console.log(successResult);
 			try {
+				if (successResult.Count === 2) {
+					throw new Error("Must have at least 2 interests");
+				} else {
 				var params2 = {
 					Key: {
 						"interest": {
@@ -409,8 +479,7 @@ var db_remove_interest = function(username, interest, callback) {
 						callback(null, data);
 					}
 				});
-
-				callback(null, successResult.Items);
+			}
 			} catch (error) {
 			    callback(9, null);
 			}
@@ -626,7 +695,6 @@ var db_get_email = function(username, callback) {
 * @param  newPwd new password that the user wants to update to
 * @return Does not return anything
 */
-// TODO: add conditionexpression to see if email isn't already that email (ALREADY DONE IN ROUTES?)
 var db_change_password = function(username, currPwd, newPwd, callback) {	
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
@@ -641,55 +709,53 @@ var db_change_password = function(username, currPwd, newPwd, callback) {
   	docClient.query(params).promise().then(
 		successResult => {
 			try {
-				const hash = crypto.createHash('sha256');
-				hash.update(currPwd);
-				var pwdResult = hash.digest('hex');
-				console.log(pwdResult);
-
-				if (successResult === null) {
-					throw new Error("Something went wrong, user doesn't exist");
-				} else if (successResult.Items[0].password != pwdResult) {
-					throw new Error("Invalid Password");
-				} else {
-					const newHash = crypto.createHash('sha256');
-					newHash.update(newPwd);
-					var newPwdResult = newHash.digest('hex');
-					console.log(newPwdResult);
-					if (pwdResult === newPwdResult) {
-						throw new Error("Enter new password");
-					}
-
-					var params = {
-						TableName: "users",
-						Key: {
-							"username": username
-						},
-						UpdateExpression: "set #CurrPass = :p",
-						ExpressionAttributeNames: {
-							"#CurrPass": "password"
-						},
-						ExpressionAttributeValues: {
-							":p": newPwdResult
+				let oldHash = successResult.Items[0].password;
+        		bcrypt.compare(currPwd, oldHash, function (err, equal) {
+            		if (!equal) {
+                		callback(11, null);
+                		return;
+            		}
+            		bcrypt.hash(newPwd, saltRounds, function (err, hashed) {
+                		if (err) {
+                    		callback(err, null);
+                    		return;
 						}
-					};
-			  
-			  		docClient.update(params).promise().then(
-					  	successResult => {
-						  	console.log("UPDATED");
-						  	console.log(successResult);
-						  	callback(null, successResult);
-					  	}, errResult => {
-						  	console.log(errResult);
-						  	callback(errResult, null);
-					  	});
+						
+						if (hashed === successResult.Items[0].password) {
+							throw new Error("Enter new password");
+						}
 
-				}
+						var params = {
+							TableName: "users",
+							Key: {
+								"username": username
+							},
+							UpdateExpression: "set #CurrPass = :p",
+							ExpressionAttributeNames: {
+								"#CurrPass": "password"
+							},
+							ExpressionAttributeValues: {
+								":p": hashed
+							}
+						};
+			  
+			  			docClient.update(params).promise().then(
+						  	successResult => {
+							  	console.log("UPDATED");
+							  	console.log(successResult);
+							  	callback(null, successResult);
+						  	}, errResult => {
+							  	console.log(errResult);
+							  	callback(errResult, null);
+							}
+						);
+           			});
+        		});
 			} catch (error) {
 			    callback(7, null);
 			}
-			  
 		}, errResult => {
-				callback(errResult, null);
+			callback(errResult, null);
 		}
 	);
 };
@@ -738,7 +804,7 @@ var db_get_curr_password = function(username, callback) {
 * in reverse chronological order
 */
 //TODO: FIX THE REVERSE CHRONOLOGICAL ORDER THING. CURRENTLY THE RETURN ARRAY IS SEPARATED BY USERNAME
-var db_get_homepage_posts = function(username, callback) {
+var db_get_homepage_posts = function(username, startTime, endTime, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
   		TableName : "friends",
@@ -751,12 +817,14 @@ var db_get_homepage_posts = function(username, callback) {
   	docClient.query(params).promise().then(
 		successResult => {
 			try {
+				console.log("BELOW IS SUCCESSRESULT.ITEMS");
 				console.log(successResult.Items);
 				var usernames = [];
 				for (var i=0; i < successResult.Count; i++) {
 					usernames.push(successResult.Items[i].friendUsername);
 				}
 				usernames.push(username);
+				console.log("USERNAMES");
 				console.log(usernames);
 			
 				var arrayOfPromises = [];
@@ -764,23 +832,30 @@ var db_get_homepage_posts = function(username, callback) {
 	  			for (var i = 0; i < usernames.length; i++) {
 					var params2 = {
 						TableName : "posts",
-						KeyConditionExpression: "#un = :username",
+						KeyConditionExpression: "#un = :userID and #ts BETWEEN :start AND :end",
 						ScanIndexForward: false,
 						ExpressionAttributeNames:{
-							"#un": "username"
+							"#un": "userID",
+							"#ts": "timestamp"
 						},
 						ExpressionAttributeValues: {
-							":username": usernames[i]
+							":userID": usernames[i],
+							":start": startTime,
+							":end": endTime
 						}
 					};
+					console.log("PARAMS2");
 					console.log(params2);
 					//Promise to query the keyword is pushed to array of promises
 		  			arrayOfPromises.push(docClient.query(params2).promise());
 	  			}
 	  			Promise.all(arrayOfPromises).then(
 			  		successResult => {
+			  			console.log(successResult);
 						callback(null, successResult);
 					}, errResult => {
+						console.log("PROMISE ALL FAIL?");
+						console.log(errResult);
 		  				callback(errResult, null);
 					}
 				);
@@ -801,30 +876,52 @@ var db_get_homepage_posts = function(username, callback) {
 
 /**
 * Gets all of the information on posts/status related to a user
-* This information will be used to render any users profile page
+* This information will be used to render any users wall 
 *
 * @param  username  username of a user
 * @return Array with the information of all of the posts/status updates of the user in 
 * reverse chronological order
 */
-var db_get_user_posts = function(username, callback) {
+var db_get_user_Wall = function(username, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
+	var arrayOfPromises = [];
+	var params1 = {
 		TableName : "posts",
-		KeyConditionExpression: "#un = :username",
+		KeyConditionExpression: "#uid = :userID",
+		FilterExpression: "#fr = :friend",
 		ScanIndexForward: false,
 		ExpressionAttributeNames:{
-			"#un": "username"
+			"#uid": "userID",
+			"#fr": "friend"
 		},
 		ExpressionAttributeValues: {
-			":username": username
+			":userID": username,
+			":friend": false
 		}
 	};
+	arrayOfPromises.push(docClient.query(params1).promise());
+	var params2 = {
+		TableName: "posts",
+		 IndexName: "posterID-index",
+		 KeyConditionExpression: "#pid = :posterID",
+		 FilterExpression: "#fr = :friend",
+		 ExpressionAttributeNames:{
+			"#pid": "posterID",
+			"#fr": "friend"
+		},
+		ExpressionAttributeValues: {
+			":posterID": username,
+			":friend": false
+		},
+		ScanIndexForward: false
+	};
+	arrayOfPromises.push(docClient.query(params2).promise());
 
 	// query the table with params, searching for item with the specified username
-	docClient.query(params).promise().then(
+	Promise.all(arrayOfPromises).then(
 		successResult => {
-			console.log(successResult);
+			console.log(successResult[0]);
+			console.log(successResult[1]);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -836,7 +933,111 @@ var db_get_user_posts = function(username, callback) {
 
 
 /**
-* Adds post info to "posts" and "hashtags" 
+* Adds post info to "posts" and "hashtags". For when user posts on someone elses wall
+*
+* @param  wallsUser  username of the user's wall that's getting posted on
+* @param  posterID  username of the current user (person trying to make post)
+* @param  postID generated postID
+* @param  content post content
+* @param  timestamp timestamp of when post was made
+* @param  hashtags hashtags (if any) of the post. Must be in form of an array
+* @return Does not return anything
+*/
+var db_make_wall_post = function(wallsUser, posterID, postID, content, timestamp, hashtags, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var userName;
+	var posterName;
+	var arrayOfPromises1 = [];
+	var getNameParam1 = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": wallsUser
+		}
+	};
+	arrayOfPromises1.push(docClient.query(getNameParam1).promise());
+
+	var getNameParam2 = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": poster
+		}
+	};
+	arrayOfPromises1.push(docClient.query(getNameParam2).promise());
+	Promise.all(arrayOfPromises1).then(
+		successResultA => {
+			console.log(successResultA[0].Items[0]);
+			userName = successResultA[0].Items[0].fullname;
+			posterName = successResultA[1].Items[0].fullname;
+			var params = {
+				TableName : "posts",
+				Item:{
+					"userID": wallsUser,
+					"postID": postID,
+					"content": content,
+					"timestamp": timestamp,
+					"posterID": posterID,
+					"userName": successResultA[0].Items[0].fullname,
+					"posterName": successResultA[1].Items[0].fullname,
+					"friend": false
+				}
+			};
+			docClient.put(params).promise().then(
+				successResult => {
+					if (hashtags.length !== 0) {
+						var arrayOfPromises = [];
+						  //Iterates through the keywords and creates params for that keyword
+						  for (var i = 0; i < hashtags.length; i++) {
+							var params2 = {
+								TableName : "hashtags",
+								Item:{
+									"userID": wallsUser,
+									"postID": postID,
+									"content": content,
+									"timestamp": timestamp,
+									"hashtag": hashtags[i],
+									"posterID": poster,
+									"userName": userName,
+									"posterName": posterName
+								}
+							};
+							//Promise to query the keyword is pushed to array of promises
+							  arrayOfPromises.push(docClient.put(params2).promise());
+						  }
+						  Promise.all(arrayOfPromises).then(
+							  successResult => {
+								callback(null, successResult);
+							}, errResult => {
+								  callback(errResult, null);
+							}
+						);
+		
+					} else {
+						callback(null, successResult);
+					}
+		
+				}, errResult => {
+					callback(errResult, null);
+				});
+
+
+		}, errResult => {
+			callback(errResult, null);
+		}
+	);
+};
+
+
+
+/**
+* Adds post info to "posts" and "hashtags". For when user makes post on homepage or their own wall
 *
 * @param  username  username of current user
 * @param  postID generated postID
@@ -845,60 +1046,84 @@ var db_get_user_posts = function(username, callback) {
 * @param  hashtags hashtags (if any) of the post. Must be in form of an array
 * @return Does not return anything
 */
-var db_make_post = function(postID, username, content, timestamp, poster, hashtags, callback) {
+// FOR SOME REASON THIS WORKS BUT THE PREVIOUS DIDNT?
+var db_make_post = function(username, postID, content, timestamp, hashtags, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "posts",
-		Item:{
-			"username": username,
-			"postID": postID,
-			"content": content,
-			"timestamp": timestamp,
-			"poster": poster
+	var userName;
+	var getNameParam = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": username
 		}
 	};
-	docClient.put(params).promise().then(
+	docClient.query(getNameParam).promise().then(
 		successResult => {
-			if (hashtags.length !== 0) {
-				var arrayOfPromises = [];
-	  			//Iterates through the keywords and creates params for that keyword
-	  			for (var i = 0; i < hashtags.length; i++) {
-					var params2 = {
-						TableName : "hashtags",
-						Item:{
-							"username": poster,
-							"postID": postID,
-							"content": content,
-							"timestamp": timestamp,
-							"hashtag": hashtags[i]
-						}
-					};
-					//Promise to query the keyword is pushed to array of promises
-		  			arrayOfPromises.push(docClient.put(params2).promise());
-	  			}
-	  			Promise.all(arrayOfPromises).then(
-			  		successResult => {
+			console.log(successResult.Items[0]);
+			userName = successResult.Items[0].fullname;
+			var params = {
+				TableName : "posts",
+				Item:{
+					"userID": username,
+					"postID": postID,
+					"content": content,
+					"timestamp": timestamp,
+					"userName": successResult.Items[0].fullname,
+					"friend": false
+				}
+			};
+			docClient.put(params).promise().then(
+				successResult => {
+					if (hashtags.length !== 0) {
+						var arrayOfPromises = [];
+						  //Iterates through the keywords and creates params for that keyword
+						  for (var i = 0; i < hashtags.length; i++) {
+							var params2 = {
+								TableName : "hashtags",
+								Item:{
+									"userID": username,
+									"postID": postID,
+									"content": content,
+									"timestamp": timestamp,
+									"hashtag": hashtags[i],
+									"userName": userName
+								}
+							};
+							//Promise to query the keyword is pushed to array of promises
+							  arrayOfPromises.push(docClient.put(params2).promise());
+						  }
+						  Promise.all(arrayOfPromises).then(
+							  successResult => {
+								callback(null, successResult);
+							}, errResult => {
+								  callback(errResult, null);
+							}
+						);
+		
+					} else {
 						callback(null, successResult);
-					}, errResult => {
-		  				callback(errResult, null);
 					}
-				);
+		
+				}, errResult => {
+					callback(errResult, null);
+				});
 
-			} else {
-				callback(null, successResult);
-			}
 
 		}, errResult => {
 			callback(errResult, null);
-		});
+		}
+	);
 };
 
 
 /**
-* Gets all posts with specific hashtag
+* Gets all posts that contain a specific hashtag
 *
-* @param  hashtag  Hashtag that was part of a post
-* @return Array with the information of all of the posts with specific hashtag
+* @param  hashtag  hashtag that you want to get
+* @return Array with the information of all of the comments
 */
 var db_get_hashtags = function(hashtag, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
@@ -926,6 +1151,7 @@ var db_get_hashtags = function(hashtag, callback) {
 		}
 	);
 };
+
 
 
 /** IDK IF WE SHOULD MAKE POSTS DELETABLE
@@ -1060,20 +1286,20 @@ var db_delete_comment = function(username, post_id, callback) {
 * once with yourUsername as partition key, once with friendUsername as partition key.
 * Both additions will use the same timestamp.
 *
-* @param  username  username of current user
+* @param  yourUsername  username of current user
 * @param  friendUsername username of person the user friended
 * @param  timestamp timestamp of when friend was added
+* @param  postID  id of post
 * @return Does not return anything
 */
-var db_add_friend = function(yourUsername, friendUsername, timestamp, callback) {
+var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var arrayOfPromises = [];
 	var yourParam = {
 		TableName : "friends",
 		Item:{
 			"yourUsername": yourUsername,
-			"friendUsername": friendUsername,
-			"timestamp": timestamp
+			"friendUsername": friendUsername
 		}
 	};
 	//Promise to add the keyword is pushed to array of promises
@@ -1083,42 +1309,66 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, callback) 
 		TableName : "friends",
 		Item:{
 			"yourUsername": friendUsername,
-			"friendUsername": yourUsername,
-			"timestamp": timestamp
+			"friendUsername": yourUsername
 		}
 	};
 	arrayOfPromises.push(docClient.put(friendParam).promise());
 
 	Promise.all(arrayOfPromises).then(
 		successResult => {
-			var arrayOfPromises2 = [];
-			var yourParam2 = {
-				TableName : "posts",
-				Item:{
-					"username": yourUsername,
-					"content": yourUsername + " is now friends with " + friendUsername,
-					"timestamp": timestamp
+			var userName;
+			var posterName;
+			var arrayOfPromisesNames = [];
+			var getyouNameParam = {
+				TableName : "users",
+				KeyConditionExpression: "#un = :username",
+				ExpressionAttributeNames:{
+					"#un": "username"
+				},
+				ExpressionAttributeValues: {
+					":username": yourUsername
 				}
 			};
-			arrayOfPromises2.push(docClient.put(yourParam2).promise());
+			arrayOfPromisesNames.push(docClient.query(getyouNameParam).promise());
 
-			var friendParam2 = {
-				TableName : "posts",
-				Item:{
-					"username": friendUsername,
-					"content": friendUsername + " is now friends with " + yourUsername,
-					"timestamp": timestamp
+			var getfriendNameParam = {
+				TableName : "users",
+				KeyConditionExpression: "#un = :username",
+				ExpressionAttributeNames:{
+					"#un": "username"
+				},
+				ExpressionAttributeValues: {
+					":username": friendUsername
 				}
 			};
-			arrayOfPromises2.push(docClient.put(friendParam2).promise());
-
-			Promise.all(arrayOfPromises2).then(
-				successResult2 => {
-					callback(null, successResult2);
+			arrayOfPromisesNames.push(docClient.query(getfriendNameParam).promise());
+			Promise.all(arrayOfPromisesNames).then(
+				successResult => {
+					var param = {
+						TableName : "posts",
+						Item:{
+							"userID": yourUsername,
+							"postID": postID,
+							"content": yourUsername + " is now friends with " + friendUsername,
+							"timestamp": timestamp,
+							"posterID": friendUsername,
+							"userName": successResult[0].Items[0].fullname,
+							"posterName": successResult[1].Items[0].fullname,
+							"friend": true
+						}
+					};
+		
+					docClient.put(param).promise().then(
+						successResult2 => {
+							callback(null, successResult2);
+						}, errResult => {
+							callback(errResult, null);
+						}
+					);
 				}, errResult => {
 					callback(errResult, null);
 				}
-			);
+			);	
 		}, errResult => {
 			callback(errResult, null);
 		}
@@ -1131,7 +1381,7 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, callback) 
 * once with yourUsername as partition key, once with friendUsername as partition key.
 * Both additions will use the same timestamp.
 *
-* @param  username  username of a user
+* @param  yourUsername  username of a user
 * @return List of usernames of all of a users friends
 */
 var db_get_friends = function(yourUsername, callback) {
@@ -1161,7 +1411,7 @@ var db_get_friends = function(yourUsername, callback) {
 /**
 * Removes both instances of the friendship from the "friends" table
 *
-* @param  username  username of current user
+* @param  yourUsername  username of current user
 * @param  friendUsername  username of a user that current user is trying to unfriend
 * @return Does not return anything
 */
@@ -1476,6 +1726,42 @@ var db_rename_chat = function(chatID, newName, callback) {
 };
 
 
+/**
+* Gets all users whose fullnames contain a certain string
+*
+* @param  typedName  what the user has typed so far
+* @return Array with the usernames whose partition key contains typedName
+*/
+//TODO: CHANGE TO A SCAN 
+var db_search_name = function(typedName, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "fullnames",
+		KeyConditionExpression: "begins_with (#fn, :fullname)",
+		ExpressionAttributeNames:{
+			"#fn": "fullname"
+		},
+		ExpressionAttributeValues: {
+			":fullname": typedName
+		}
+	};
+
+	// query the table with params
+	docClient.query(params).promise().then(
+		successResult => {
+			console.log(successResult);
+			callback(null, successResult);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
+
+
+
+
 
 
 /* We define an object with one field for each method. For instance, below we have
@@ -1499,8 +1785,9 @@ var database = {
   changePassword: db_change_password,
   getPassword: db_get_curr_password,
   getHomepagePosts: db_get_homepage_posts,
-  getUserPosts: db_get_user_posts,
+  getUserWall: db_get_user_Wall,
   getHashtags: db_get_hashtags,
+  makeWallPost: db_make_wall_post,
   makePost: db_make_post,
   deletePost: db_delete_post,
   getPostComments: db_get_post_comments,
@@ -1516,7 +1803,8 @@ var database = {
   getChatUsers: db_get_chat_users,
   joinChat: db_join_chat,
   leaveChat: db_leave_chat,
-  renameChat: db_rename_chat
+  renameChat: db_rename_chat,
+  searchName: db_search_name
 };
 
 module.exports = database;
