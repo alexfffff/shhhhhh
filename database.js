@@ -1405,8 +1405,8 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, ca
 							"content": userName + " is now friends with " + posterName,
 							"timestamp": timestamp,
 							"posterID": friendUsername,
-							"userName": successResult[0].Items[0].fullname,
-							"posterName": successResult[1].Items[0].fullname,
+							"userName": userName,
+							"posterName": posterName,
 							"friend": true
 						}
 					};
@@ -1432,13 +1432,6 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, ca
 	
 };
 
-/*
-
-*/
-
-/*
-
-*/
 
 
 
