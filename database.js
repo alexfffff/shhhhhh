@@ -1341,63 +1341,68 @@ var db_delete_comment = function(username, post_id, callback) {
 * @return Does not return anything
 */
 var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, callback) {
+	var userName; //full name of yourUsername
+	var posterName; //full name of friendUsername
 	var docClient = new AWS.DynamoDB.DocumentClient();
-	var arrayOfPromises = [];
-	var yourParam = {
-		TableName : "friends",
-		Item:{
-			"yourUsername": yourUsername,
-			"friendUsername": friendUsername
+	var arrayOfPromisesNames = [];
+	var getyouNameParam = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": yourUsername
 		}
 	};
-	//Promise to add the keyword is pushed to array of promises
-	arrayOfPromises.push(docClient.put(yourParam).promise());
+	arrayOfPromisesNames.push(docClient.query(getyouNameParam).promise());
 
-	var friendParam = {
-		TableName : "friends",
-		Item:{
-			"yourUsername": friendUsername,
-			"friendUsername": yourUsername
+	var getfriendNameParam = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": friendUsername
 		}
 	};
-	arrayOfPromises.push(docClient.put(friendParam).promise());
-
-	Promise.all(arrayOfPromises).then(
+	arrayOfPromisesNames.push(docClient.query(getfriendNameParam).promise());
+	Promise.all(arrayOfPromisesNames).then(
 		successResult => {
-			var userName;
-			var posterName;
-			var arrayOfPromisesNames = [];
-			var getyouNameParam = {
-				TableName : "users",
-				KeyConditionExpression: "#un = :username",
-				ExpressionAttributeNames:{
-					"#un": "username"
-				},
-				ExpressionAttributeValues: {
-					":username": yourUsername
+			userName = successResult[0].Items[0].fullname;
+			posterName = successResult[1].Items[0].fullname;
+			
+			var arrayOfPromises = [];
+			var yourParam = {
+				TableName : "friends",
+				Item:{
+					"yourUsername": yourUsername,
+					"friendUsername": friendUsername,
+					"fullname": posterName
 				}
 			};
-			arrayOfPromisesNames.push(docClient.query(getyouNameParam).promise());
+			//Promise to add the keyword is pushed to array of promises
+			arrayOfPromises.push(docClient.put(yourParam).promise());
 
-			var getfriendNameParam = {
-				TableName : "users",
-				KeyConditionExpression: "#un = :username",
-				ExpressionAttributeNames:{
-					"#un": "username"
-				},
-				ExpressionAttributeValues: {
-					":username": friendUsername
+			var friendParam = {
+				TableName : "friends",
+				Item:{
+					"yourUsername": friendUsername,
+					"friendUsername": yourUsername,
+					"fullname": userName
 				}
 			};
-			arrayOfPromisesNames.push(docClient.query(getfriendNameParam).promise());
-			Promise.all(arrayOfPromisesNames).then(
+			arrayOfPromises.push(docClient.put(friendParam).promise());
+
+			Promise.all(arrayOfPromises).then(
 				successResult => {
 					var param = {
 						TableName : "posts",
 						Item:{
 							"userID": yourUsername,
 							"postID": postID,
-							"content": yourUsername + " is now friends with " + friendUsername,
+							"content": userName + " is now friends with " + posterName,
 							"timestamp": timestamp,
 							"posterID": friendUsername,
 							"userName": successResult[0].Items[0].fullname,
@@ -1413,15 +1418,28 @@ var db_add_friend = function(yourUsername, friendUsername, timestamp, postID, ca
 							callback(errResult, null);
 						}
 					);
+				
 				}, errResult => {
 					callback(errResult, null);
 				}
-			);	
+			);
+
+
 		}, errResult => {
 			callback(errResult, null);
 		}
 	);
+	
 };
+
+/*
+
+*/
+
+/*
+
+*/
+
 
 
 /**
@@ -1454,6 +1472,7 @@ var db_get_friends = function(yourUsername, callback) {
 		}
 	);
 };
+
 
 
 /**
