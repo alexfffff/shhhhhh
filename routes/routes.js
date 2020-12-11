@@ -54,7 +54,7 @@ var getLogin = function(req, res) {
 		// users logged in cannot view the login page
 		res.redirect('/home');
 	} else {
-		res.render('main.ejs', {message: null});
+		res.render('main.ejs', {message: req.query.message});
 	}
 };
 
@@ -85,7 +85,7 @@ var signUp = function(req, res) {
 		// users logged in cannot view the sign up page, redirect to home page
 		res.redirect('/home');
 	} else {
-		res.render('signup.ejs', {message: null});
+		res.render('signup.ejs');
 	}
 };
 
@@ -104,11 +104,6 @@ var createAccount = function(req, res) {
 		// required interests, the first two are mandatory
 		var interest1 = req.body.myFirstInterest;
 		var interest2 = req.body.mySecondInterest;
-
-		// check that the required interests are unique first
-		if (interest1 === interest2) {
-			res.redirect('/signup/?message=' + 'Must_choose_at_least_two_unique_interests');
-		}
 
 		// use Set to ensure that all other interests are unique (a new user can optionally declare a maximum of five)
 		let interestSet = new Set();
@@ -201,7 +196,7 @@ var getSettings = function(req, res) {
 						var interests = data2;
 
 						// render the settings page, where a user can see and change their settings (only affiliation and interests displayed)
-						res.render('settings.ejs', {message: null, currAffiliation: affiliation, currInterests: interests, success: null, username: req.session.username});
+						res.render('settings.ejs', {message: req.query.message, currAffiliation: affiliation, currInterests: interests, success: req.query.success, username: req.session.username});
 					}
 				});
 			}
@@ -232,10 +227,10 @@ var updateEmail = function(req, res) {
 			// check for the type of error
 			if (err == 8) {
 				// user's old email does not match, or their new email is the same as their old one
-				res.redirect('/settings/?message=' + 'Please_enter_the_correct_old_email_and_a_valid_new_email');
+				res.redirect('/settings?message=' + 'Please_enter_the_correct_old_email_and_a_valid_new_email');
 			} else {
 				// error with querying database
-				res.redirect('/settings/?message=' + 'Database_error');
+				res.redirect('/settings?message=' + 'Database_error');
 			}
 		} else {
 			// redirect to the settings page, email successfully updated
@@ -255,13 +250,13 @@ var updatePassword = function(req, res) {
 			// check for the type of error
 			if (err == 7) {
 				// user's new password is the same as their old one
-				res.redirect('/settings/?message=' + 'Please_enter_a_different_new_password');
+				res.redirect('/settings?message=' + 'Please_enter_a_different_new_password');
 			} else if (err == 11) {
 				// user's inputted old password does not match their actual old password
-				res.redirect('/settings/?message=' + 'Password_does_not_match._Please_enter_the_correct_old_password');
+				res.redirect('/settings?message=' + 'Password_does_not_match._Please_enter_the_correct_old_password');
 			} else {
 				// error with querying database
-				res.redirect('/settings/?message=' + 'Database_error');
+				res.redirect('/settings?message=' + 'Database_error');
 			}
 		} else {
 			// redirect to the settings page, password successfully updated
@@ -277,14 +272,14 @@ var updateAffiliation = function(req, res) {
 
 	// old and new affiliations must be different
 	if (oldAffiliation === newAffiliation) {
-		res.redirect('/settings/?message=' + 'Enter_different_affiliations');
+		res.redirect('/settings?message=' + 'Enter_different_affiliations');
 	}
 
 	// query database for the user's actual old affiliation
 	db.getAffiliation(req.session.username, function(err1, data1) {
 		if (err1) {
 			// error with querying database
-			res.redirect('/settings/?message=' + 'Database_error');
+			res.redirect('/settings?message=' + 'Database_error');
 		} else {
 			if (data1.localeCompare(oldAffiliation) == 0) {
 				// update the user's affiliation in the database (force a status update)
@@ -294,7 +289,7 @@ var updateAffiliation = function(req, res) {
 				db.changeAffiliation(poster, newAffiliation, timestamp, id, function(err2, data2) {
 					if (err2) {
 						// error with querying database
-						res.redirect('/settings/?message=' + 'Database_error');
+						res.redirect('/settings?message=' + 'Database_error');
 					} else {
 						// successfully changed affiliation
 						res.redirect('/settings?message=' + 'Affiliation_successfully_updated' + '&success=true');
@@ -302,7 +297,7 @@ var updateAffiliation = function(req, res) {
 				});
 			} else {
 				// user's input does not match affiliation of user in database, fail to change affiliation
-				res.redirect('/settings/?message=' + 'Old_affiliation_does_not_match');
+				res.redirect('/settings?message=' + 'Old_affiliation_does_not_match');
 			}
 		}
 	});
@@ -321,10 +316,10 @@ var addNewInterest = function(req, res) {
 			// check for the type of error
 			if (err == 6) {
 				// user attempted to add an interest that they are already interested in
-				res.redirect('/settings/?message=' + 'Already_interested_in_this._Please_add_a_new_interest.');
+				res.redirect('/settings?message=' + 'Already_interested_in_this._Please_add_a_new_interest');
 			} else {
 				// error with querying database
-				res.redirect('/settings/?message=' + 'Database_error');
+				res.redirect('/settings?message=' + 'Database_error');
 			}
 		} else {
 			// successfully added an interest
@@ -346,10 +341,10 @@ var removeOldInterest = function(req, res) {
 			// check for the type of error
 			if (err == 9) {
 				// user attempted to remove an interest when they have two interests (two interests is the minimum number allowed)
-				res.redirect('/settings/?message=' + 'Must_have_at_least_two_interests.');
+				res.redirect('/settings?message=' + 'Must_have_at_least_two_interests');
 			} else {
 				// error with querying database
-				res.redirect('/settings/?message=' + 'Database_error');
+				res.redirect('/settings?message=' + 'Database_error');
 			}
 		} else {
 			// successfully removed an interest (forces a status update)
@@ -365,9 +360,10 @@ var getWall = function(req, res) {
 		res.redirect('/');
 	} else {
 		// get the username of the wall to visit
-		var wallToVisit = req.body.wallToVisit;
+		var wallToVisit = req.query.wallToVisit;
 		var posts;
-
+		
+		// TODO - TESTING URL ... use /wall?wallToVisit=
 		console.log("looking at wall of: " + wallToVisit);
 
 		// check if user clicked on their own page
@@ -647,14 +643,19 @@ var searchNews = function(req, res) {
 
 var newsFeedUpdate = function(req, res) {
 	// send the data from the database to display up-to-date version of the news page to the user
-	// TODO: CHANGE THIS DB METHOD TO WHATEVER RETURNS THE ARTICLES EVERY HOUR
+	
+	/* TODO: CHANGE THIS DB METHOD TO WHATEVER RETURNS THE ARTICLES EVERY HOUR
 	db.getHomepagePosts(req.session.username, function(err, data) {
 		if (err) {
 			res.send(err);
 		} else {
 			res.send(data);
 		}
-	});
+	});*/
+	
+	var news = [];
+	news.push("news");
+	res.send(news);
 };
 
 var logout = function(req, res) {
