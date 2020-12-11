@@ -342,7 +342,7 @@ var getWall = function(req, res) {
 			db.getUserWall(wallToVisit, function(err1, data1) {
 				if (err1) {
 					// handle database error
-					res.render(error.ejs);
+					res.render('error.ejs');
 				} else {
 					posts = data1;
 
@@ -355,7 +355,7 @@ var getWall = function(req, res) {
 			db.getFriends(req.session.username, function(err2, data2) {
 				if (err2) {
 					// handle database error
-					res.render(error.ejs);
+					res.render('error.ejs');
 				} else {
 					// render the wall depending on whether or not the user is friends with the user looking at the wall
 					if (data2.includes(wallToVisit)) {
@@ -363,7 +363,7 @@ var getWall = function(req, res) {
 						db.getUserWall(wallToVisit, function(err3, data3) {
 							if (err3) {
 								// handle database error
-								res.render(error.ejs);
+								res.render('error.ejs');
 							} else {
 								posts = data3;
 
@@ -376,7 +376,7 @@ var getWall = function(req, res) {
 						db.getUserWall(wallToVisit, function(err4, data4) {
 							if (err4) {
 								// handle database error
-								res.render(error.ejs);
+								res.render('error.ejs');
 							} else {
 								posts = data4;
 
