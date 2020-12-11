@@ -112,10 +112,8 @@ var getHome = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
-
-		// TODO - use the actual values for startTime and endTime, currently unknown
-
-		var startTime = 0;
+		// show only the most recent posts within the past hour
+		var startTime = Date.now() - 86400000; // subtracts 1 day (in milliseconds) from current time
 		var endTime = Date.now();
 
 		// show the home page to the user
@@ -491,11 +489,9 @@ var deleteFriend = function(req, res) {
 
 var getHomePagePosts = function(req, res) {
 	// send the data from the database to display up-to-date version of the home page to the user
+	var startTime = Date.now() - 300000; // show new posts from the last 5 minutes (in milliseconds)
+	var endTime = Date.now();
 
-	// TODO - THIS DOES NOT WORK BECAUSE I NEED startTime and endTime
-	var startTime = null;
-	var endTime = null;
-	
 	db.getHomepagePosts(req.session.username, startTime, endTime, function(err, data) {
 		if (err) {
 			res.send(err);
