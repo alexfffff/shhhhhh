@@ -1,3 +1,4 @@
+const { time } = require('console');
 var db = require('../models/database.js');
 
 var getLogin = function(req, res) {
@@ -55,27 +56,35 @@ var createAccount = function(req, res) {
 		var email = req.body.myNewEmail;
 		var affiliation = req.body.myNewAffiliation;
 		var birthday = req.body.myNewBirthday;
-		
-		console.log("this is bday: " + birthday);
-		console.log("first int: " + req.body.myFirstInterest);	
-		console.log("second int: " + req.body.mySecondInterest);
 
-		// TODO - A new user should also declare an interest in at least two news categories.
-		// array of interests, the first two are mandatory and a new user can optionally declare a maximum of five
-		var interests = [];
-		interests.push(req.body.myFirstInterest);
-		interests.push(req.body.mySecondInterest);
+		// required interests, the first two are mandatory
+		var interest1 = req.body.myFirstInterest;
+		var interest2 = req.body.mySecondInterest;
+
+		// check that the required interests are unique first
+		if (interest1 === interest2) {
+			res.redirect('/signup/?message=' + 'Must_choose_at_least_two_unique_interests');
+		}
+
+		// use Set to ensure that all other interests are unique (a new user can optionally declare a maximum of five)
+		let interestSet = new Set();
+		interestSet.add(interest1);
+		interestSet.add(interest2);
 		if (req.body.myThirdInterest) {
-			interests.push(req.body.myThirdInterest);
+			interestSet.add(req.body.myThirdInterest);
 		}
 		if (req.body.myFourthInterest) {
-			interests.push(req.body.myFourthInterest);
+			interestSet.add(req.body.myFourthInterest);
 		}
 		if (req.body.myFifthInterest) {
-			interests.push(req.body.myFifthInterest);
+			interestSet.add(req.body.myFifthInterest);
 		}
 
-		// TODO - check that all interests are unique
+		// array of interests built from the Set
+		var interests = [];
+		for (let i of interestSet) {
+			interests.push(i);
+		}
 
 		// attempt to create a new account with the requested username, password, full name, email, affiliation, birthday, and interests
 		db.createAccount(newUser, newPass, fullName, email, affiliation, birthday, interests, function(err, data) {
@@ -103,12 +112,32 @@ var getHome = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
+
+		// TODO - use the actual values for startTime and endTime, currently unknown
+
+		var startTime = 0;
+		var endTime = Date.now();
+
 		// show the home page to the user
-		db.getHomepagePosts(req.session.username, function(err, data) {
+		db.getHomepagePosts(req.session.username, startTime, endTime, function(err, data) {
 			if (err) {
 				// handle error with database
 				res.render('error.ejs');
 			} else {
+
+				// TODO - no idea wtf this is, need to debug (!!!)
+				console.log("data");
+				console.log(data);
+
+				console.log("json stringify data");
+				console.log(JSON.stringify(data));
+
+				console.log("data items");
+				console.log(data.Items);
+
+				console.log("data 0 items");
+				console.log(data[0].Items);
+
 				// pass the data from the table and render the home page to the user
 				res.render('home.ejs', {posts: data[0].Items, username: req.session.username, message: null});
 			}
@@ -195,8 +224,11 @@ var updatePassword = function(req, res) {
 		if (err) {
 			// check for the type of error
 			if (err == 7) {
-				// user's old password does not match, or their new password is the same as their old one
-				res.redirect('/settings/?message=' + 'Please_enter_the_correct_old_password_and_a_valid_new_password');
+				// user's new password is the same as their old one
+				res.redirect('/settings/?message=' + 'Please_enter_a_different_new_password');
+			} else if (err == 11) {
+				// user's inputted old password does not match their actual old password
+				res.redirect('/settings/?message=' + 'Password_does_not_match._Please_enter_the_correct_old_password');
 			} else {
 				// error with querying database
 				res.redirect('/settings/?message=' + 'Database_error');
@@ -213,6 +245,11 @@ var updateAffiliation = function(req, res) {
 	var oldAffiliation = req.body.myOldAffiliation;
 	var newAffiliation = req.body.myNewAffiliation;
 
+	// old and new affiliations must be different
+	if (oldAffiliation === newAffiliation) {
+		res.redirect('/settings/?message=' + 'Enter_different_affiliations');
+	}
+
 	// query database for the user's actual old affiliation
 	db.getAffiliation(req.session.username, function(err1, data1) {
 		if (err1) {
@@ -220,20 +257,22 @@ var updateAffiliation = function(req, res) {
 			res.redirect('/settings/?message=' + 'Database_error');
 		} else {
 			if (data1.localeCompare(oldAffiliation) == 0) {
-				// update the user's affiliation in the database
-				db.changeAffiliation(req.session.username, newAffiliation, function(err2, data2) {
+				// update the user's affiliation in the database (force a status update)
+				var timestamp = Date.now();
+				var poster = req.session.username;
+				var id = poster.concat(timestamp);
+				db.changeAffiliation(poster, newAffiliation, timestamp, id, function(err2, data2) {
 					if (err2) {
 						// error with querying database
 						res.redirect('/settings/?message=' + 'Database_error');
 					} else {
 						// successfully changed affiliation
-						// TODO: force a status update
 						res.redirect('/settings?message=' + 'Affiliation_successfully_updated' + '&success=true');
 					}
 				});
 			} else {
 				// user's input does not match affiliation of user in database, fail to change affiliation
-				res.redirect('/settings/?message=' + 'Affiliation_does_not_match');
+				res.redirect('/settings/?message=' + 'Old_affiliation_does_not_match');
 			}
 		}
 	});
@@ -243,9 +282,11 @@ var addNewInterest = function(req, res) {
 	// get the user's selected new interest and the timestamp of submission
 	var newInterest = req.body.myNewInterest;
 	var timestamp = Date.now();
+	var poster = req.session.username;
+	var id = poster.concat(timestamp);
 
-	// attempt to add the new interest to the user's interests
-	db.addInterest(req.session.username, newInterest, timestamp, function(err, data) {
+	// attempt to add the new interest to the user's interests (force a status update)
+	db.addInterest(poster, newInterest, timestamp, id, function(err, data) {
 		if (err) {
 			// check for the type of error
 			if (err == 6) {
@@ -257,7 +298,6 @@ var addNewInterest = function(req, res) {
 			}
 		} else {
 			// successfully added an interest
-			// TODO: force a status update
 			res.redirect('/settings?message=' + 'Interest_successfully_added' + '&success=true');
 		}
 	});
@@ -294,24 +334,58 @@ var getWall = function(req, res) {
 	} else {
 		// get the username of the wall to visit
 		var wallToVisit = req.body.wallToVisit;
+		var posts;
 
-		console.log(wallToVisit);
+		console.log("looking at wall of: " + wallToVisit);
 
-		// render the user's own page if they click on their own page
+		// check if user clicked on their own page
 		if (wallToVisit === req.session.username) {
-			res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true, username: req.session.username});
+			// get the posts to display on the wall
+			db.getUserWall(wallToVisit, function(err1, data1) {
+				if (err1) {
+					// handle database error
+					res.render(error.ejs);
+				} else {
+					posts = data1;
+
+					// render the user's own page if they click on their own page
+					res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true, username: req.session.username, wallPosts: posts});
+				}
+			});
 		} else {
 			// query database for user's friends
-			db.getFriends(req.session.username, function(err, data) {
-				if (err) {
+			db.getFriends(req.session.username, function(err2, data2) {
+				if (err2) {
 					// handle database error
 					res.render(error.ejs);
 				} else {
 					// render the wall depending on whether or not the user is friends with the user looking at the wall
-					if (data.includes(wallToVisit)) {
-						res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false, username: req.session.username});
+					if (data2.includes(wallToVisit)) {
+						// get the posts to display on the user's friend's wall
+						db.getUserWall(wallToVisit, function(err3, data3) {
+							if (err3) {
+								// handle database error
+								res.render(error.ejs);
+							} else {
+								posts = data3;
+
+								// render the user's friend's page and the posts on it
+								res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false, username: req.session.username, wallPosts: posts});
+							}
+						});
 					} else {
-						res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false, username: req.session.username});
+						// get the posts to display on the wall of someone who is not friends with the user
+						db.getUserWall(wallToVisit, function(err4, data4) {
+							if (err4) {
+								// handle database error
+								res.render(error.ejs);
+							} else {
+								posts = data4;
+
+								// render the non-friend page and the posts on it
+								res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false, username: req.session.username, wallPosts: posts});
+							}
+						});
 					}
 				}
 			});
@@ -348,17 +422,35 @@ var postToWall = function(req, res) {
 	// the username of the current wall that the poster is looking at
 	var username = req.body.currentWall;
 
-	db.makePost(id, username, content, timestamp, poster, hashtags, function(err, data) {
-		if (err) {
-			// error with querying database
-			res.render('error.ejs');
-		} else {
-			// successfully made a new post
-			// TODO: either do nothing (AJAX handles it?) or res.send
-			//res.send(data);
-			res.send("success");
-		}
-	});
+	// separates posts on a user's own wall and posts on other users' walls
+	if (poster === username) {
+		db.makePost(poster, id, content, timestamp, hashtags, function(err, data) {
+			if (err) {
+				// error with querying database
+				res.render('error.ejs');
+			} else {
+				// successfully made a new post on user's own wall
+				// TODO: either do nothing (AJAX handles it?) or res.send
+				//res.send(data);
+				// I DON'T KNOW WHAT TO SEND HERE
+				res.send("success");
+			}
+		});
+	} else {
+		// user makes a post on someone else's wall
+		db.makeWallPost(username, poster, id, content, timestamp, hashtags, function(err, data) {
+			if (err) {
+				// error with querying database
+				res.render('error.ejs');
+			} else {
+				// successfully made a new post on someone else's wall
+				// TODO: either do nothing (AJAX handles it?) or res.send
+				//res.send(data);
+				// I DON'T KNOW WHAT TO SEND HERE
+				res.send("success");
+			}
+		});
+	}
 };
 
 var addNewFriend = function(req, res) {
@@ -366,8 +458,9 @@ var addNewFriend = function(req, res) {
 	var user = req.session.username;
 	var userToFriend = req.body.userToFriend;
 	var timestamp = Date.now();
+	var id = user.concat(timestamp);
 
-	db.addFriend(user, userToFriend, timestamp, function(err, data) {
+	db.addFriend(user, userToFriend, timestamp, id, function(err, data) {
 		if (err) {
 			// error with querying database
 			res.render('error.ejs');
@@ -398,7 +491,12 @@ var deleteFriend = function(req, res) {
 
 var getHomePagePosts = function(req, res) {
 	// send the data from the database to display up-to-date version of the home page to the user
-	db.getHomepagePosts(req.session.username, function(err, data) {
+
+	// TODO - THIS DOES NOT WORK BECAUSE I NEED startTime and endTime
+	var startTime = null;
+	var endTime = null;
+	
+	db.getHomepagePosts(req.session.username, startTime, endTime, function(err, data) {
 		if (err) {
 			res.send(err);
 		} else {
@@ -410,10 +508,11 @@ var getHomePagePosts = function(req, res) {
 var commentOnPost = function(req, res) {
 	// get the user, comment content, post ID, and timestamp
 	var user = req.session.username;
-	var content = req.body.comment;
-	// TODO: Figure out how to get ID and timestamp of a post from the comment field (ejs)
-	//var id = req ...
-	//var timestamp = req ...
+	var content = req.body.commentContent;
+	var timestamp = Date.now();
+	var id = user.concat(timestamp);
+
+	// TODO - THIS IS NOT FINISHED YET AND I DON'T KNOW WHAT TO RES.SEND
 
 	db.addComment(user, content, id, timestamp, function(err, data) {
 		if (err) {
@@ -426,7 +525,7 @@ var commentOnPost = function(req, res) {
 	});
 };
 
-// TODO
+// TODO - get rid of this later
 var restaurantsList = function(req, res) {
 	db.getRestaurants(function(err, data) {
 		if (err) {
@@ -437,7 +536,7 @@ var restaurantsList = function(req, res) {
 	});
 };
 
-// TODO
+// TODO - get rid of this later
 var addRestaurant = function(req, res) {
 	var name = req.body.newName;
 	var latitude = req.body.newLatitude;
@@ -460,7 +559,7 @@ var addRestaurant = function(req, res) {
 	});
 };
 
-// TODO
+// TODO - get rid of this later
 var deleteRestaurant = function(req, res) {
 	var name = req.body.name;
 	
@@ -584,6 +683,8 @@ var routes = {
 	news_feed_update: newsFeedUpdate,
 
 	log_out: logout,
+
+	// IGNORE
 
   add_restaurant: addRestaurant,
   delete_restaurant: deleteRestaurant,
