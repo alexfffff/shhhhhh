@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+<body>
+    <script src = "/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io();
+        var id = Math.random();
+        var room = false;
+
+        function sendChat() {
+            if ($('#input').val().trim() !== '') {
+                socket.emit('chat message', {
+                    text: $('#input').val().trim(),
+                    sender: id,
+                    room: 1
+                });
+                $('#input').val('');
+                $('#input').focus();
+            }
+        }
+
+        $(document).ready(function () {
+            socket.on('chat message', function (msg) {
+                var message_temp = document.createElement("li");
+                if (id === msg.sender) {
+                    message_temp.setAttribute("class", "me");
+                } else {
+                    message_temp.setAttribute("class", "other");
+                }
+                message_temp.appendChild(document.createTextNode(msg.text))
+                $('#messages').append(message_temp);
+                $('#messages').animate({
+                    scrollTop: $('#messages').get(0).scrollHeight
+                }, 0);
+            });
+        
+            $(".left").addClass("fullWidth");
+
+            $("#roomBtn").on("click", function () {
+                if (!room) {
+                    $.post('/join', { room: 1 }, function (data) {
+                        if (data.success) {
+                            room = true;
+                            $(".left").removeClass("fullWidth");
+                            $(".right").show();
+                            $("#roomBtn").html("leave chat room");
+                        }
+                    });
+                } else {
+                    $.post('/leave', { room: 1}, function (data) {
+                        if (data.success) {
+                            room = false;
+                            $(".left").addClass("fullWidth");
+                            $(".right").hide();
+                            $("#roomBtn").html("enter chat room");
+                        }
+                    })
+                }
+            })
+        });
+
+        
+
+
+
+
+    </script>
+
+    <main>
+        <div class="left">
+            <div class = "wrapper">
+                <h1 class="SOMEhitnG?"><span>CHAT</span></h1>
+                <h3 class="something else"><span>ASLSKJ</span></h3>
+                <div>
+                    <h2 id="roomBtn" class="underlineHover"> enter chat room</h2>
+                </div>
+            </div>
+        </div>
+        <div class="right">
+            <div>
+                <ul id="messages">
+                </ul>
+            </div>
+            <form id="message-form">
+                <div id="form-message">
+                    <input class="form-control" id="input" autocomplete="off" placeholder="type a message..." onfocus="this.placeholder = ''" onblur="this.placeholder = 'type a msg'">
+                    <button type="button" id="send=btn" class="btn btun-light" onclick="return sendChat();"><i class="material-icons" style="font-size:26px;">send</i></button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+
+</body>
+</html>
