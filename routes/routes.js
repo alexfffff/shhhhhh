@@ -1,6 +1,54 @@
 const { time } = require('console');
 var db = require('../models/database.js');
 
+// helper function for sorting posts in reverse chronological order
+function sortPosts(data) {
+	var allPosts = [];
+	
+	// iterate through all posts from the database
+	for (let i = 0; i < data.length; i++) {
+		allPosts.push(data[i].Items);
+	}
+	
+	// map from timestamp to a post
+	let timestampToPost = new Map();
+	
+	// add every (non-empty) list of posts to the map, keyed by timestamp
+	for (let j = 0; j < allPosts.length; j++) {
+		let currPostList = allPosts[j];
+		if (currPostList.length != 0) {
+			// map every individual post (in each list of posts) by timestamp
+			for (let k = 0; k < currPostList.length; k++) {
+				timestampToPost.set(currPostList[k].timestamp, currPostList[k]);
+			}
+		}
+	}
+	
+	// get array of timestamps and sort them, more recent timestamps appear first
+	let timestamps = Array.from(timestampToPost.keys());
+	timestamps.sort();
+	timestamps.reverse();
+	
+	// reset all posts and push them into the array in sorted order
+	allPosts = [];
+	for (let t = 0; t < timestamps.length; t++) {
+		allPosts.push(timestampToPost.get(timestamps[t]));
+	}
+	
+	// TODO - DELETE LATER, USE FOR DEBUGGING PURPOSES
+	console.log("---------- All posts (sorted) below ----------");
+	console.log(allPosts);
+	
+	// TODO - DELETE LATER, USE FOR DEBUGGING PURPOSES
+	console.log("---------- All post content below ----------")
+	allPosts.forEach(post => {
+		console.log(post.content);
+	})
+	
+	// return the sorted posts from the data
+	return allPosts;
+}
+
 var getLogin = function(req, res) {
 	if (req.session.username !== undefined) {
 		// users logged in cannot view the login page
@@ -13,10 +61,6 @@ var getLogin = function(req, res) {
 var checkLogin = function(req, res) {
 	var username = req.body.myUsername;
 	var password = req.body.myPassword;
-
-	// TODO - implement login check with username and password (almost done)
-	console.log("username is: " + username);
-	console.log("password is: " + password);
 	
 	db.loginCheck(username, password, function(err, data) {
 		if (err) {
@@ -112,7 +156,7 @@ var getHome = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
-		// show only the most recent posts within the past hour
+		// show only the most recent posts within the past day
 		var startTime = Date.now() - 86400000; // subtracts 1 day (in milliseconds) from current time
 		var endTime = Date.now();
 
@@ -122,46 +166,7 @@ var getHome = function(req, res) {
 				// handle error with database
 				res.render('error.ejs');
 			} else {
-				var allPosts = [];
-				
-				// iterate through all posts from the database
-				for (let i = 0; i < data.length; i++) {
-					allPosts.push(data[i].Items);
-				}
-				
-				// map from timestamp to a post
-				let timestampToPost = new Map();
-				
-				// add every (non-empty) post to the map, keyed by timestamp
-				for (let j = 0; j < allPosts.length; j++) {
-					let currPosts = allPosts[j];
-					if (currPosts.length != 0) {
-						// map every post by timestamp
-						for (let k = 0; k < currPosts.length; k++) {
-							timestampToPost.set(currPosts[k].timestamp, currPosts[k]);
-						}
-					}
-				}
-				
-				console.log("map is below");
-				console.log(timestampToPost);
-				
-				// get array of timestamps and sort them, more recent timestamps appear first
-				let timestamps = Array.from(timestampToPost.keys());
-				timestamps.sort();
-				timestamps.reverse();
-				
-				console.log("timestamps below, sorted")
-				console.log(timestamps);
-				
-				// reset all posts and push them into the array in sorted order
-				allPosts = [];
-				for (let t = 0; t < timestamps.length; t++) {
-					allPosts.push(timestampToPost.get(timestamps[t]));
-				}
-				
-				console.log("all posts");
-				console.log(allPosts);
+				var allPosts = sortPosts(data);
 
 				// pass the data from the table and render the home page to the user
 				res.render('home.ejs', {posts: allPosts, username: req.session.username, message: null});
@@ -331,9 +336,12 @@ var addNewInterest = function(req, res) {
 var removeOldInterest = function(req, res) {
 	// get the user's selected old interest
 	var oldInterest = req.body.myOldInterest;
+	var timestamp = Date.now();
+	var poster = req.session.username;
+	var id = poster.concat(timestamp);
 
 	// attempt to remove the old interest from the user's interests
-	db.removeInterest(req.session.username, oldInterest, function(err, data) {
+	db.removeInterest(poster, oldInterest, timestamp, id, function(err, data) {
 		if (err) {
 			// check for the type of error
 			if (err == 9) {
@@ -344,8 +352,7 @@ var removeOldInterest = function(req, res) {
 				res.redirect('/settings/?message=' + 'Database_error');
 			}
 		} else {
-			// successfully removed an interest
-			// TODO: force a status update
+			// successfully removed an interest (forces a status update)
 			res.redirect('/settings?message=' + 'Interest_successfully_removed' + '&success=true');
 		}
 	});
@@ -371,7 +378,7 @@ var getWall = function(req, res) {
 					// handle database error
 					res.render('error.ejs');
 				} else {
-					posts = data1;
+					posts = sortPosts(data1);
 
 					// render the user's own page if they click on their own page
 					res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true, username: req.session.username, wallPosts: posts});
@@ -392,7 +399,7 @@ var getWall = function(req, res) {
 								// handle database error
 								res.render('error.ejs');
 							} else {
-								posts = data3;
+								posts = sortPosts(data3);
 
 								// render the user's friend's page and the posts on it
 								res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false, username: req.session.username, wallPosts: posts});
@@ -405,7 +412,7 @@ var getWall = function(req, res) {
 								// handle database error
 								res.render('error.ejs');
 							} else {
-								posts = data4;
+								posts = sortPosts(data4);
 
 								// render the non-friend page and the posts on it
 								res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false, username: req.session.username, wallPosts: posts});
@@ -524,37 +531,7 @@ var getHomePagePosts = function(req, res) {
 			res.send(err);
 		} else {
 			// TODO - not sure if I should also sort them before res.send
-			var allPosts = [];
-			
-			// iterate through all posts from the database
-			for (let i = 0; i < data.length; i++) {
-				allPosts.push(data[i].Items);
-			}
-			
-			// map from timestamp to a post
-			let timestampToPost = new Map();
-			
-			// add every (non-empty) post to the map, keyed by timestamp
-			for (let j = 0; j < allPosts.length; j++) {
-				let currPosts = allPosts[j];
-				if (currPosts.length != 0) {
-					// map every post by timestamp
-					for (let k = 0; k < currPosts.length; k++) {
-						timestampToPost.set(currPosts[k].timestamp, currPosts[k]);
-					}
-				}
-			}
-			
-			// get array of timestamps and sort them, more recent timestamps appear first
-			let timestamps = Array.from(timestampToPost.keys());
-			timestamps.sort();
-			timestamps.reverse();
-			
-			// reset all posts and push them into the array in sorted order
-			allPosts = [];
-			for (let t = 0; t < timestamps.length; t++) {
-				allPosts.push(timestampToPost.get(timestamps[t]));
-			}
+			var allPosts = sortPosts(data);
 			
 			// send the posts
 			res.send(allPosts);
