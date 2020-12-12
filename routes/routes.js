@@ -35,16 +35,6 @@ function sortPosts(data) {
 		allPosts.push(timestampToPost.get(timestamps[t]));
 	}
 	
-	// TODO - DELETE LATER, USE FOR DEBUGGING PURPOSES
-	console.log("---------- All posts (sorted) below ----------");
-	console.log(allPosts);
-	
-	// TODO - DELETE LATER, USE FOR DEBUGGING PURPOSES
-	console.log("---------- All post content below ----------")
-	allPosts.forEach(post => {
-		console.log(post.content);
-	})
-	
 	// return the sorted posts from the data
 	return allPosts;
 }
@@ -351,8 +341,13 @@ var getWall = function(req, res) {
 		var wallToVisit = req.query.wallToVisit;
 		var posts;
 		
+		// send user to their own wall if the URL parameter is missing
+		if (!wallToVisit) {
+			wallToVisit = req.session.username;
+		}
+		
 		// TODO - TESTING URL ... use /wall?wallToVisit=
-		console.log("looking at wall of: " + wallToVisit);
+		console.log("Looking at wall of: " + wallToVisit);
 
 		// check if user clicked on their own page
 		if (wallToVisit === req.session.username) {
@@ -363,6 +358,8 @@ var getWall = function(req, res) {
 					res.render('error.ejs');
 				} else {
 					posts = sortPosts(data1);
+					
+					console.log("Looking at my own wall...");
 
 					// render the user's own page if they click on their own page
 					res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true, username: req.session.username, wallPosts: posts});
@@ -375,13 +372,17 @@ var getWall = function(req, res) {
 					// handle database error
 					res.render('error.ejs');
 				} else {
-					
-					// TODO - UPDATE THIS BASED ON WHAT GETS RETURNED FROM DATABASE
-					console.log(data2);
-					// TODO - I SHOULD MAKE A VAR THAT GETS ALL OF THE USERNAMES OF FRIENDS FROM DATA2
+					// check if wall's owner is friends with the user looking at the wall
+					var isMyFriend = false;
+					for (let f of data2) {
+						if (f.friendUsername === wallToVisit) {
+							isMyFriend = true;
+							break;
+						}
+					}
 					
 					// render the wall depending on whether or not the user is friends with the user looking at the wall
-					if (data2.includes(wallToVisit)) {
+					if (isMyFriend) {
 						// get the posts to display on the user's friend's wall
 						db.getUserWall(wallToVisit, function(err3, data3) {
 							if (err3) {
@@ -389,6 +390,8 @@ var getWall = function(req, res) {
 								res.render('error.ejs');
 							} else {
 								posts = sortPosts(data3);
+								
+								console.log("Looking at a friend's wall...");
 
 								// render the user's friend's page and the posts on it
 								res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false, username: req.session.username, wallPosts: posts});
@@ -402,6 +405,8 @@ var getWall = function(req, res) {
 								res.render('error.ejs');
 							} else {
 								posts = sortPosts(data4);
+								
+								console.log("Looking at a non-friend's wall...");
 
 								// render the non-friend page and the posts on it
 								res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false, username: req.session.username, wallPosts: posts});
@@ -436,31 +441,37 @@ var postToWall = function(req, res) {
 
 	// the username of the current wall that the poster is looking at (extracted from URL)
 	var username = req.query.wallToVisit;
+	
+	// if URL parameter does not exist, user is looking at home page
+	if (!username) {
+		// treat as if user was posting on their own wall
+		username = poster;
+	}
 
 	// separates posts on a user's own wall and posts on other users' walls
 	if (poster === username) {
-		db.makePost(poster, id, content, timestamp, hashtags, function(err, data) {
-			if (err) {
+		db.makePost(poster, id, content, timestamp, hashtags, function(err1, data1) {
+			if (err1) {
 				// error with querying database
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on user's own wall
 				// TODO: either do nothing (AJAX handles it?) or res.send
-				//res.send(data);
+				//res.send(data1);
 				// I DON'T KNOW WHAT TO SEND HERE
 				res.send("success");
 			}
 		});
 	} else {
 		// user makes a post on someone else's wall
-		db.makeWallPost(username, poster, id, content, timestamp, hashtags, function(err, data) {
-			if (err) {
+		db.makeWallPost(username, poster, id, content, timestamp, hashtags, function(err2, data2) {
+			if (err2) {
 				// error with querying database
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on someone else's wall
 				// TODO: either do nothing (AJAX handles it?) or res.send
-				//res.send(data);
+				//res.send(data2);
 				// I DON'T KNOW WHAT TO SEND HERE
 				res.send("success");
 			}
@@ -471,7 +482,7 @@ var postToWall = function(req, res) {
 var addNewFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
 	var user = req.session.username;
-	var userToFriend = req.body.userToFriend;
+	var userToFriend = req.query.wallToVisit;
 	var timestamp = Date.now();
 	var id = user.concat(timestamp);
 
@@ -480,9 +491,10 @@ var addNewFriend = function(req, res) {
 			// error with querying database
 			res.render('error.ejs');
 		} else {
-			// successfully added a friend
+			// successfully added a friend, redirect to new friend's page
 			// TODO: either do nothing (AJAX handles it?) or res.send
-			res.send("success");
+			//res.send("success");
+			res.redirect('/wall?wallToVisit=' + userToFriend);
 		}
 	});
 };
@@ -490,16 +502,17 @@ var addNewFriend = function(req, res) {
 var deleteFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
 	var user = req.session.username;
-	var userToFriend = req.body.userToFriend;
+	var userToUnfriend = req.query.wallToVisit;
 
-	db.unfriend(user, userToFriend, function(err, data) {
+	db.unfriend(user, userToUnfriend, function(err, data) {
 		if (err) {
 			// error with querying database
 			res.render('error.ejs');
 		} else {
-			// successfully deleted a friend
+			// successfully deleted a friend, redirect to their page
 			// TODO: either do nothing (AJAX handles it?) or res.send
-			res.send("success");
+			//res.send("success");
+			res.redirect('/wall?wallToVisit=' + userToUnfriend);
 		}
 	});
 };
