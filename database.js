@@ -1547,6 +1547,38 @@ var db_logout = function(username, callback) {
 };
 
 
+/** 
+* Removes an interest from a user's profile
+*
+* @param  username  username of a user
+* @return fullname of that user
+*/
+var db_get_name = function(username, callback) {
+	var params = {
+		KeyConditions: {
+			// match the keyword with the username
+			username: {
+				ComparisonOperator: 'EQ',
+				AttributeValueList: [ { S: username } ]
+			}
+		},
+		TableName: "users",
+		// specify the name of the column for the attribute to get
+		AttributesToGet: [ 'fullname' ]
+	};
+
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			// Sends back affiliation of the user
+			callback(err, data.Items[0].fullname.S);
+		}
+	});
+};
+
 
 
 /**
@@ -1761,6 +1793,7 @@ var database = {
   getFriends: db_get_friends,
   unfriend: db_unfriend,
   logout: db_logout,
+  getName: db_get_name,
   searchName: db_search_name,
   newsSearch: db_news_search
 };
