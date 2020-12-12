@@ -17,6 +17,7 @@ const stemmer = require('stemmer');
 * @return Does not return anything
 */
 var my_login_check = function(username, password, callback) {
+	var userFullName;
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
   		TableName : "users",
@@ -35,6 +36,7 @@ var my_login_check = function(username, password, callback) {
 					let hash = successResult.Items[0].password;
 					bcrypt.compare(password, hash, function (err, res) {
 					if (res === true) {
+						userFullName = successResult.Items[0].fullname;
 						var docClient = new AWS.DynamoDB.DocumentClient();
 						var params = {
 								TableName: "users",
@@ -54,7 +56,7 @@ var my_login_check = function(username, password, callback) {
 							  successResult => {
 								  console.log("UPDATED");
 								  console.log(successResult);
-								  callback(null, username);
+								  callback(null, {username: username, fullname: userFullName});
 							  },
 							  errResult => {
 								  console.log(errResult);
@@ -1777,6 +1779,16 @@ var db_news_search = function(searchStr, callback) {
 		);
 	});
 };
+
+
+
+
+
+
+
+
+
+
 
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
