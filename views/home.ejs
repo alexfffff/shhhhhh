@@ -187,6 +187,20 @@
                         <a href="#" class="card-link"><i class="fa fa-comment"></i> Comment</a>
                         <a href="#" class="card-link"><i class="fa fa-mail-forward"></i> Share</a>
                     </div>
+                    <div class="card-body">
+                        <div class="card-subtitle">
+                             Comments
+                        </div>
+                        <form action="/commentonpost" method="post">
+                            <div class="form-group">
+                                <label class="sr-only" for="message">post</label>
+                                <textarea class="form-control" style="height:70px;" name="commentContent" rows="3" placeholder="Leave a comment, <%=username%>!" required></textarea>
+                                <input type="hidden" name="postID" value="post.postID">
+                                <br>
+                                <input type="submit" value="Comment" class="btn btn-lg btn-primary">
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 <!-- Post /////-->
 
@@ -320,6 +334,7 @@
                                     "<label class=\"sr-only\" for=\"message\">post</label>" +
                                     "<textarea class=\"form-control\" style=\"height:70px;\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
                                     "<br>" +
+                                    "<input type=\"hidden\" name=\"postID\" value=\"<%=post.postID%>\">" +
                                     "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
                                 " </div>" +
                             "</form>" +
