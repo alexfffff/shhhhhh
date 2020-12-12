@@ -60,6 +60,7 @@ var checkLogin = function(req, res) {
 				res.redirect('/?message=' + 'Username_or_password_invalid._Please_try_again.');
 			} else {
 				// handle error with database
+				console.log("error with checklogin");
 				res.render('error.ejs');
 			}
 		} else {
@@ -548,7 +549,8 @@ var postToWall = function(req, res) {
 				// TODO: either do nothing (AJAX handles it?) or res.send
 				//res.send(data1);
 				// I DON'T KNOW WHAT TO SEND HERE
-				res.send("success");
+				console.log("successfully made post on own wall");
+				//res.send("success");
 			}
 		});
 	} else {
@@ -562,7 +564,8 @@ var postToWall = function(req, res) {
 				// TODO: either do nothing (AJAX handles it?) or res.send
 				//res.send(data2);
 				// I DON'T KNOW WHAT TO SEND HERE
-				res.send("success");
+				console.log("successfully made post on someone else's wall");
+				//res.send("success");
 			}
 		});
 	}
@@ -637,10 +640,13 @@ var getHomePagePosts = function(req, res) {
 
 	db.getHomepagePosts(req.session.username, startTime, endTime, function(err, data) {
 		if (err) {
-			res.send(err);
+			console.log('AJAX ERROR IN ROUTES getHomePagePosts');
+			res.send("error");
 		} else {
 			// TODO - not sure if I should also sort them before res.send
 			var allPosts = sortPosts(data);
+
+			console.log("AJAX SUCCESSFUL CALL 5 SEC");
 			
 			// send the posts
 			res.send(allPosts);
@@ -656,15 +662,18 @@ var commentOnPost = function(req, res) {
 	
 	// get the postID, indicates which post is being commented on
 	var postID = req.body.postID;
+	console.log("postID: " + postID);
 	
 	// commentID is postID + commenter's username + timestamp of comment
 	var commentID = postID.concat(user).concat(timestamp);
+	console.log("commentID: " + commentID);
 
 	// TODO - THIS IS NOT FINISHED YET AND I DON'T KNOW WHAT TO RES.SEND
 
 	db.addComment(commentID, user, content, postID, timestamp, function(err, data) {
 		if (err) {
 			// error with querying database
+			console.log("addComment error with database");
 			res.render('error.ejs');
 		} else {
 			// TODO: ideally have the comment appear immediately, with no redirect

@@ -389,6 +389,7 @@
     // automatic refresh every 5 seconds to update home page
     var refreshTime = function() {
         // set clock to refresh every 5000 ms
+        console.log("refresh time called");
         $("#clock").html((new Date()).toString());
         setTimeout(refreshTime, 5000);
         // make AJAX call to get the home page posts and compare the data from the server to the data on the client
@@ -398,7 +399,16 @@
                 success: function(data) {
                     // list containing the differences between the server and client
                     var newPosts = [];
+                    alert("refresh");
+
+                    if (data === "error") {
+                        alert("AJAX FUCKING ERROR");
+                    }
                         
+                    if (data === "success") {
+                        alert("AJAX FUCKING SUCCESS");
+                    }
+
                     // iterate through data (posts) sent from server
                     data.forEach(p => {
                         // put the post in the list if it's from the server but not on the client
@@ -410,12 +420,64 @@
                     });
                         
                     // TODO: ACTUALLY DISPLAY THE NEW POSTS THAT THE SERVER HAS SENT TO THE CLIENT
+                    var container = document.getElementbyId("allposts");
                     newPosts.forEach(newPost => {
-                        // SEE ABOVE
+                        //VISUAL RENDER OF THE NEWPOST
+                        var content = "<div class=\"card gedf-card\">" +
+                        "<div class=\"card-header\">" +
+                            "<div class=\"d-flex justify-content-between align-items-center\">" +
+								"<div class=\"d-flex justify-content-between align-items-center\">" +
+									"<div class=\"mr-2\">" +
+										"<img class=\"rounded-circle\" width=\"45\" src=\"https://picsum.photos/50/50\">" +
+                                    "</div>";
+                        if(newPost.friend) {
+                            content += "<div class=\"ml-2\">" +
+                                            "<div class=\"h5 m-0\">@" + newPost.posterName + " posted on @" + newPost.userName + "'s wall</div>" +
+                                        "</div>";
+                        } else {
+                            content += "<div class=\"ml-2\">" +
+                                            "<div class=\"h5 m-0\">@" + newPost.posterName + "</div>" +
+                                        "</div>";
+                        }
+                            content +=      "</div>" +
+                                        "</div>" +
+                                    "</div>" +
+                                    "<div class=\"card-body\">" +
+                                        "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i>" + newPost.timestamp + "</div>" +
+                                        "<a class=\"card-link\" href=\"#\">" +
+                                            "<h5 class=\"card-title\">" + newPost.postID + "</h5>" +
+                                        "</a>" +
+                                        "<p class=\"card-text\">" + newPost.content + "</p>" +
+                                    "</div>" +
+                                    "<div class=\"card-footer\">" + 
+                                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
+                                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
+                                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                                    "</div>" +
+                                    "<div class=\"card-body\">" +
+                                        "<div class=\"card-subtitle\">" +
+                                            "Comments" +
+                                        "</div>" +
+                                        "<form action=\"/commentonpost\" method=\"post\">" +
+                                            "<div class=\"form-group\">" +
+                                                "<label class=\"sr-only\" for=\"message\">post</label>" +
+                                                "<textarea class=\"form-control\" style=\"height:70px;\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                                "<br>" +
+                                                "<input type=\"hidden\" name=\"postID\" value=\"newPost.postID%>\">" +
+                                                "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
+                                            " </div>" +
+                                        "</form>" +
+                                    " </div>" +
+                                "</div> ";
+                        postsOnClient.push(newPost);
+                        //ADDS THE NEWEST POST AT THE BEGINNING OF ALL POSTS.
+                        container.innerHTML = content += container.innerHTML;
                     });
+                   
                 },
                 error: function(err) {
                     // TODO: HANDLE ERRORS WITH AJAX CALLING DATABASE
+                    alert("I HAVE NO IDEA WHEN THIS SHOWS UP");
                     alert(err);
                 }
             })

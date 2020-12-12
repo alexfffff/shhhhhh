@@ -75,7 +75,7 @@
                             <div class="h6 text-muted">Friends</div>
                             <div class="h5">
                                 <div class="friend-list">
-                                    <a class="button" href="/friendsof" role="button" class="btn btn-primary">Friends</a>
+                                    <a class="button" href="/friendsof?user=<%=username%>" role="button" class="btn btn-primary">Friends</a>
                                 </div>
                             </div>
                         </li>
@@ -343,6 +343,7 @@ var refreshTime = function() {
                 // TODO: ACTUALLY DISPLAY THE NEW POSTS THAT THE SERVER HAS SENT TO THE CLIENT
                 newPosts.forEach(newPost => {
                     // SEE ABOVE
+                    
                 });
             },
             error: function(err) {
