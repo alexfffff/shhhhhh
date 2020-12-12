@@ -238,6 +238,7 @@
                         <a href="#" class="card-link"><i class="fa fa-comment"></i> Comment</a>
                         <a href="#" class="card-link"><i class="fa fa-mail-forward"></i> Share</a>
                     </div>
+
                 </div>
                 <!-- Post /////-->
             </div>   
@@ -271,13 +272,13 @@
 
 <script>
     var postsOnClient = [];
+    var commentsOnPosts = [];
 
-    function initHomePage() {
+    function initAllPosts() {
         // TODO: ACTUALLY DISPLAY POSTS ON THE HOME PAGE SOMEHOW
         // iterate through all of the posts
-        console.log("initHomePage called");
+        console.log("initAllPosts called");
         var container = document.getElementById('allposts');
-        var i;
         <% posts.forEach(post => { %>
             var content = "<div class=\"card gedf-card\">" +
                         "<div class=\"card-header\">" +
@@ -303,9 +304,27 @@
                             "<a class=\"card-link\" href=\"#\">" +
                                 "<h5 class=\"card-title\"><%=post.postID%></h5>" +
                             "</a>" +
-                            "<p class=\"card-text\"> <%=post.content%></p>";
-                content += "</div>" +
-                       "</div>";
+                            "<p class=\"card-text\"> <%=post.content%></p>" +
+                         "</div>" +
+                         "<div class=\"card-footer\">" + 
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                        "</div>" +
+                        "<div class=\"card-body\">" +
+                            "<div class=\"card-subtitle\">" +
+                                "Comments" +
+                            "</div>" +
+                            "<form action=\"/commentonpost\" method=\"post\">" +
+                                "<div class=\"form-group\">" +
+                                    "<label class=\"sr-only\" for=\"message\">post</label>" +
+                                    "<textarea class=\"form-control\" style=\"height:70px;\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                    "<br>" +
+                                    "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
+                                " </div>" +
+                            "</form>" +
+                        " </div>" +
+                    "</div> ";
             postsOnClient.push("<%=post%>");
             container.innerHTML += content;
 
@@ -313,7 +332,15 @@
 
         // add each post from the server into the list of posts stored on the client side
         <% }); %>
-        console.log(container);
+        console.log(postsOnClient);
+    }
+
+    function initAllComments() {
+
+    }
+
+    function renderPostsAndComments() {
+
     }
 
     // TODO: ejs form submit button (for making a new post) should have: onclick="makeNewPost()"
@@ -379,7 +406,8 @@
             })
     };
 
-    initHomePage();
+    initAllComments();
+    initAllPosts();
 
     $(document).ready(function() {
         // CAN CHANGE CSS CODE (THE LINE BELOW) IF THERE ARE CONFLICTS
