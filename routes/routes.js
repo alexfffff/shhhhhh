@@ -138,7 +138,7 @@ var createAccount = function(req, res) {
 				}
 			} else {
 				// new account successfully created, log in with new account and redirect to home page
-				req.session.username = data;
+				req.session.username = newUser;
 				res.redirect('/home');
 			}
 		});
@@ -203,18 +203,6 @@ var getSettings = function(req, res) {
 		});
 	}
 };
-
-//var updateSettings = function(req, res) {
-	/* 
-		TODO - Users should be able to change their affiliation after the account has been created, and
-		they should be able to change the news categories they are interested in. Changes to these fields should
-		result in an automatic status update (“Alice is now interested in Quantum Physics”). They should also be
-		able to change their email and their password, without a status update.
-	*/
-
-	// Automatic status update - changes to affiliation, news categories
-	// No status update - changes to email, password
-//}
 
 var updateEmail = function(req, res) {
 	// get the user's inputted old email and new email
@@ -387,6 +375,11 @@ var getWall = function(req, res) {
 					// handle database error
 					res.render('error.ejs');
 				} else {
+					
+					// TODO - UPDATE THIS BASED ON WHAT GETS RETURNED FROM DATABASE
+					console.log(data2);
+					// TODO - I SHOULD MAKE A VAR THAT GETS ALL OF THE USERNAMES OF FRIENDS FROM DATA2
+					
 					// render the wall depending on whether or not the user is friends with the user looking at the wall
 					if (data2.includes(wallToVisit)) {
 						// get the posts to display on the user's friend's wall
@@ -511,6 +504,30 @@ var deleteFriend = function(req, res) {
 	});
 };
 
+var showFriends = function(req, res) {
+	// check if user is logged in
+	if (req.session.username === undefined) {
+		// redirect to the login page if not logged in
+		res.redirect('/');
+	} else {
+		// check if the URL has the user parameter
+		if (!req.query.user) {
+			// redirect to the home page if the URL has missing parameters
+			res.redirect('/home');
+		}
+		// get the user's current list of friends
+		db.getFriends(req.query.user, function(err, data) {
+			if (err) {
+				// error with querying database
+				res.render('error.ejs');
+			} else {				
+				// render the friends page, where a user can see someone's friends
+				res.render('friends.ejs', {friends: data, friendsOf: req.query.user, username: req.session.username});
+			}
+		});
+	}
+};
+
 var getHomePagePosts = function(req, res) {
 	// send the data from the database to display up-to-date version of the home page to the user
 	var startTime = Date.now() - 300000; // show new posts from the last 5 minutes (in milliseconds)
@@ -630,9 +647,21 @@ var searchNews = function(req, res) {
 
 	console.log("YOU SEARCHED FOR: " + keyword);
 
-	// call db method
-	// temporarily does nothing
-	res.render('/newsresults.ejs', {username: req.session.username, articles: null}); // not sure about fields for ejs, need "articles" though
+	// TODO - call db method
+	db.newsSearch(keyword, function(err, data) {
+		if (err) {
+			// handle database error
+			res.render('error.ejs');
+		} else {
+			// temporarily does nothing
+			
+			console.log("news articles returned from db are");
+			console.log(data);
+			
+			res.render('/newsresults.ejs', {username: req.session.username, articles: null});
+			// not sure about fields for ejs, need "articles" though
+		}
+	});
 }
 
 var newsFeedUpdate = function(req, res) {
@@ -694,6 +723,8 @@ var routes = {
 
 	get_wall: getWall,
 	post_to_wall: postToWall,
+	
+	get_friends: showFriends,
 
 	add_friend: addNewFriend,
 	delete_friend: deleteFriend,
