@@ -146,15 +146,36 @@ var getHome = function(req, res) {
 		var endTime = Date.now();
 
 		// show the home page to the user
-		db.getHomepagePosts(req.session.username, startTime, endTime, function(err, data) {
-			if (err) {
+		db.getHomepagePosts(req.session.username, startTime, endTime, function(err1, data1) {
+			if (err1) {
 				// handle error with database
 				res.render('error.ejs');
 			} else {
-				var allPosts = sortPosts(data);
-
-				// pass the data from the table and render the home page to the user
-				res.render('home.ejs', {posts: allPosts, username: req.session.username, message: null});
+				// sort the posts returned from the database
+				var allPosts = sortPosts(data1);
+				
+				// get all of the post IDs
+				var allPostIDs = [];
+				for (let p of allPosts) {
+					allPostIDs.push(p.postID);
+				}
+				
+				// get all of the comments for each post
+				db.getPostComments(allPostIDs, function(err2, data2) {
+					if (err2) {
+						// handle error with database
+						res.render('error.ejs');
+					} else {
+						var allComments = data2;
+						
+						// pass the data from the table and render the home page to the user
+						res.render('home.ejs', {
+							posts: allPosts, 
+							comments: allComments, 
+							username: req.session.username
+						});
+					}
+				});
 			}
 		});
 	}
@@ -340,6 +361,8 @@ var getWall = function(req, res) {
 		// get the username of the wall to visit
 		var wallToVisit = req.query.wallToVisit;
 		var posts;
+		var comments;
+		var allPostIDs = [];
 		
 		// send user to their own wall if the URL parameter is missing
 		if (!wallToVisit) {
@@ -360,9 +383,31 @@ var getWall = function(req, res) {
 					posts = sortPosts(data1);
 					
 					console.log("Looking at my own wall...");
-
-					// render the user's own page if they click on their own page
-					res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: true, username: req.session.username, wallPosts: posts});
+					
+					// get all of the post IDs
+					for (let p of posts) {
+						allPostIDs.push(p.postID);
+					}
+					
+					// get all of the comments for each post
+					db.getPostComments(allPostIDs, function(err1b, data1b) {
+						if (err1b) {
+							// handle error with database
+							res.render('error.ejs');
+						} else {
+							comments = data1b;
+							
+							// render the user's own page if they click on their own page
+							res.render('wall.ejs', {
+								user: wallToVisit, 
+								isFriend: false, 
+								isSelf: true, 
+								username: req.session.username, 
+								wallPosts: posts, 
+								wallComments: comments
+							});
+						}
+					});
 				}
 			});
 		} else {
@@ -392,9 +437,31 @@ var getWall = function(req, res) {
 								posts = sortPosts(data3);
 								
 								console.log("Looking at a friend's wall...");
-
-								// render the user's friend's page and the posts on it
-								res.render('wall.ejs', {user: wallToVisit, isFriend: true, isSelf: false, username: req.session.username, wallPosts: posts});
+								
+								// get all of the post IDs
+								for (let p of posts) {
+									allPostIDs.push(p.postID);
+								}
+								
+								// get all of the comments for each post
+								db.getPostComments(allPostIDs, function(err3b, data3b) {
+									if (err3b) {
+										// handle error with database
+										res.render('error.ejs');
+									} else {
+										comments = data3b;
+										
+										// render the user's friend's page and the posts on it
+										res.render('wall.ejs', {
+											user: wallToVisit, 
+											isFriend: false, 
+											isSelf: true, 
+											username: req.session.username, 
+											wallPosts: posts, 
+											wallComments: comments
+										});
+									}
+								});
 							}
 						});
 					} else {
@@ -407,9 +474,31 @@ var getWall = function(req, res) {
 								posts = sortPosts(data4);
 								
 								console.log("Looking at a non-friend's wall...");
-
-								// render the non-friend page and the posts on it
-								res.render('wall.ejs', {user: wallToVisit, isFriend: false, isSelf: false, username: req.session.username, wallPosts: posts});
+								
+								// get all of the post IDs
+								for (let p of posts) {
+									allPostIDs.push(p.postID);
+								}
+								
+								// get all of the comments for each post
+								db.getPostComments(allPostIDs, function(err4b, data4b) {
+									if (err4b) {
+										// handle error with database
+										res.render('error.ejs');
+									} else {
+										comments = data4b;
+										
+										// render the non-friend page and the posts on it
+										res.render('wall.ejs', {
+											user: wallToVisit, 
+											isFriend: false, 
+											isSelf: true, 
+											username: req.session.username, 
+											wallPosts: posts, 
+											wallComments: comments
+										});
+									}
+								});
 							}
 						});
 					}
@@ -560,15 +649,20 @@ var getHomePagePosts = function(req, res) {
 };
 
 var commentOnPost = function(req, res) {
-	// get the user, comment content, post ID, and timestamp
+	// get the user, comment content, and timestamp
 	var user = req.session.username;
 	var content = req.body.commentContent;
 	var timestamp = Date.now();
-	var id = user.concat(timestamp);
+	
+	// get the postID, indicates which post is being commented on
+	var postID = req.body.postID;
+	
+	// commentID is postID + commenter's username + timestamp of comment
+	var commentID = postID.concat(user).concat(timestamp);
 
 	// TODO - THIS IS NOT FINISHED YET AND I DON'T KNOW WHAT TO RES.SEND
 
-	db.addComment(user, content, id, timestamp, function(err, data) {
+	db.addComment(commentID, user, content, postID, timestamp, function(err, data) {
 		if (err) {
 			// error with querying database
 			res.render('error.ejs');
