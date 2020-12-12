@@ -49,9 +49,12 @@ app.post('/updateaffiliation', routes.update_affiliation);
 app.post('/addinterest', routes.add_interest);
 app.post('/removeinterest', routes.remove_interest);
 
-// wall page (get route to view the page, post route to post a status update)
+// wall page (get route to view the page, post route to make posts)
 app.get('/wall', routes.get_wall);
 app.post('/postonwall', routes.post_to_wall);
+
+// view a page displaying a user's list of friends
+app.get('/friendsof', routes.get_friends);
 
 // routes for adding and removing friends
 app.post('/addfriend', routes.add_friend);
