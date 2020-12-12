@@ -62,7 +62,7 @@ var my_login_check = function(username, password, callback) {
 								  callback(errResult, null);
 							  });
 					} else {
-						callback("Wrong username or password", false);
+						callback(5, false);
 					}
 				});
 				}
@@ -1237,70 +1237,98 @@ var db_delete_post = function(username, post_id, callback) {
 /**
 * Gets all comments on a specific post
 *
-* @param  postID  postID of the post to generate comments
+* @param  postID  list of postIDs of the post that you want the comments for
 * @return Array with the information of all of the comments
 */
 var db_get_post_comments = function(postID, callback) {
-	// create params to query for an item with the postID
-	var params = {
-		KeyConditions: {
-			// match the keyword with the username
-			postID: {
-				ComparisonOperator: 'EQ',
-				AttributeValueList: [ { S: postID } ]
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var arrayOfPromises = [];
+	postID.forEach(post => {
+		var params = {
+			TableName: "comments",
+			 IndexName: "postID-index",
+			 ScanIndexForward: false,
+			 KeyConditionExpression: "postID = :pi",
+			 ExpressionAttributeValues: {
+				 ":pi": post
 			}
-		},
-		TableName: "comments"
-	};
+		};
+		arrayOfPromises.push(docClient.query(params).promise());
+	});
 
 	// query the table with params, searching for item with the specified username
-	db.query(params, function(err, data) {
-		if (err || data.Items.length === 0) {
-			// username not found in table, or some other error
-			callback(err, null);
-		} else {
-			callback(err, data.Items);
+	Promise.all(arrayOfPromises).then(
+		successResult => {
+			console.log(successResult);
+			callback(null, successResult);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
 		}
-	});
+	);
 };
 
 
 /**
 * Adds post comment information into "comment" table
 *
+* @param  commentID generated postID
 * @param  username  username of current user
 * @param  postID generated postID
 * @param  comment comment content
-* @param  timestamp timestamp of when post was made
+* @param  timestamp timestamp of when comment was made
 * @return 
 */
-var db_add_comment = function(username, comment, postID, timestamp, callback) {
-	// create new comment with the appropriate attributes
+var db_add_comment = function(commentID, username, comment, postID, timestamp, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "comments",
-		Item:{
-			"username": username,
-			"postID": postID,
-			"comment": comment,
-			"timestamp": timestamp
+	var userName;
+	var getNameParam = {
+		TableName : "users",
+		KeyConditionExpression: "#un = :username",
+		ExpressionAttributeNames:{
+			"#un": "username"
+		},
+		ExpressionAttributeValues: {
+			":username": username
 		}
 	};
+	docClient.query(getNameParam).promise().then(
+		successResult => {
+			console.log(successResult.Items[0]);
+			userName = successResult.Items[0].fullname;
+			var params = {
+				TableName : "comments",
+				Item:{
+					"commentID": commentID,
+					"username": username,
+					"postID": postID,
+					"comment": comment,
+					"timestamp": timestamp,
+					"fullname": userName
+				}
+			};
+		
+			docClient.put(params).promise().then(
+					successResult => {
+				try  {
+					console.log("Added item");
+					callback(null, successResult);
+					
+				} catch (err) {
+					console.log("Unable to add item.");
+					callback(err, null);
+				}
+			},
+			errResult => {
+				callback(errResult, null);
+			});
 
-	docClient.put(params).promise().then(
-			successResult => {
-		try  {
-			console.log("Added item");
-			callback(null, successResult);
-			
-		} catch (err) {
-			console.log("Unable to add item.");
-			callback(err, null);
+
+		}, errResult => {
+			callback(errResult, null);
 		}
-	},
-	errResult => {
-		callback(errResult, null);
-	});
+	);
 };
 
 
@@ -1547,6 +1575,38 @@ var db_logout = function(username, callback) {
 };
 
 
+/** 
+* Removes an interest from a user's profile
+*
+* @param  username  username of a user
+* @return fullname of that user
+*/
+var db_get_name = function(username, callback) {
+	var params = {
+		KeyConditions: {
+			// match the keyword with the username
+			username: {
+				ComparisonOperator: 'EQ',
+				AttributeValueList: [ { S: username } ]
+			}
+		},
+		TableName: "users",
+		// specify the name of the column for the attribute to get
+		AttributesToGet: [ 'fullname' ]
+	};
+
+	// query the table with params, searching for item with the specified username
+	db.query(params, function(err, data) {
+		if (err || data.Items.length === 0) {
+			// username not found in table, or some other error
+			callback(err, null);
+		} else {
+			// Sends back affiliation of the user
+			callback(err, data.Items[0].fullname.S);
+		}
+	});
+};
+
 
 
 /**
@@ -1718,16 +1778,6 @@ var db_news_search = function(searchStr, callback) {
 	});
 };
 
-
-
-
-
-
-
-
-
-
-
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
@@ -1761,6 +1811,7 @@ var database = {
   getFriends: db_get_friends,
   unfriend: db_unfriend,
   logout: db_logout,
+  getName: db_get_name,
   searchName: db_search_name,
   newsSearch: db_news_search
 };

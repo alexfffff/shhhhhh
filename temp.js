@@ -1,4 +1,26 @@
-/* TEMPORARY FILE WITH CODE TO BE INTEGRATED INTO home.ejs WHEN READY */
+/* TEMPORARY FILE WITH CODE TO BE INTEGRATED WHEN READY */
+
+// ---------- UPDATE AS OF 12/12 ----------
+/* HOW TO RUN ALEX'S CODE (JAVA FROM JAVASCRIPT) */
+const { exec } = require('child_process');
+
+const filepath = 'java <INSERT PATH TO ALEXS FILE HERE>';
+
+exec(filepath, (error, stdout, stderr) => {
+  if (error) {
+    console.error(error: ${error.message});
+    return;
+  }
+
+  if (stderr) {
+    console.error(stderr: ${stderr});
+    return;
+  }
+
+  console.log(stdout:\n${stdout});
+});
+
+// ---------- END OF UPDATE 12/12 ----------
 
 // ---------- UPDATE AS OF 12/7 ----------
 // see the following line, copy and paste it whenever there is a "message" field to display in an ejs file
