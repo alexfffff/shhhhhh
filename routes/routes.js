@@ -64,8 +64,9 @@ var checkLogin = function(req, res) {
 				res.render('error.ejs');
 			}
 		} else {
-			// set the session's username to reflect login, and redirect user to the home page
-			req.session.username = data;
+			// set the session's username and full name to reflect login, and redirect user to the home page
+			req.session.username = username;
+			req.session.fullname = data.fullname;
 			res.redirect('/home');
 		}
 	});
@@ -549,8 +550,14 @@ var postToWall = function(req, res) {
 				// TODO: either do nothing (AJAX handles it?) or res.send
 				//res.send(data1);
 				// I DON'T KNOW WHAT TO SEND HERE
-				console.log("successfully made post on own wall");
-				//res.send("success");
+				console.log("Successfully made post on own wall");
+				res.send({
+					username: poster, 
+					postID: id, 
+					content: content, 
+					timestamp: timestamp, 
+					hashtags: hashtags
+				});
 			}
 		});
 	} else {
@@ -564,8 +571,15 @@ var postToWall = function(req, res) {
 				// TODO: either do nothing (AJAX handles it?) or res.send
 				//res.send(data2);
 				// I DON'T KNOW WHAT TO SEND HERE
-				console.log("successfully made post on someone else's wall");
-				//res.send("success");
+				console.log("Successfully made post on someone else's wall");
+				res.send({
+					wallsUser: username, 
+					posterID: poster, 
+					postID: id, 
+					content: content, 
+					timestamp: timestamp, 
+					hashtags: hashtags
+				});
 			}
 		});
 	}
@@ -640,16 +654,40 @@ var getHomePagePosts = function(req, res) {
 
 	db.getHomepagePosts(req.session.username, startTime, endTime, function(err, data) {
 		if (err) {
-			console.log('AJAX ERROR IN ROUTES getHomePagePosts');
+			console.log("AJAX ERROR IN ROUTES: see var getHomePagePosts");
 			res.send("error");
 		} else {
-			// TODO - not sure if I should also sort them before res.send
+			// sort the posts returned from the database
 			var allPosts = sortPosts(data);
-
-			console.log("AJAX SUCCESSFUL CALL 5 SEC");
 			
-			// send the posts
-			res.send(allPosts);
+			// get all of the post IDs
+			var allPostIDs = [];
+			for (let p of allPosts) {
+				allPostIDs.push(p.postID);
+			}
+			
+			// get all of the comments for each post
+			db.getPostComments(allPostIDs, function(err2, data2) {
+				if (err2) {
+					// handle error with database
+					res.render('error.ejs');
+				} else {
+					var allComments = data2;
+					
+					console.log("AJAX SUCCESSFUL CALL every 5 seconds from routes");
+					console.log("Sending the following posts (from the last 5 minutes) to home.ejs...");
+					console.log(allPosts);
+					console.log("Sending the following comments (from the last 5 minutes) to home.ejs...");
+					console.log(allComments);
+					console.log("Everything above successfully sent to home.ejs");
+					
+					// send the data (posts and comments)
+					res.send({
+						posts: allPosts, 
+						comments: allComments
+					})
+				}
+			});
 		}
 	});
 };
@@ -784,7 +822,7 @@ var newsFeedUpdate = function(req, res) {
 	// send the data from the database to display up-to-date version of the news page to the user
 	
 	/* TODO: CHANGE THIS DB METHOD TO WHATEVER RETURNS THE ARTICLES EVERY HOUR
-	db.getHomepagePosts(req.session.username, function(err, data) {
+	db.something(req.session.username, function(err, data) {
 		if (err) {
 			res.send(err);
 		} else {
