@@ -792,24 +792,16 @@ var getNews = function(req, res) {
 
 // TODO - news
 var searchNews = function(req, res) {
-	// TODO - search news
 	var keyword = req.body.keyword;
 
-	console.log("YOU SEARCHED FOR: " + keyword);
-
-	// TODO - call db method
-	db.newsSearch(keyword, function(err, data) {
+	// query the database with the keyword and username to get the articles
+	db.newsSearch(keyword, req.session.username, function(err, data) {
 		if (err) {
 			// handle database error
 			res.render('error.ejs');
 		} else {
-			// temporarily does nothing
-			
-			console.log("news articles returned from db are");
-			console.log(data);
-			
-			res.render('/newsresults.ejs', {username: req.session.username, articles: null});
-			// not sure about fields for ejs, need "articles" though
+			// render the news search results page, and the resulting articles based on keyword
+			res.render('newsresults.ejs', {username: req.session.username, articles: data, keyword: keyword});
 		}
 	});
 }
