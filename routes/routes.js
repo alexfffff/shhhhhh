@@ -131,6 +131,7 @@ var createAccount = function(req, res) {
 			} else {
 				// new account successfully created, log in with new account and redirect to home page
 				req.session.username = newUser;
+				req.session.fullname = fullName;
 				res.redirect('/home');
 			}
 		});
@@ -193,8 +194,8 @@ var getSettings = function(req, res) {
 		// get the user's current affiliation
 		db.getAffiliation(req.session.username, function(err1, data1) {
 			if (err1) {
-				// error with querying database
-				res.render('settings.ejs', {message: err1, currAffiliation: null, currInterests: null, success: null, username: req.session.username});
+				// handle error with database
+				res.render('error.ejs');
 			} else {
 				// store the current affiliation
 				var affiliation = data1;
@@ -202,8 +203,8 @@ var getSettings = function(req, res) {
 				// get the user's current interests
 				db.getInterests(req.session.username, function(err2, data2) {
 					if (err2) {
-						// error with querying database
-						res.render('settings.ejs', {message: err2, currAffiliation: null, currInterests: null, success: null, username: req.session.username});
+						// handle error with database
+						res.render('error.ejs');
 					} else {
 						// store the current interests
 						var interests = data2;
@@ -546,11 +547,8 @@ var postToWall = function(req, res) {
 				// error with querying database
 				res.render('error.ejs');
 			} else {
-				// successfully made a new post on user's own wall
-				// TODO: either do nothing (AJAX handles it?) or res.send
-				//res.send(data1);
-				// I DON'T KNOW WHAT TO SEND HERE
-				console.log("Successfully made post on own wall");
+				// successfully made a new post on user's own wall, sends the post information
+				console.log("Successfully made post on my own wall");
 				res.send({
 					username: poster, 
 					postID: id, 
@@ -567,10 +565,7 @@ var postToWall = function(req, res) {
 				// error with querying database
 				res.render('error.ejs');
 			} else {
-				// successfully made a new post on someone else's wall
-				// TODO: either do nothing (AJAX handles it?) or res.send
-				//res.send(data2);
-				// I DON'T KNOW WHAT TO SEND HERE
+				// successfully made a new post on someone else's wall, sends the post information
 				console.log("Successfully made post on someone else's wall");
 				res.send({
 					wallsUser: username, 
@@ -598,8 +593,6 @@ var addNewFriend = function(req, res) {
 			res.render('error.ejs');
 		} else {
 			// successfully added a friend, redirect to new friend's page
-			// TODO: either do nothing (AJAX handles it?) or res.send
-			//res.send("success");
 			res.redirect('/wall?wallToVisit=' + userToFriend);
 		}
 	});
@@ -616,8 +609,6 @@ var deleteFriend = function(req, res) {
 			res.render('error.ejs');
 		} else {
 			// successfully deleted a friend, redirect to their page
-			// TODO: either do nothing (AJAX handles it?) or res.send
-			//res.send("success");
 			res.redirect('/wall?wallToVisit=' + userToUnfriend);
 		}
 	});
@@ -649,13 +640,13 @@ var showFriends = function(req, res) {
 
 var getHomePagePosts = function(req, res) {
 	// send the data from the database to display up-to-date version of the home page to the user
-	var startTime = Date.now() - 300000; // show new posts from the last 5 minutes (in milliseconds)
+	var startTime = Date.now() - 5000; // show new posts from the last 5 seconds (in milliseconds)
 	var endTime = Date.now();
 
 	db.getHomepagePosts(req.session.username, startTime, endTime, function(err, data) {
 		if (err) {
-			console.log("AJAX ERROR IN ROUTES: see var getHomePagePosts");
-			res.send("error");
+			// error with querying database
+			res.render('error.ejs');
 		} else {
 			// sort the posts returned from the database
 			var allPosts = sortPosts(data);
@@ -706,8 +697,6 @@ var commentOnPost = function(req, res) {
 	var commentID = postID.concat(user).concat(timestamp);
 	console.log("commentID: " + commentID);
 
-	// TODO - THIS IS NOT FINISHED YET AND I DON'T KNOW WHAT TO RES.SEND
-
 	db.addComment(commentID, user, content, postID, timestamp, function(err, data) {
 		if (err) {
 			// error with querying database
@@ -715,7 +704,14 @@ var commentOnPost = function(req, res) {
 			res.render('error.ejs');
 		} else {
 			// TODO: ideally have the comment appear immediately, with no redirect
-			res.send(data);
+			// successfully added a new comment, send the comment information
+			res.send({
+				commentID: commentID, 
+				username: user, 
+				comment: content, 
+				postID: postID, 
+				timestamp: timestamp
+			});
 		}
 	});
 };
@@ -841,13 +837,16 @@ var logout = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
-		// invoke db method to set the status of user to logged off
+		// invoke database method to set the status of user to logged off
 		db.logout(req.session.username, function(err, data) {
 			if (err) {
 				res.render('error.ejs');
 			} else {
-				// reset the session's username to undefined to indicate that the user has logged out, redirect to the login page
+				// reset the session's username and full name to undefined to indicate that the user has logged out
 				req.session.username = undefined;
+				req.session.fullname = undefined;
+				
+				// redirect to the login page
 				res.redirect('/');
 			}
 		});
