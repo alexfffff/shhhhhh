@@ -1815,7 +1815,35 @@ var db_news_search = function(searchStr, username, callback) {
 
 
 
+/** 
+* Removes an interest from a user's profile
+*
+* @param  username  username of a user
+* @return List of recommended articles for user
+*/
+var get_article_recs = function(username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var newsUsername = "u:".concat(username);
+    var paramsRecommended = {
+    		TableName: "recommend",
+			KeyConditionExpression: "username = :user",
+			ExpressionAttributeValues: {
+				":user": newsUsername
+			}
+		};
 
+	// query the table with params, searching for item with the specified username
+	docClient.query(paramsRecommended).promise().then(
+		successResult => {
+			console.log(successResult);
+			callback(null, successResult);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
 
 
 
@@ -1858,7 +1886,8 @@ var database = {
   logout: db_logout,
   getName: db_get_name,
   searchName: db_search_name,
-  newsSearch: db_news_search
+  newsSearch: db_news_search,
+  getArticleRecs: get_article_recs
 };
 
 module.exports = database;
