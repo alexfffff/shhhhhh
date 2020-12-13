@@ -22,6 +22,184 @@ exec(filepath, (error, stdout, stderr) => {
 
 // ---------- END OF UPDATE 12/12 ----------
 
+
+// ---------- UPDATE AS OF 12/12 @sclya2000 ----------
+/* DATABASE METHOD FOR SEARCHING FOR NEWS ARTICLES FROM A KEYWORD */
+
+/**
+* Gets all articles that match the keywords extracted from the search 
+*
+* @param  searchStr  what the user entered into the search bar
+* @param  username   the username of the person searching
+* @return Array with the results of the search in the correct order
+*/
+var db_news_search = function(searchStr, username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	// Makes all lowercase and stems the word
+	var key = searchStr.toLowerCase();
+	var keyArr = key.split(" ");
+	// Create arrays that will need to be accessed later
+	var queryResults = [];
+	var articleNamePromises = [];
+	var results = [];
+	var repeats = [];
+    var arrayOfPromises = [];
+	
+	// map of recommended articles for this user, maps article name to adsorption graph weight
+    var recommended = new Map();
+    var recommendedArticles = [];
+    var newsUsername = "u:".concat(username);
+    var paramsRecommended = {
+    		TableName: "recommend",
+			KeyConditionExpression: "username = :user",
+			ExpressionAttributeValues: {
+				":user": newsUsername
+			}
+		};
+    
+    // query for all of the recommended articles under the user's username
+    docClient.query(paramsRecommended).promise().then(
+    	successResultRecommended => {
+    		// add the recommended articles and weights to the map and list
+    		for (let newsArticle of successResultRecommended.Items) {
+    			recommended.set(newsArticle.article.substring(2), newsArticle.weight);
+    			recommendedArticles.push(newsArticle.article.substring(2));
+    		}
+
+    		console.log("----- Map of user's recommended articles to their weight -----");
+    	    console.log(recommended);
+    	    
+    	    // Iterates through the keywords and creates params for that keyword
+    		for (var i = 0; i < keyArr.length; i++) {
+    			keyArr[i] = stemmer(keyArr[i]);
+    			var params = {
+    				TableName: "inverted",
+    				KeyConditionExpression: "keyword = :terms",
+    				ExpressionAttributeValues: {
+    					":terms": keyArr[i]
+    				}
+    			};
+    			// Promise to query the keyword is pushed to array of promises
+    			articleNamePromises.push(docClient.query(params).promise());
+    		}
+    		Promise.all(articleNamePromises).then(
+    			successResult1 => {
+    				// Adds each article from each keyword query to an array of articles
+    				successResult1.forEach(function (item) {
+    					item.Items.forEach(function (talk) {
+    						queryResults.push(talk.article);
+    					})
+    				});
+    			}, errResult => {
+    				console.log("failed to get articles");
+    				callback(errResult, null);
+    			}
+    		).then(
+    			successResult2 => {
+    				// Iterates through each article and pushes promise to query for the talk to array of promises
+    				for (var i = 0; i < queryResults.length; i++) {
+    					var params = {
+    						TableName: 'news',
+    						KeyConditionExpression: "article = :article",
+    						ExpressionAttributeValues: {
+    							":article": queryResults[i]
+    						}
+    					};
+    					var newPromise = docClient.query(params).promise();
+    					arrayOfPromises.push(newPromise);
+    				}
+    			}, errResult => {
+    				console.log("failed to create array of promises");
+    				callback(errResult, null);
+    			}
+    		).then(function(successResult2) {
+    			// Promise.all to resolve promises in array of promises
+    			Promise.all(arrayOfPromises).then(
+    				successResult => {
+    					// Filters and retrieves the article info for each article and pushes it to "results" array
+    					successResult.forEach(function (item) {
+    						if (item.Count > 0) {
+    							repeats.push(item.Items[0]);
+    						}
+    					});
+    					
+    					// Finds how many of each talk there are to see which has repeats
+    					var talkFreqs = repeats.reduce((arr, talk) => 
+    						(arr[talk.article] = (arr[talk.article] || 0) + 1, arr), {});
+    							  						
+    						// For loop based on number of keywords searched. Each iteration will just address
+    						// talks with 'i' keyword matches
+    						for (var i = keyArr.length; i > 0; i--) {
+    							// Array that will only hold talks that had 'i' keyword matches
+    							var tempArr = [];
+    							for (let [key, value] of Object.entries(talkFreqs)) {
+    							  	if (value == i) {
+    									tempArr.push(key);
+    								}
+    							}
+    							
+    							// Goes through the temp array that only holds talks of 'i' keyword
+    							// matches and adds the talk just once to results array
+    							var tempTalks = [];
+    							tempArr.forEach(function(name) {
+    								var alreadyThere = false;
+    								repeats.forEach(function(talk) {
+    									if (talk.article == name) {
+    										for (var i = 0; i < tempTalks.length; i++) {
+    											if (tempTalks[i].article == name) {
+    												  alreadyThere = true;
+    												  break;
+    											}
+    										}
+    										if (!alreadyThere) {
+    											tempTalks.push(talk);
+    										}
+    									}
+    								});
+    							});
+    								
+	    						// articles recommended and not recommended to the user from the search results
+	    						var recommendedToMe = [];
+	    						var notRecommendedToMe = [];
+	    						
+	    						// push every talk in tempTalks into one of the search result arrays
+    							for (let talk of tempTalks) {
+    								if (recommendedArticles.includes(talk.article)) {
+    									recommendedToMe.push(talk);
+    								} else {
+    									notRecommendedToMe.push(talk);
+    								}
+    							}
+    							
+    							// sort the search results in recommendations, descending by weight
+    							recommendedToMe.sort(function(a,b) {
+    								return ((recommended.get(b.article)) - (recommended.get(a.article)));
+    							});
+    	    					
+    							// append the recommended search results and the not recommended search results
+    	    					results = results.concat(recommendedToMe.concat(notRecommendedToMe));
+    						}
+    						
+    						// callback with the finalized article results
+    						callback(null, results);
+    						
+    				}, errResult => {
+    					console.log("failed to get article info"); 
+    					callback(errResult, null);
+    				}
+    			);
+    		});
+    	}, errResultRecommended => {
+    		console.log("failed to get user's recommended articles");
+    		callback(errResult, null);
+    	}
+    );
+};
+
+// ---------- END OF UPDATE 12/12 ----------
+
+
+
 // ---------- UPDATE AS OF 12/7 ----------
 // see the following line, copy and paste it whenever there is a "message" field to display in an ejs file
 
