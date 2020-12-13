@@ -169,14 +169,10 @@ var create_account = function(username, password, name, email, affiliation, birt
 			  						successResult => {
 										var nameParam = {
 											Item: {
-												"fullname": {
-													S: name
-												},
-												"username": {
-													S: username
-												}
+												"fullname": name,
+												"username": username
 											},
-											TableName: "fullnames"
+										TableName: "fullnames"
 										};
 										docClient.put(nameParam, function(err, data) {
 											if (err) {
