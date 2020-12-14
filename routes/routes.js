@@ -292,6 +292,10 @@ var updateAffiliation = function(req, res) {
 	// get the user's inputted old affiliation and new affiliation
 	var oldAffiliation = req.body.myOldAffiliation;
 	var newAffiliation = req.body.myNewAffiliation;
+	
+	// trim any excess whitespace at the end of the affiliations
+	oldAffiliation = oldAffiliation.trim();
+	newAffiliation = newAffiliation.trim();
 
 	// old and new affiliations must be different
 	if (oldAffiliation === newAffiliation) {
