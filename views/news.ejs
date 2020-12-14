@@ -1,5 +1,6 @@
 <head>
-    <title>News Recommendations</title>
+    <title>News Feed</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<!------ Include the above in your HEAD tag ---------->
 	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
@@ -7,68 +8,6 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous"/>
 	<link rel="stylesheet" type="text/css" href="pennbook.css"/>
 </head>
-
-<script>
-	var articlesOnClient = [];
-	
-	function initNewsPage() {
-		// TODO: ACTUALLY DISPLAY ARTICLES ON THE NEWS PAGE SOMEHOW
-	
-		// iterate through all of the articles
-		<% articles.forEach(article => { %>
-	
-			// TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY ARTICLE
-			//<!-- TODO: Show the news article recommendations (use AJAX for hourly updates) -->
-			// Article recommendations go here
-	
-			// add each article from the server into the list of articles stored on the client side
-			articlesOnClient.push("<%=article%>");
-		<% }) %>
-	}
-	
-	// automatic refresh every 1 hour to update the news page
-	var refreshTime = function() {
-		// set clock to refresh every 5000 ms (TODO: CHANGE THIS TO ONE HOUR AFTER IT WORKS)
-		$("#clock").html((new Date()).toString());
-		setTimeout(refreshTime, 5000);
-		// make AJAX call to get the news articles and compare the data from the server to the data on the client
-		$.ajax({
-				url: "/newsfeedupdate",
-				type: "GET",
-				success: function(data) {
-					// list containing the differences between the server and client
-					var newArticles = [];
-						
-					// iterate through data (articles) sent from server
-					data.forEach(a => {
-						// put the article in the list if it's from the server but not on the client
-						if (!articlesOnClient.includes(a)) {
-							newArticles.push(a);
-							// update the client-side list to contain new articles from the server
-							articlesOnClient.push(a);
-						}
-					});
-						
-					// TODO: ACTUALLY DISPLAY THE NEW ARTICLES THAT THE SERVER HAS SENT TO THE CLIENT
-					newArticles.forEach(newArticle => {
-						// SEE ABOVE
-						alert("AJAX test " + newArticle);
-					});
-				},
-				error: function(err) {
-					// TODO: HANDLE ERRORS WITH AJAX CALLING DATABASE
-					alert(err);
-				}
-			})
-	};
-	
-	$(document).ready(function() {
-		// CAN CHANGE CSS CODE (THE LINE BELOW) IF THERE ARE CONFLICTS
-		$("#clock").css("color", "white");
-		setTimeout(refreshTime, 5000);
-	});
-	
-</script>
 
 <body>
 	<!--Top Header bar: Title of page, Toolbar, Search bar-->
@@ -106,4 +45,131 @@
 			</div>
 		</form>
 	</nav>
+	
+	<font color="white"><font size="20"><center>Recommended News</center></font></font>
+	
+	<!--- All articles in a div -->
+    <div id="allArticles">
+    
+	</div>
+  
 </body>
+
+<script>
+	var articleNamesOnClient = [];
+	
+	// function that unescapes all special characters in a string
+	function htmlDecode(input){
+		var e = document.createElement('div');
+		e.innerHTML = input;
+		return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+	}
+	
+	function initNewsPage() {
+		// container for all of the articles
+		var container = document.getElementById("allArticles");
+	
+		// iterate through all of the articles
+		<% articles.forEach(article => { %>
+			// initially display every article on the user's news feed
+		    var content = "<div class=\"blog-card\"><div class=\"meta\"><div class=\"photo\" style=\"background-image: ";
+		    content += "url(https://www.nyacknewsandviews.com/wp-content/uploads/2016/03/trump-600x450.jpg)\"></div>";
+			content += "<ul class=\"details\"><li class=\"author\">";
+        	<% if (article.authors) { %>
+				content += "<%=article.authors%>";
+			<% } else { %>
+				content += "No authors found.";
+			<% } %>
+        	content += "</li><li class=\"date\">";
+        	content += "<%=article.date%>";
+        	content += "</li><li class=\"tags\"><ul><li>";
+        	content += "<%=article.category%>";
+        	content += "</li></ul></li></ul></div>";
+        	content += "<div class=\"description\"><h1>";
+        	content += htmlDecode("<%=article.article%>");
+        	content += "</h1><p>";
+        	content += "<%=article.description%>";
+        	content += "</p><p class=\"read-more\"><a href=\"";
+        	content += "<%=article.link%>";
+        	content += "\">Read More</a></p></div></div>";
+			
+			// append the content to the container's inner HTML
+			container.innerHTML += content;
+	
+			// add each article from the server into the list of articles stored on the client side
+			articleNamesOnClient.push(htmlDecode("<%=article.article%>"));
+		<% }); %>
+	}
+	
+	initNewsPage();
+	
+	// automatic refresh every 1 hour to update the news page
+	var refreshTime = function() {
+		// set clock to refresh every 5000 ms (TODO: CHANGE THIS TO ONE HOUR AFTER IT WORKS)
+		$("#clock").html((new Date()).toString());
+		setTimeout(refreshTime, 5000);		
+		// make AJAX call to get the news articles and compare the data from the server to the data on the client
+		$.ajax({
+				url: "/newsfeedupdate",
+				type: "GET",
+				success: function(data) {
+					// list containing the differences between the server and client
+					var newArticles = [];
+						
+					// iterate through data (articles) sent from server
+					data.forEach(a => {
+						// put the article in the list if it's from the server but not on the client
+						if (!articleNamesOnClient.includes(htmlDecode(a.article))) {
+							newArticles.push(a);
+							// update the client-side list to contain new articles from the server
+							articleNamesOnClient.push(htmlDecode(a.article));
+						}
+					});
+					
+					// get the container for all of the articles displayed
+					var container = document.getElementById("allArticles");
+						
+					// iterate over all of the new articles
+					newArticles.forEach(newArticle => {
+						// display the new articles that the server has sent to the client
+						var content = "<div class=\"blog-card\"><div class=\"meta\"><div class=\"photo\" style=\"background-image: ";
+					    content += "url(https://www.nyacknewsandviews.com/wp-content/uploads/2016/03/trump-600x450.jpg)\"></div>";
+						content += "<ul class=\"details\"><li class=\"author\">";
+			        	if (newArticle.authors) {
+							content += newArticle.authors;
+						} else {
+							content += "No authors found.";
+						}
+						content += "</li>";
+			        	content += "<li class=\"date\">";
+			        	content += newArticle.date;
+			        	content += "</li>";
+			        	content += "<li class=\"tags\"><ul><li>";
+			        	content += newArticle.category;
+			        	content += "</li></ul></li></ul></div>";
+			        	content += "<div class=\"description\"><h1>";
+			        	content += htmlDecode(newArticle.article);
+			        	content += "</h1><p>";
+			        	content += newArticle.description;
+			        	content += "</p><p class=\"read-more\"><a href=\"";
+			        	content += newArticle.link;
+			        	content += "\">Read More</a></p></div></div>";
+						
+						// append the content to the beginning of the container's inner HTML
+						container.innerHTML = (content + container.innerHTML);
+					});
+				},
+				error: function(err) {
+					// handle errors with AJAX calling database
+					alert("Error with AJAX automatic refresh. Could not load new articles.");
+					alert(err);
+				}
+			})
+	};
+	
+	$(document).ready(function() {
+		$("#clock").css("color", "white");
+		setTimeout(refreshTime, 5000);
+	});
+	
+</script>

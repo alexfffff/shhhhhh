@@ -46,21 +46,44 @@
 			</div>
 		</form>
 	</nav>
+	
 	<!-- Show the news articles search results -->
-	<font color="white"><font size="20">
-	<% if (articles.length == 0) { %>
-		No articles found.
-	<% } else { %>
-		Showing <%=articles.length%> search results for: <%=keyword%></font><br><br>
-		<% articles.forEach(article => { %>
-			article: <%=article.article%><br>
-			authors: <%=article.authors%><br>
-			link: <a href="<%=article.link%>"><%=article.link%></a><br>
-			category: <%=article.category%><br>
-		    date: <%=article.date%><br>
-		    description: <%=article.description%><br>
-		    <br>
-		<% }); %>
-	<% } %>
-	</font>
+	<div id="allArticles">
+		<font color="white"><font size="20">
+			<% if (articles.length == 0) { %>
+				No articles found.
+			<% } else { %>
+				Showing <%=articles.length%> search results for: <%=keyword%></font></font><br>
+				<% articles.forEach(article => { %>
+					<!--- Display each of the articles -->
+					<div class="blog-card">
+					    <div class="meta">
+					      <div class="photo" style="background-image: url(https://www.nyacknewsandviews.com/wp-content/uploads/2016/03/trump-600x450.jpg)"></div>
+					      <ul class="details">
+					        <li class="author">
+						        <% if (article.authors) { %>
+									<%=article.authors%>
+								<% } else { %>
+									No authors found.
+								<% } %>
+					        </li>
+					        <li class="date"><%=article.date%></li>
+					        <li class="tags">
+					          <ul>
+					            <li><%=article.category%></li>
+					          </ul>
+					        </li>
+					      </ul>
+					    </div>
+					    <div class="description">
+					      <h1><%=article.article%></h1>
+					      <p> <%=article.description%></p>
+					      <p class="read-more">
+					        <a href="<%=article.link%>">Read More</a>
+					      </p>
+					    </div>
+					  </div>
+				<% }); %>
+			<% } %>
+	</div>
 </body>

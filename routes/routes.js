@@ -764,33 +764,33 @@ var deleteRestaurant = function(req, res) {
 	});
 };
 
-// TODO - news
+// TODO - news, may need updating depending on database.js
 var getNews = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
-		// get the user's interests
-		db.getInterests(req.session.username, function(err1, data1) {
-			if (err1) {
+		// get the user's news feed
+		db.getArticleRecs(req.session.username, function(err, data) {
+			if (err) {
 				// handle error with querying database
 				res.render('error.ejs');
 			} else {
-				var myInterests = data1;
+				var myArticles = data;
 				
-				// TODO: change later
-				var myArticles = [];
-	
-				// TODO: Call some db method that returns the articles ??? data1 is array of interests
+				// TODO: delete these print statements later
+				console.log("recommended articles are");
+				console.log(myArticles);
+				
 				// render the news recommendations page for this user based on their interests
-				res.render('news.ejs', {username: req.session.username, interests: myInterests, articles: myArticles});
+				res.render('news.ejs', {username: req.session.username, articles: myArticles});
 			}
 		});
 	}
 };
 
-// TODO - news
+// TODO - may need updating depending on database.js
 var searchNews = function(req, res) {
 	var keyword = req.body.keyword;
 
@@ -806,21 +806,18 @@ var searchNews = function(req, res) {
 	});
 }
 
+// TODO - may need updating depending on database.js
 var newsFeedUpdate = function(req, res) {
 	// send the data from the database to display up-to-date version of the news page to the user
-	
-	/* TODO: CHANGE THIS DB METHOD TO WHATEVER RETURNS THE ARTICLES EVERY HOUR
-	db.something(req.session.username, function(err, data) {
+	db.getArticleRecs(req.session.username, function(err, data) {
 		if (err) {
-			res.send(err);
+			// handle error with querying database
+			res.render('error.ejs');
 		} else {
+			// send the data for the most updated news feed
 			res.send(data);
 		}
-	});*/
-	
-	var news = [];
-	news.push("news");
-	res.send(news);
+	});
 };
 
 var logout = function(req, res) {
