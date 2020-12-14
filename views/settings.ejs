@@ -84,45 +84,16 @@
     <!--News / Affiliation-->
     <div class="container-fluid gedf-wrapper">
         <div class="row">
-            <div class="col-md-6 gedf-main">
+            <div class="col-md-3">
                 <div class="card gedf-card">
                     <div class="card-header" style="font-size:20px">
-                        Current Settings for <%=username%>
+                        Current Interest for <%=username%>
                     </div>
                     <div class="card-body">
-                        <% if (currAffiliation != null) { %>
-                            <label><font color="black">Current Affiliation: <%=currAffiliation%></font></label><br>
-                        <% } %>
                         <label><font color="black">Current Interests:</font></label>
                         <%for (var i = 0; i < currInterests.length; i++) { %>
                             <li><%=currInterests[i].interest%></li>
                         <% } %>
-                    </div>
-                </div>
-                <div class="card gedf-card">
-                    <div class="card-header" style="font-size:20px">
-                        Change Settings
-                    </div>
-                    <div class="card-body">
-                        <form action="/updateemail" method="post">
-                            <label><font color="black">Enter Old Email: </font></label><input type="text" autocomplete="off" name="myOldEmail" required size="20" class="form-control">
-                            <label><font color="black">Enter New Email: </font></label><input type="text" autocomplete="off" name="myNewEmail" required size="20" class="form-control">
-                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
-                        </form>
-                        <form action="/updatepassword" method="post">
-                            <label><font color="black">Enter Old Password: </font></label><input type="password" autocomplete="current-password" id="myOldPassword" name="myOldPassword" required size="20" class="form-control">
-                            <input type="checkbox" onclick="showOldPassword()">
-							<label> Show Old Password </label><br>
-                            <label><font color="black">Enter New Password: </font></label><input type="password" autocomplete="new-password" id="myNewPassword" name="myNewPassword" required size="20" class="form-control">
-                            <input type="checkbox" onclick="showNewPassword()">
-							<label> Show New Password </label><br>
-                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
-                        </form>
-                        <form action="/updateaffiliation" method="post">
-                            <label><font color="black">Enter Old Affiliation: </font></label><input type="text" autocomplete="off" name="myOldAffiliation" required size="20" class="form-control">
-                            <label><font color="black">Enter New Affiliation: </font></label><input type="text" autocomplete="off" name="myNewAffiliation" required size="20" class="form-control">
-                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
-                        </form>
                         <form action="/addinterest" method="post">
                             <label><font color="black">Add New Interest: </font></label>
                             <select name="myNewInterest" required>
@@ -169,8 +140,10 @@
                                 <option value="WORLDPOST">Worldpost</option> 
                                 <option value="THE WORLDPOST">The Worldpost</option> 
                             </select>
+                            <br>
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
+                        <br>
                         <form action="/removeinterest" method="post">
                             <label><font color="black">Remove Old Interest: </font></label>
                             <select name="myOldInterest" required>
@@ -178,6 +151,51 @@
                                     <option value="<%=currInterests[i].interest%>"><%=currInterests[i].interest%></option>
                                 <% } %>
                             </select>
+                            <br>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                    </div>   
+                </div>
+            </div>
+            <div class="col-md-6 gedf-main">
+                <div class="card gedf-card">
+                    <div class="card-header" style="font-size:20px">
+                        Change General Settings
+                    </div>
+                    <div class="card-body">
+                        <form action="/updateemail" method="post">
+                            <label><font color="black">Enter Old Email: </font></label><input type="text" autocomplete="off" name="myOldEmail" required size="20" class="form-control">
+                            <label><font color="black">Enter New Email: </font></label><input type="text" autocomplete="off" name="myNewEmail" required size="20" class="form-control">
+                            <br>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <br>
+                        <form action="/updatepassword" method="post">
+                            <label><font color="black">Enter Old Password: </font></label><input type="password" autocomplete="current-password" id="myOldPassword" name="myOldPassword" required size="20" class="form-control">
+                            <input type="checkbox" onclick="showOldPassword()">
+							<label> Show Old Password </label><br>
+                            <label><font color="black">Enter New Password: </font></label><input type="password" autocomplete="new-password" id="myNewPassword" name="myNewPassword" required size="20" class="form-control">
+                            <input type="checkbox" onclick="showNewPassword()">
+							<label> Show New Password </label><br>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <br>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card gedf-card">
+                    <div class="card-header" style="font-size:20px">
+                        Current Affiliation for <%=username%>
+                    </div>
+                    <div class="card-body">
+                        <% if (currAffiliation != null) { %>
+                            <label><font color="black">Current Affiliation: <%=currAffiliation%></font></label><br>
+                        <% } %>
+                        <form action="/updateaffiliation" method="post">
+                            <label><font color="black">Enter Old Affiliation: </font></label><input type="text" autocomplete="off" name="myOldAffiliation" required size="20" class="form-control">
+                            <label><font color="black">Enter New Affiliation: </font></label><input type="text" autocomplete="off" name="myNewAffiliation" required size="20" class="form-control">
+                            <br>
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
                     </div>
