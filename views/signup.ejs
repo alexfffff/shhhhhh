@@ -45,7 +45,12 @@
 		<!-- Check if the full name is alphabetical only (space-permitting), clear and re-prompts if not -->
 		function validateFullname() {
 			var name = document.getElementById("myNewFullName").value;
-			if (name.match(/[^a-z ]/i)) {
+			if (name.match(/^[a-z](.*[a-z ])?$/igm)) {
+				if (name.length > 30) {
+					alert("Full name must be less than 30 characters. Please enter a valid full name.");
+					document.getElementById("myNewFullName").value = "";
+				}
+			} else {
 				alert("Full name must be alphabetical. Please enter a valid full name.");
 				document.getElementById("myNewFullName").value = "";
 			}
