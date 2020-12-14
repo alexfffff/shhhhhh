@@ -32,6 +32,50 @@
 			pass.type = "password";
 		}
 	}
+	
+	<!-- Check if the email is alphanumeric or contains @ symbol or . symbol, clear and re-prompts if not -->
+	function validateOldEmail() {
+		var email = document.getElementById("myOldEmail").value;
+		if (email.match(/[^0-9a-z@.]/i)) {
+			alert("Email must be alphanumeric. Please enter a valid email.");
+			document.getElementById("myOldEmail").value = "";
+		}
+	}
+	
+	<!-- Check if the email is alphanumeric or contains @ symbol or . symbol, clear and re-prompts if not -->
+	function validateNewEmail() {
+		var email = document.getElementById("myNewEmail").value;
+		if (email.match(/[^0-9a-z@.]/i)) {
+			alert("Email must be alphanumeric. Please enter a valid email.");
+			document.getElementById("myNewEmail").value = "";
+		}
+	}
+	
+	<!-- Check if the affiliation is alphanumeric only (space-permitting), clear and re-prompts if not -->
+	function validateOldAffiliation() {
+		var affiliation = document.getElementById("myOldAffiliation").value;
+		if (affiliation.match(/^[0-9a-z](.*[0-9a-z ])?$/igm)) {
+			// silently filters out excess (consecutive) whitespace, turning them into one space
+			document.getElementById("myOldAffiliation").value = affiliation.replace(/\s\s+/g, ' ');
+			affiliation = document.getElementById("myOldAffiliation").value;
+		} else {
+			alert("Affiliation must be alphanumeric. Please enter a valid affiliation.");
+			document.getElementById("myOldAffiliation").value = "";
+		}
+	}
+	
+	<!-- Check if the affiliation is alphanumeric only (space-permitting), clear and re-prompts if not -->
+	function validateNewAffiliation() {
+		var affiliation = document.getElementById("myNewAffiliation").value;
+		if (affiliation.match(/^[0-9a-z](.*[0-9a-z ])?$/igm)) {
+			// silently filters out excess (consecutive) whitespace, turning them into one space
+			document.getElementById("myNewAffiliation").value = affiliation.replace(/\s\s+/g, ' ');
+			affiliation = document.getElementById("myNewAffiliation").value;
+		} else {
+			alert("Affiliation must be alphanumeric. Please enter a valid affiliation.");
+			document.getElementById("myNewAffiliation").value = "";
+		}
+	}
 </script>
 
 <body>
@@ -84,45 +128,17 @@
     <!--News / Affiliation-->
     <div class="container-fluid gedf-wrapper">
         <div class="row">
-            <div class="col-md-6 gedf-main">
+            <div class="col-md-3">
                 <div class="card gedf-card">
                     <div class="card-header" style="font-size:20px">
-                        Current Settings for <%=username%>
+                        Current Interests for <%=username%>
                     </div>
                     <div class="card-body">
-                        <% if (currAffiliation != null) { %>
-                            <label><font color="black">Current Affiliation: <%=currAffiliation%></font></label><br>
-                        <% } %>
                         <label><font color="black">Current Interests:</font></label>
                         <%for (var i = 0; i < currInterests.length; i++) { %>
                             <li><%=currInterests[i].interest%></li>
                         <% } %>
-                    </div>
-                </div>
-                <div class="card gedf-card">
-                    <div class="card-header" style="font-size:20px">
-                        Change Settings
-                    </div>
-                    <div class="card-body">
-                        <form action="/updateemail" method="post">
-                            <label><font color="black">Enter Old Email: </font></label><input type="text" autocomplete="off" name="myOldEmail" required size="20" class="form-control">
-                            <label><font color="black">Enter New Email: </font></label><input type="text" autocomplete="off" name="myNewEmail" required size="20" class="form-control">
-                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
-                        </form>
-                        <form action="/updatepassword" method="post">
-                            <label><font color="black">Enter Old Password: </font></label><input type="password" autocomplete="current-password" id="myOldPassword" name="myOldPassword" required size="20" class="form-control">
-                            <input type="checkbox" onclick="showOldPassword()">
-							<label> Show Old Password </label><br>
-                            <label><font color="black">Enter New Password: </font></label><input type="password" autocomplete="new-password" id="myNewPassword" name="myNewPassword" required size="20" class="form-control">
-                            <input type="checkbox" onclick="showNewPassword()">
-							<label> Show New Password </label><br>
-                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
-                        </form>
-                        <form action="/updateaffiliation" method="post">
-                            <label><font color="black">Enter Old Affiliation: </font></label><input type="text" autocomplete="off" name="myOldAffiliation" required size="20" class="form-control">
-                            <label><font color="black">Enter New Affiliation: </font></label><input type="text" autocomplete="off" name="myNewAffiliation" required size="20" class="form-control">
-                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
-                        </form>
+                        <br>
                         <form action="/addinterest" method="post">
                             <label><font color="black">Add New Interest: </font></label>
                             <select name="myNewInterest" required>
@@ -169,8 +185,10 @@
                                 <option value="WORLDPOST">Worldpost</option> 
                                 <option value="THE WORLDPOST">The Worldpost</option> 
                             </select>
+                            <br>
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
+                        <br>
                         <form action="/removeinterest" method="post">
                             <label><font color="black">Remove Old Interest: </font></label>
                             <select name="myOldInterest" required>
@@ -178,6 +196,56 @@
                                     <option value="<%=currInterests[i].interest%>"><%=currInterests[i].interest%></option>
                                 <% } %>
                             </select>
+                            <br>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                    </div>   
+                </div>
+            </div>
+            <div class="col-md-6 gedf-main">
+                <div class="card gedf-card">
+                    <div class="card-header" style="font-size:20px">
+                        Change General Settings
+                    </div>
+                    <div class="card-body">
+                        <form action="/updateemail" method="post">
+                            <label><font color="black">Enter Old Email: </font></label>
+                            <input type="text" onkeyup="validateOldEmail()" autocomplete="off" id="myOldEmail" name="myOldEmail" required size="20" class="form-control">
+                            <br>
+                            <label><font color="black">Enter New Email: </font></label>
+                            <input type="text" onkeyup="validateNewEmail()" autocomplete="off" id="myNewEmail" name="myNewEmail" required size="20" class="form-control">
+                            <br>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <br>
+                        <form action="/updatepassword" method="post">
+                            <label><font color="black">Enter Old Password (at least 8 characters): </font></label>
+                            <input type="password" autocomplete="current-password" id="myOldPassword" name="myOldPassword" required minlength="8" size="20" class="form-control">
+                            <input type="checkbox" id="checkboxoldpass" onclick="showOldPassword()">
+							<label for="checkboxoldpass"> Show Old Password </label><br>
+                            <label><font color="black">Enter New Password (at least 8 characters): </font></label>
+                            <input type="password" autocomplete="new-password" id="myNewPassword" name="myNewPassword" required minlength="8" size="20" class="form-control">
+                            <input type="checkbox" id="checkboxnewpass" onclick="showNewPassword()">
+							<label for="checkboxnewpass"> Show New Password </label><br>
+                            <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
+                        </form>
+                        <br>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card gedf-card">
+                    <div class="card-header" style="font-size:20px">
+                        Change Affiliation for <%=username%>
+                    </div>
+                    <div class="card-body">
+                        <form action="/updateaffiliation" method="post">
+                            <label><font color="black">Enter Old Affiliation (up to 50 characters): </font></label>
+                            <input type="text" onkeyup="validateOldAffiliation()" autocomplete="off" id="myOldAffiliation" name="myOldAffiliation" required size="20" maxlength="50" class="form-control">
+                            <br>
+                            <label><font color="black">Enter New Affiliation (up to 50 characters): </font></label>
+                            <input type="text" onkeyup="validateNewAffiliation()" autocomplete="off" id="myNewAffiliation" name="myNewAffiliation" required size="20" maxlength="50" class="form-control">
+                            <br>
                             <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block">
                         </form>
                     </div>
@@ -187,4 +255,3 @@
     </div>
 
 </body>
-    

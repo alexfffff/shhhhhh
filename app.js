@@ -73,11 +73,6 @@ app.post('/searchnews', routes.search_news);
 // support dynamic content on the news page by updating it hourly (gets the list of articles to show on the news page)
 app.get('/newsfeedupdate', routes.news_feed_update);
 
-// --- IGNORE THESE THREE ROUTES FOR NOW ---
-app.post('/addrestaurant', routes.add_restaurant);
-app.post('/deleterestaurant', routes.delete_restaurant);
-app.get('/restaurantsList', routes.restaurantsList);
-
 app.get('/logout', routes.log_out);
 
 /* 
@@ -101,12 +96,8 @@ app.get('/searchnews', routes.get_login);
 app.get('/addfriend', routes.get_login);
 app.get('/deletefriend', routes.get_login);
 
-// IGNORE BELOW
-app.get('/addrestaurant', routes.get_login);
-app.get('/deleterestaurant', routes.get_login);
-
 /* Run the server */
 
-console.log('Author: Philip Kaw (ph163k8)');
+console.log('Authors: Philip Kaw (ph163k8), Selene Li (seleneli), Alex Dong (adong9), Di Lu (dlu36)');
 app.listen(8080);
 console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!');

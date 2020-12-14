@@ -92,6 +92,10 @@ var createAccount = function(req, res) {
 		var email = req.body.myNewEmail;
 		var affiliation = req.body.myNewAffiliation;
 		var birthday = req.body.myNewBirthday;
+		
+		// trim any excess whitespace at the end of the full name and affiliation
+		fullName = fullName.trim();
+		affiliation = affiliation.trim();
 
 		// required interests, the first two are mandatory
 		var interest1 = req.body.myFirstInterest;
@@ -209,8 +213,13 @@ var getSettings = function(req, res) {
 						// store the current interests
 						var interests = data2;
 
-						// render the settings page, where a user can see and change their settings (only affiliation and interests displayed)
-						res.render('settings.ejs', {message: req.query.message, currAffiliation: affiliation, currInterests: interests, success: req.query.success, username: req.session.username});
+						// render the settings page, where a user can see and change their settings (only display interests)
+						res.render('settings.ejs', {
+							message: req.query.message, 
+							currInterests: interests, 
+							success: req.query.success, 
+							username: req.session.username
+						});
 					}
 				});
 			}
@@ -223,22 +232,28 @@ var updateEmail = function(req, res) {
 	var oldEmail = req.body.myOldEmail;
 	var newEmail = req.body.myNewEmail;
 	
-	// query database for the user's actual old email
-	db.changeEmail(req.session.username, oldEmail, newEmail, function(err, data) {
-		if (err) {
-			// check for the type of error
-			if (err == 8) {
-				// user's old email does not match, or their new email is the same as their old one
-				res.redirect('/settings?message=' + 'Please_enter_the_correct_old_email_and_a_valid_new_email');
+	// old and new emails must be different
+	if (oldEmail === newEmail) {
+		res.redirect('/settings?message=' + 
+				'Old_email_and_new_email_fields_must_differ._Please_enter_different_emails');
+	} else {
+		// query database for the user's actual old email
+		db.changeEmail(req.session.username, oldEmail, newEmail, function(err, data) {
+			if (err) {
+				// check for the type of error
+				if (err == 8) {
+					// user's old email does not match, or their new email is the same as their old one
+					res.redirect('/settings?message=' + 'Please_enter_the_correct_old_email_and_a_valid_new_email');
+				} else {
+					// error with querying database
+					res.redirect('/settings?message=' + 'Database_error');
+				}
 			} else {
-				// error with querying database
-				res.redirect('/settings?message=' + 'Database_error');
+				// redirect to the settings page, email successfully updated
+				res.redirect('/settings?message=' + 'Email_successfully_updated' + '&success=true');
 			}
-		} else {
-			// redirect to the settings page, email successfully updated
-			res.redirect('/settings?message=' + 'Email_successfully_updated' + '&success=true');
-		}
-	});
+		});
+	}
 };
 
 var updatePassword = function(req, res) {
@@ -246,25 +261,31 @@ var updatePassword = function(req, res) {
 	var oldPass = req.body.myOldPassword;
 	var newPass = req.body.myNewPassword;
 	
-	// query database for the user's actual old password
-	db.changePassword(req.session.username, oldPass, newPass, function(err, data) {
-		if (err) {
-			// check for the type of error
-			if (err == 7) {
-				// user's new password is the same as their old one
-				res.redirect('/settings?message=' + 'Please_enter_a_different_new_password');
-			} else if (err == 11) {
-				// user's inputted old password does not match their actual old password
-				res.redirect('/settings?message=' + 'Password_does_not_match._Please_enter_the_correct_old_password');
+	// old and new passwords must be different
+	if (oldPass === newPass) {
+		res.redirect('/settings?message=' + 
+				'Old_password_and_new_password_fields_must_differ._Please_enter_different_passwords');
+	} else {
+		// query database for the user's actual old password
+		db.changePassword(req.session.username, oldPass, newPass, function(err, data) {
+			if (err) {
+				// check for the type of error
+				if (err == 7) {
+					// user's new password is the same as their old one
+					res.redirect('/settings?message=' + 'Please_enter_a_different_new_password');
+				} else if (err == 11) {
+					// user's inputted old password does not match their actual old password
+					res.redirect('/settings?message=' + 'Password_does_not_match._Please_enter_the_correct_old_password');
+				} else {
+					// error with querying database
+					res.redirect('/settings?message=' + 'Database_error');
+				}
 			} else {
-				// error with querying database
-				res.redirect('/settings?message=' + 'Database_error');
+				// redirect to the settings page, password successfully updated
+				res.redirect('/settings?message=' + 'Password_successfully_updated' + '&success=true');
 			}
-		} else {
-			// redirect to the settings page, password successfully updated
-			res.redirect('/settings?message=' + 'Password_successfully_updated' + '&success=true');
-		}
-	});
+		});
+	}
 };
 
 var updateAffiliation = function(req, res) {
@@ -274,35 +295,36 @@ var updateAffiliation = function(req, res) {
 
 	// old and new affiliations must be different
 	if (oldAffiliation === newAffiliation) {
-		res.redirect('/settings?message=' + 'Enter_different_affiliations');
-	}
-
-	// query database for the user's actual old affiliation
-	db.getAffiliation(req.session.username, function(err1, data1) {
-		if (err1) {
-			// error with querying database
-			res.redirect('/settings?message=' + 'Database_error');
-		} else {
-			if (data1.localeCompare(oldAffiliation) == 0) {
-				// update the user's affiliation in the database (force a status update)
-				var timestamp = Date.now();
-				var poster = req.session.username;
-				var id = poster.concat(timestamp);
-				db.changeAffiliation(poster, newAffiliation, timestamp, id, function(err2, data2) {
-					if (err2) {
-						// error with querying database
-						res.redirect('/settings?message=' + 'Database_error');
-					} else {
-						// successfully changed affiliation
-						res.redirect('/settings?message=' + 'Affiliation_successfully_updated' + '&success=true');
-					}
-				});
+		res.redirect('/settings?message=' + 
+				'Old_affiliation_and_new_affiliation_fields_must_differ._Please_enter_different_affiliations');
+	} else {
+		// query database for the user's actual old affiliation
+		db.getAffiliation(req.session.username, function(err1, data1) {
+			if (err1) {
+				// error with querying database
+				res.redirect('/settings?message=' + 'Database_error');
 			} else {
-				// user's input does not match affiliation of user in database, fail to change affiliation
-				res.redirect('/settings?message=' + 'Old_affiliation_does_not_match');
+				if (data1.localeCompare(oldAffiliation) == 0) {
+					// update the user's affiliation in the database (force a status update)
+					var timestamp = Date.now();
+					var poster = req.session.username;
+					var id = poster.concat(timestamp);
+					db.changeAffiliation(poster, newAffiliation, timestamp, id, function(err2, data2) {
+						if (err2) {
+							// error with querying database
+							res.redirect('/settings?message=' + 'Database_error');
+						} else {
+							// successfully changed affiliation
+							res.redirect('/settings?message=' + 'Affiliation_successfully_updated' + '&success=true');
+						}
+					});
+				} else {
+					// user's input does not match affiliation of user in database, fail to change affiliation
+					res.redirect('/settings?message=' + 'Old_affiliation_does_not_match');
+				}
 			}
-		}
-	});
+		});
+	}
 };
 
 var addNewInterest = function(req, res) {
@@ -716,54 +738,6 @@ var commentOnPost = function(req, res) {
 	});
 };
 
-// TODO - get rid of this later
-var restaurantsList = function(req, res) {
-	db.getRestaurants(function(err, data) {
-		if (err) {
-			res.send(err);
-		} else {
-			res.send(data.Items);
-		}
-	});
-};
-
-// TODO - get rid of this later
-var addRestaurant = function(req, res) {
-	var name = req.body.newName;
-	var latitude = req.body.newLatitude;
-	var longitude = req.body.newLongitude;
-	var description = req.body.newDescription;
-	
-	// add a new restaurant to the table
-	db.addRestaurant(name, req.session.username, latitude, longitude, description, function(err, data) {
-		if (err) {
-			res.render('restaurants.ejs', {table: null, username: req.session.username, message: err});
-		} else if (data) {
-			// new restaurant successfully added, send the data
-			res.send(data);
-		} else {
-			// restaurant under this name already exists in table, send error message
-			res.send({
-			    error: "Error: Restaurant already exists, please add a new restaurant."
-			});
-		}
-	});
-};
-
-// TODO - get rid of this later
-var deleteRestaurant = function(req, res) {
-	var name = req.body.name;
-	
-	// delete a restaurant from the table
-	db.deleteRestaurant(name, function(err, data) {
-		if (err) {
-			res.render('restaurants.ejs', {table: null, username: req.session.username, message: err});
-		} else {
-			res.render('restaurants.ejs', {table: data.Items, username: req.session.username, message: null});
-		}
-	});
-};
-
 // TODO - news, may need updating depending on database.js
 var getNews = function(req, res) {
 	// check if user is logged in
@@ -884,14 +858,7 @@ var routes = {
 
 	news_feed_update: newsFeedUpdate,
 
-	log_out: logout,
-
-	// IGNORE
-
-  add_restaurant: addRestaurant,
-  delete_restaurant: deleteRestaurant,
-  
-  restaurantsList: restaurantsList
+	log_out: logout
 };
 
 module.exports = routes;
