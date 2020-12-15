@@ -64,7 +64,7 @@
             <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
-                        <a href="/wall?wallToVisit=<%=username%>" class="h5">@<%=user%></a>
+                        <a href="/wall?wallToVisit=<%=user%>" class="h5">@<%=user%></a>
                         <div class="h7 text-muted">Fullname : FULL NAME</div>  
                         <div class="h7"> BIO GOES HERE
                         </div>
@@ -74,7 +74,7 @@
                             <div class="h6 text-muted">Friends</div>
                             <div class="h5">
                                 <div class="friend-list">
-                                    <a class="button" href="/friendsof?user=<%=username%>" role="button" class="btn btn-primary">Friends</a>
+                                    <a class="button" href="/friendsof?user=<%=user%>">Friends</a>
                                 </div>
                             </div>
                         </li>
@@ -242,7 +242,7 @@
     </div>
 </body>
 <script>
-    var postsOnClient = [];
+var postsOnClient = [];
 
 function initWall() {
     // TODO: ACTUALLY DISPLAY POSTS ON THE HOME PAGE SOMEHOW
@@ -347,7 +347,7 @@ var refreshTime = function() {
             },
             error: function(err) {
                 // TODO: HANDLE ERRORS WITH AJAX CALLING DATABASE
-                alert(err);
+                //alert(err);
             }
         })
 };
