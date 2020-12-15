@@ -33,31 +33,36 @@
 <!--Top Header bar: Title of page, Toolbar, Search bar-->      
 <nav class="navbar">
 	<!--Title-->
-	<a href="/home" class="navbar-brand" style="font-size:36px; color:#93FFDD">PennBook</a>
+	<a href="/home" class="navbar-brand" style="font-size:36px; color:#99DFFF">PennBook</a>
 	<!--Toolbar-->
 	<div class="toolbar-container">
         <a class="button" href="/home" role="button">
+            &#127969;
             Home
         </a>
         <a class="button" href="/wall?wallToVisit=<%=username%>" role="button">
+            &#128204;
             My Wall
         </a>
         <a class="button" href="/settings" role="button">
+            &#128295;
             Settings
         </a>
         <a class="button" href="/news" role="button">
+            &#128240;
             News
         </a>
         <a class="button" href="/logout" role="button">
+            &#128682;
 			Log Out
 		</a>
     </div>
 	<!--Search Bar-->
 	<form class="form-inline">
 		<div class="input-group">
-			<input type="text" class="form-control" aria-label="Recipient's username" aria-describedby="button-addon2">
+			<input type="text" class="form-control" placeholder="Search" aria-label="Recipient's username" aria-describedby="button-addon2" style="color:#E1E1E1;background-color:#3a3b3c;border-color:#242526">
 			<div class="input-group-append">
-				<button class="btn btn-outline-primary" type="button" id="button-addon2" style="color:#535353">
+				<button class="btn btn-outline-primary" type="button" id="button-addon2" style="color:#99DFFF">
 					<i class="fa fa-search"></i>
 				</button>
 			</div>
@@ -71,22 +76,28 @@
 
             <!--Left col-->
             <div class="col-md-3">
-                <div class="card" >
+                <div class="card" style="background-color:#242526;border-radius:10px">
                     <div class="card-body">
                         <!--Links to the wall-->
                         <a href="/wall?wallToVisit=<%=username%>" class="h5">@<%=username%></a>
-                        <div class="h7 text-muted" >Fullname : FULL NAME</div>
-                        <div class="h7"> BIO GOES HERE</div>
+                        <div class="h7 text-muted">Fullname : FULL NAME</div>
+                        <div class="h7" style="color:#535353"> BIO GOES HERE</div>
                     </div>
                 </div>
                 <br>
+                <div class="card" style="background-color:#242526;border-radius:10px">
+                    <div class="card-body">
+                        <p style="color:#E1E1E1">Made by Selene Li, Alex Dong, Philip Kaw, Di Lu</p>
+                        <a style="color:#E1E1E1">UPenn - NETS212 &#128154;</a>
+                    </div>
+                </div>
             </div>
 
             <!--Center posts col-->
             <div class="col-md-6 gedf-main">
                 <!--- \\\\\\\Post-->
-                <div class="card gedf-card">
-                    <div class="card-header" style="font-size:20px">
+                <div class="card gedf-card" style="background-color:#242526;border-radius:10px">
+                    <div class="card-header" style="font-size:20px; color:#E1E1E1">
                         Make a Post
                     </div>
                     <div class="card-body">
@@ -95,7 +106,7 @@
                             <form>
                                 
                                     
-                                    <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" class="form-control"required></textarea>
+                                    <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" class="form-control" style="background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1"required></textarea>
                                     <br>
                                    
                                     <input type="hidden" name="currentWall" value="<%=username%>">
@@ -137,7 +148,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="mr-2">
-                                    <img class="rounded-circle" width="45" src="https://icon-library.com/images/default-profile-icon/default-profile-icon-17.jpg" alt="">
+                                    <img class="rounded-circle" width="45" src="https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png" alt="">
                                 </div>
                                 <div class="ml-2">
                                     <div class="h5 m-0">@USERNAME</div>
@@ -210,7 +221,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="mr-2">
-                                    <img class="rounded-circle" width="45" src="https://icon-library.com/images/default-profile-icon/default-profile-icon-17.jpg" alt="">
+                                    <img class="rounded-circle" width="45" src="https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png" alt="">
                                 </div>
                                 <div class="ml-2">
                                     <div class="h5 m-0">@LeeCross</div>
@@ -285,6 +296,7 @@
 </body>
 
 <script>
+    var postIDsOnClient = [];
     var postsOnClient = [];
     var commentsOnPosts = [];
 
@@ -294,12 +306,12 @@
         console.log("initAllPosts called");
         var container = document.getElementById("allposts");
         <% posts.forEach(post => { %>
-            var content = "<div class=\"card gedf-card\">" +
+            var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
                         "<div class=\"card-header\">" +
                             "<div class=\"d-flex justify-content-between align-items-center\">" +
 								"<div class=\"d-flex justify-content-between align-items-center\">" +
 									"<div class=\"mr-2\">" +
-										"<img class=\"rounded-circle\" width=\"45\" src=\"https://icon-library.com/images/default-profile-icon/default-profile-icon-17.jpg\">" +
+										"<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
                                     "</div>";
             <% if(post.friend) { %>
                 //DO NOTHING ABOUT THE HEADER
@@ -307,12 +319,12 @@
                 <% if (post.posterID) { %>
                     //someone posted on someone else's wall
                     content += "<div class=\"ml-2\">" +
-                                "<div class=\"h5 m-0\"><%=post.posterName%> posted on <%=post.userName%>'s wall </div>" +
+                                "<div class=\"h5 m-0\"style=\"color:#E1E1E1\"><%=post.posterName%> posted on <%=post.userName%>'s wall </div>" +
 							"</div>";
                 <% } else { %>
                     //anything involving just you, i.e changing interest, posted on your own wall, etc.
                     content += "<div class=\"ml-2\">" +
-                                "<div class=\"h5 m-0\"><%=post.userName%> </div>" +
+                                "<div class=\"h5 m-0\"style=\"color:#E1E1E1\"><%=post.userName%> </div>" +
 							"</div>";
                 <% } %>
             <% } %>
@@ -324,7 +336,7 @@
                         "<a class=\"card-link\" href=\"#\">" +
                             "<h5 class=\"card-title\"><%=post.postID%></h5>" +
                         "</a>" +
-                        "<p class=\"card-text\"> <%=post.content%></p>" +
+                        "<p class=\"card-text\" style=\"color:#E1E1E1\"> <%=post.content%></p>" +
                         "</div>" +
                         "<div class=\"card-footer\">" + 
                         "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
@@ -332,13 +344,13 @@
                         "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
                     "</div>" +
                     "<div class=\"card-body\">" +
-                        "<div class=\"card-subtitle\">" +
+                        "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
                             "Comments" +
                         "</div>" +
                         "<form action=\"/commentonpost\" method=\"post\">" +
                             "<div class=\"form-group\">" +
                                 "<label class=\"sr-only\" for=\"message\">post</label>" +
-                                "<textarea class=\"form-control\" style=\"height:70px;\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                "<textarea class=\"form-control\" style=\"height:70px; background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
                                 "<br>" +
                                 "<input type=\"hidden\" name=\"postID\" value=\"<%=post.postID%>\">" +
                                 "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
@@ -346,7 +358,10 @@
                         "</form>" +
                     " </div>" +
                 "</div> ";
+            
+            postIDsOnClient.push("<%=post.postID%>");
             postsOnClient.push("<%=post%>");
+            
             container.innerHTML += content;
 
         // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
@@ -390,21 +405,21 @@
 					hashtags: hashtags
                 */
 
-                console.log("userid GOT: " + data.username);
+                console.log("userid GOT: " + data.userName);
                 console.log("postID GOT: " + data.postID);
                 console.log("content GOT: " + data.content);
                 console.log("timestamp GOT: " + data.timestamp);
                 var container = document.getElementById("allposts");
 
-                var content = "<div class=\"card gedf-card\">" +
+                var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
                 "<div class=\"card-header\">" +
                     "<div class=\"d-flex justify-content-between align-items-center\">" +
                         "<div class=\"d-flex justify-content-between align-items-center\">" +
                             "<div class=\"mr-2\">" +
-                                "<img class=\"rounded-circle\" width=\"45\" src=\"https://icon-library.com/images/default-profile-icon/default-profile-icon-17.jpg\">" +
+                                "<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
                             "</div>";
                 content += "<div class=\"ml-2\">" +
-                                "<div class=\"h5 m-0\">" + data.username+ "</div>" +
+                                "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + data.userName+ "</div>" +
                             "</div>";
                 content +=      "</div>" +
                             "</div>" +
@@ -414,7 +429,7 @@
                             "<a class=\"card-link\" href=\"#\">" +
                                 "<h5 class=\"card-title\">" + data.postID + "</h5>" +
                             "</a>" +
-                            "<p class=\"card-text\">" + data.content + "</p>" +
+                            "<p class=\"card-text\" style=\"color:#E1E1E1\">" + data.content + "</p>" +
                         "</div>" +
                         "<div class=\"card-footer\">" + 
                             "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
@@ -422,7 +437,7 @@
                             "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
                         "</div>" +
                         "<div class=\"card-body\">" +
-                            "<div class=\"card-subtitle\">" +
+                            "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
                                 "Comments" +
                             "</div>" +
                             "<form action=\"/commentonpost\" method=\"post\">" +
@@ -436,6 +451,8 @@
                             "</form>" +
                         " </div>" +
                     "</div> ";
+                //postsOnClient.push(data);
+                postIDsOnClient.push(data.postID);
                 postsOnClient.push(data);
                 console.log("post added to list: ");
                 console.log(data);
@@ -476,7 +493,10 @@
 		                    	console.log("New post added, see below");
 		                    	console.log(JSON.stringify(p));
 		                        // put the post in the list if it's from the server but not on the client
-		                        if (!postsOnClient.includes(p)) {
+		                        //if (!postsOnClient.includes(p)) {
+                                if (!postIDsOnClient.includes(p.postID)) {
+                                    console.log("cur list doesn't include p");
+                                    console.log(p);
 		                            newPosts.push(p);
 		                            // update the client-side list to contain new posts from the server
                                     postsOnClient.push(p);
@@ -509,7 +529,7 @@
                     newPosts.forEach(newPost => {
                         //VISUAL RENDER OF THE NEWPOST
                         console.log("make new post");
-                        var content = "<div class=\"card gedf-card\">" +
+                        var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
                         "<div class=\"card-header\">" +
                             "<div class=\"d-flex justify-content-between align-items-center\">" +
 								"<div class=\"d-flex justify-content-between align-items-center\">" +
@@ -522,12 +542,12 @@
                             if (newPost.posterID) {
                                 //someone posted on someone else's wall
                                 content += "<div class=\"ml-2\">" +
-                                            "<div class=\"h5 m-0\">" + newPost.posterName + " posted on " + newPost.userName + "'s wall </div>" +
+                                            "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + newPost.posterName + " posted on " + newPost.userName + "'s wall </div>" +
                                         "</div>";
                             } else {
                                 //anything involving just you, i.e changing interest, posted on your own wall, etc.
                                 content += "<div class=\"ml-2\">" +
-                                            "<div class=\"h5 m-0\">" + newPost.userName + "</div>" +
+                                            "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + newPost.userName + "</div>" +
                                         "</div>";
                             }
                         }
@@ -539,7 +559,7 @@
                                     "<a class=\"card-link\" href=\"#\">" +
                                         "<h5 class=\"card-title\">" + newPost.postID + "</h5>" +
                                     "</a>" +
-                                    "<p class=\"card-text\">" + newPost.content + "</p>" +
+                                    "<p class=\"card-text\" style=\"color:#E1E1E1\">" + newPost.content + "</p>" +
                                 "</div>" +
                                 "<div class=\"card-footer\">" + 
                                     "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
@@ -547,7 +567,7 @@
                                     "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
                                 "</div>" +
                                 "<div class=\"card-body\">" +
-                                    "<div class=\"card-subtitle\">" +
+                                    "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
                                         "Comments" +
                                     "</div>" +
                                     "<form action=\"/commentonpost\" method=\"post\">" +
@@ -561,7 +581,9 @@
                                     "</form>" +
                                 " </div>" +
                             "</div> ";
+                        postIDsonClient.push(newPost.postID);
                         postsOnClient.push(newPost);
+                        //postsOnClient[newPost.postID] = newPost;
 
                         //ADDS THE NEWEST POST AT THE BEGINNING OF ALL POSTS.
                         container.innerHTML = content + container.innerHTML;

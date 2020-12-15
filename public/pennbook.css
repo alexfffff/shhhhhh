@@ -1,6 +1,6 @@
 body {
     padding: 40px;
-    background-color: #323232;
+    background-color: #18191a;
 }
 
 .page-title {
@@ -56,15 +56,15 @@ body {
 
 .button {
     font-size: 14px;
-    background-color: #93FFDD;
+    background-color: #99DFFF;
     color: black;
-    border-radius: 5px;
+    border-radius: 10px;
     width: 100px;
     height: min-content; 
     text-align: center;
     float:left;
-    margin-left: 20px;
-    margin-right: 20px;
+   
+    margin-right: 40px;
     padding-right: 10px;
     padding-left: 10px;
     padding-top: 10px;
@@ -74,13 +74,13 @@ body {
 
 .btn-primary {
     color: #323232;
-    background-color:  #93FFDD;
-    border-color: #67b49c; /*set the color you want here*/
+    background-color:  #99DFFF;
+    border-color: #69AAC9; /*set the color you want here*/
 }
 .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
     color: #323232;
-    background-color:#6ec4a9;
-    border-color: #49816f; /*set the color you want here*/
+    background-color:#69AAC9;
+    border-color: #6094AD; /*set the color you want here*/
 }
 
 .h7 {

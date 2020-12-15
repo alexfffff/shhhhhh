@@ -174,6 +174,9 @@ var getHome = function(req, res) {
 						res.render('error.ejs');
 					} else {
 						var allComments = data2;
+
+						console.log("All Posts look like this: ");
+						console.log(allPosts);
 						
 						// pass the data from the table and render the home page to the user
 						res.render('home.ejs', {
@@ -537,56 +540,79 @@ var getWall = function(req, res) {
 	}
 };
 
+/*var getGraph = function(req, res) {
+	//alert('graph time');
+	res.render('graph.ejs');
+}*/
+
 var postToWall = function(req, res) {
 	// get the parameters to make the new post
-	var poster = req.session.username;
+	var posterID = req.session.username;
+	var posterName = req.session.fullname;
 	var content = req.body.content;
 	var timestamp = Date.now();
 
 	// generate the hashtags array from the post content
 	var hashtags = [];
 	// match alphanumeric characters after a hashtag, assumes that no user posts nested hashtags
-	var matches = content.match(/#([A-Z0-9]|[0-9A-Z])+( |$)/gi);
-	if (matches !== null) {
+	/*var matches = content.match(/#([A-Z0-9]|[0-9A-Z])+( |$)/gi);
+	if (matches) {
 		// get rid of whitespaces and # symbols before sending array to the database
 		for (var word of matches) {
 			hashtags.push(word.replace(/\s+/g, '').replace('#', ''));
 		}
-	}
+	}*/
 
 	// create the post ID from the poster and timestamp
-	var id = poster.concat(timestamp);
+	var id = posterID.concat(timestamp);
 
 	// the username of the current wall that the poster is looking at (extracted from URL)
-	var username = req.query.wallToVisit;
+	var userID = req.query.wallToVisit;
 	
 	// if URL parameter does not exist, user is looking at home page
-	if (!username) {
+	if (!userID) {
 		// treat as if user was posting on their own wall
-		username = poster;
+		userID = posterID;
 	}
 
 	// separates posts on a user's own wall and posts on other users' walls
-	if (poster === username) {
-		db.makePost(poster, id, content, timestamp, hashtags, function(err1, data1) {
+	if (posterID === userID) {
+		db.makePost(posterID, id, content, timestamp, hashtags, function(err1, data1) {
 			if (err1) {
 				// error with querying database
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on user's own wall, sends the post information
 				console.log("Successfully made post on my own wall");
-				res.send({
-					username: poster, 
-					postID: id, 
-					content: content, 
-					timestamp: timestamp, 
-					hashtags: hashtags
-				});
+
+				console.log("579: " + content);
+				
+				if (hashtags.length > 0) {
+					res.send({
+						userName: posterName, 
+						content: content, 
+						friend: false,
+						postID: id, 
+						userID: posterID,
+						timestamp: timestamp, 
+						hashtags: hashtags
+					});
+				} else {
+					res.send({
+						userName: posterName, 
+						content: content, 
+						friend: false,
+						postID: id, 
+						userID: posterID,
+						timestamp: timestamp, 
+					});
+				}
+				
 			}
 		});
 	} else {
 		// user makes a post on someone else's wall
-		db.makeWallPost(username, poster, id, content, timestamp, hashtags, function(err2, data2) {
+		db.makeWallPost(userID, poster, id, content, timestamp, hashtags, function(err2, data2) {
 			if (err2) {
 				// error with querying database
 				res.render('error.ejs');
@@ -845,6 +871,8 @@ var routes = {
 	post_to_wall: postToWall,
 	
 	get_friends: showFriends,
+
+	//get_graph: getGraph,
 
 	add_friend: addNewFriend,
 	delete_friend: deleteFriend,
