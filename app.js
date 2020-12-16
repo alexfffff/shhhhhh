@@ -94,17 +94,16 @@ app.get('/friendvisualization', function(req, res) {
 				json.data = []
 				// it worked so we send null message so the resturant knows to delete
 				data.forEach(item => {
-               //console.log(item.friendUsername);
-					let singleton  = []
-					singleton.push(name)
-					singleton.push(item.friendUsername)
-					map.set(item.friendUsername,singleton)
-					let freind = {}
-					freind.name = item.friendUsername
-					freind.id = item.friendUsername
-					freind.children = []
-					freind.data = []
-					json.children.push(freind)
+								let singleton  = []
+								singleton.push(name)
+								singleton.push(item.friendUsername)
+								map.set(item.friendUsername,singleton)
+								let friend = {}
+								friend.name = item.friendUsername
+								friend.id = item.friendUsername
+								friend.children = []
+								friend.data = []
+								json.children.push(friend)
 				} )
 				res.send(json);
 			}
@@ -114,65 +113,83 @@ app.get('/friendvisualization', function(req, res) {
 
 app.get('/getFriends/:user', function(req, res) {
 
-   //console.log(req.params.user);
    let name = req.params.user
-  let array = []
-  array = array.concat(map.get(req.params.user));
-  let aff = ""
-  db.getAffiliation(array[0], function(err,data){
-                 if (err){
-                    console.log("rip this shoudln't be added'")
-                 } else {
-                    aff = data
-                 }
-  })
-  //console.log(aff)
-  db.getFriends(name,function(err,data){// TODO fix the name here		
-        if(err){
-           res.send(null)
-        } else {
-           // it worked so we send null message so the resturant knows to delete
-           json = myFunction(array,data, array, aff)
-           res.send(json);
-        }
-        
-  }); 
+	let array = []
+	array = array.concat(map.get(req.params.user));
+	let aff = "sfasfadsf"
+	db.getAffiliation(array[0], function(err,data){
+						if (err){
+							console.log(err)
+						} else {
+							aff = data
+							db.getFriends(name,function(err,data){// TODO fix the name here		
+									if(err){
+										res.send(null)
+									} else {
+										let list = []
+										let list1 = []
+										data.forEach( f =>{
+												list.push(f.friendUsername)
+											}
+										)
+										db.getAllAffiliations(list, function(err,data){
+													if (err){
+														console.log(err)
+														return ret
+													} else{
+														data.forEach(temp => {
+															let check = temp.Items[0].affiliation
+															if (check == aff){
+																	list1.push(temp.Items[0].username)
+															}
+														})
+														console.log(list1)
+														json = myFunction(array,list1, array, aff)
+														console.log("________________")
+														res.send(json);
+													}
+										})
+										// it worked so we send null message so the resturant knows to delete
+
+									}
+									
+							}); 
+						}
+	})
+
 });
 
 function myFunction( array,items, array2, aff) {
- //console.log(array)
- if (array.length == 0){
-     let ret = []
-     items.forEach(item => {
-           db.getAffiliation(item.friendUsername, function(err,data){
-     if (err){
-        //console.log("reip irip rip")
-     } else{
-        let freind = {}
-        freind.name = item.friendUsername
-        freind.id = item.friendUsername
-        freind.children = []
-        freind.data = []
-        ret.push(freind)
-        let singleton = []
-        singleton.push(item.friendUsername)
-        let array2 = [] 
-        array2 = array
-        array2.push(item.friendUsername)
-        map.set(item.friendUsername,array2)
-        }
-     })
-     } )
-     return ret
- }
- let name = array.splice(0,1)
- let json = {};
- json.id = name
- json.name = name
- json.children = []
- json.data = []
- json.children = json.children.concat(myFunction(array, items, array2, aff))
- return json
+  if (array.length == 0){
+		let ret = []
+		items.forEach(temp => {
+			let freind = {}
+			freind.name = temp
+			freind.id = temp
+			freind.children = []
+			freind.data = []
+			ret.push(freind)
+			
+			let array2 = [] 
+			array2 = array
+			array2.push(temp)
+			map.set(temp,array2)
+		})
+		console.log(ret)
+		return ret
+  } else {
+	  let name = array.splice(0,1)
+	  let json = {};
+	  json.id = name
+	  json.name = name
+	  json.children = []
+	  json.data = []
+	  let y = myFunction(array, items, array2, aff)
+	  console.log(y)
+	  json.children = json.children.concat(y)
+	  return json
+	}
+
 }
 
 

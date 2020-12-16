@@ -271,7 +271,7 @@ var db_get_all_affiliations = function(usernames, callback) {
 	Promise.all(arrayOfPromises).then(
 		successResult => {
 			console.log(successResult);
-			callback(null, successResult.Items);
+			callback(null, successResult);
 		},
 		errResult => {
 			console.log(errResult);
