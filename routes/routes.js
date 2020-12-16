@@ -551,11 +551,6 @@ var getWall = function(req, res) {
 	}
 };
 
-/*var getGraph = function(req, res) {
-	//alert('graph time');
-	res.render('graph.ejs');
-}*/
-
 var postToWall = function(req, res) {
 	// get the parameters to make the new post
 	var posterID = req.session.username;
@@ -729,9 +724,9 @@ var getHomePagePosts = function(req, res) {
 					var allComments = data2;
 					
 					console.log("AJAX SUCCESSFUL CALL every 5 seconds from routes");
-					console.log("Sending the following posts (from the last 5 minutes) to home.ejs...");
+					console.log("Sending the following posts (from the last 5 seconds) to home.ejs...");
 					console.log(allPosts);
-					console.log("Sending the following comments (from the last 5 minutes) to home.ejs...");
+					console.log("Sending the following comments (from the last 5 seconds) to home.ejs...");
 					console.log(allComments);
 					console.log("Everything above successfully sent to home.ejs");
 					
@@ -882,8 +877,6 @@ var routes = {
 	post_to_wall: postToWall,
 	
 	get_friends: showFriends,
-
-	//get_graph: getGraph,
 
 	add_friend: addNewFriend,
 	delete_friend: deleteFriend,

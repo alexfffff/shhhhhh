@@ -2,6 +2,7 @@
   "dependencies": {
     "aws-sdk": "^2.797.0",
     "bcrypt": "^5.0.0",
+    "child-process": "^1.0.2",
     "cookie-parser": "^1.4.5",
     "ejs": "^3.1.5",
     "express": "^4.17.1",
