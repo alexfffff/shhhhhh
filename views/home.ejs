@@ -202,6 +202,11 @@
                         <div class="card-subtitle">
                              Comments
                         </div>
+
+                        <% for (var i = 0; i < 7; i++) { %>
+                            <p>COMMENT POSTER</p>
+                            <p>COMMENT CONTENT</p>
+                        <% } %>
                         <form action="/commentonpost" method="post">
                             <div class="form-group">
                                 <label class="sr-only" for="message">post</label>
@@ -263,7 +268,6 @@
                         <a href="#" class="card-link"><i class="fa fa-comment"></i> Comment</a>
                         <a href="#" class="card-link"><i class="fa fa-mail-forward"></i> Share</a>
                     </div>
-
                 </div>
                 <!-- Post /////-->
             </div>   
@@ -296,49 +300,78 @@
 </body>
 
 <script>
-    var postIDsOnClient = [];
-    var postsOnClient = [];
-    var commentsOnPosts = [];
+    var IDsToPostsMap = [];
+    var IDsToCommentsMap = [];
 
-    function initAllPosts() {
+    function initPostsandComments() {
         // TODO: DISPLAY POSTS ON THE HOME PAGE
         // iterate through all of the posts
-        console.log("initAllPosts called");
-        var container = document.getElementById("allposts");
+        console.log("initPostsandComments called");
         <% posts.forEach(post => { %>
+            IDsToPostsMap["<%=post.postID%>"] = "<%=post%>";
+            console.log("placed into post map: ");
+            console.log(IDsToPostsMap["<%=post.postID%>"]);
+
+            IDsToCommentsMap["<%=post.postID%>"] = [];
+            console.log("placed into comments map: ");
+            console.log(IDsToCommentsMap["<%=post.postID%>"]);
+        <% }); %>
+
+        
+
+        //console.log(typeOf(<%=comments%>));
+        <%for (var i = 0; i < comments.length; i++) { %>
+            console.log("kill me now");
+            console.log(JSON.stringify("<%comments[i].postID%>"));
+        <% }%>
+
+        
+        console.log("Ids to posts:");
+        console.log(IDsToPostsMap);
+        console.log("Ids to comments:");
+        console.log(IDsToCommentsMap);
+    }
+
+    function renderPostsAndComments() {
+        IDsToPostsMap.forEach((postID, post) => {
+
+            var commentList = IDsToCommentsMap(postID);
+
+            console.log("rendering content.....");
+
             var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
-                        "<div class=\"card-header\">" +
-                            "<div class=\"d-flex justify-content-between align-items-center\">" +
-								"<div class=\"d-flex justify-content-between align-items-center\">" +
-									"<div class=\"mr-2\">" +
-										"<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
-                                    "</div>";
-            <% if(post.friend) { %>
+            "<div class=\"card-header\">" +
+                "<div class=\"d-flex justify-content-between align-items-center\">" +
+                    "<div class=\"d-flex justify-content-between align-items-center\">" +
+                        "<div class=\"mr-2\">" +
+                            "<img class=\"rounded-circle\" width=\"45\" src=\"https://icon-library.com/images/default-profile-icon/default-profile-icon-17.jpg\">" +
+                        "</div>";
+            if(post.friend) {
                 //DO NOTHING ABOUT THE HEADER
-            <%} else { %>
-                <% if (post.posterID) { %>
+            } else {
+                if (post.posterID) {
                     //someone posted on someone else's wall
                     content += "<div class=\"ml-2\">" +
-                                "<div class=\"h5 m-0\"style=\"color:#E1E1E1\"><%=post.posterName%> posted on <%=post.userName%>'s wall </div>" +
-							"</div>";
-                <% } else { %>
+                                "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + post.posterName + " posted on " + post.userName + "'s wall </div>" +
+                            "</div>";
+                } else {
                     //anything involving just you, i.e changing interest, posted on your own wall, etc.
                     content += "<div class=\"ml-2\">" +
-                                "<div class=\"h5 m-0\"style=\"color:#E1E1E1\"><%=post.userName%> </div>" +
-							"</div>";
-                <% } %>
-            <% } %>
+                                "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + post.userName + "</div>" +
+                            "</div>";
+                }
+            }
             content +=      "</div>" +
                         "</div>" +
                     "</div>" +
                     "<div class=\"card-body\">" +
-                        "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i><%=post.timestamp%></div>" +
+                        "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i>" + post.timestamp + "</div>" +
                         "<a class=\"card-link\" href=\"#\">" +
-                            "<h5 class=\"card-title\"><%=post.postID%></h5>" +
+                            "<h5 class=\"card-title\">" + post.postID + "</h5>" +
                         "</a>" +
-                        "<p class=\"card-text\" style=\"color:#E1E1E1\"> <%=post.content%></p>" +
-                        "</div>" +
-                        "<div class=\"card-footer\">" + 
+                        "<p class=\"card-text\" style=\"color:#E1E1E1\">" + post.content + "</p>" +
+                    "</div>" +
+                    "<div class=\"card-footer\">" + 
                         "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
                         "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
                         "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
@@ -347,36 +380,27 @@
                         "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
                             "Comments" +
                         "</div>" +
+                        "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">";
+            commentList.forEach(comment => {
+                content += "<p>COMMENT POSTER</p><p>COMMENT CONTENT</p>";
+            });
+                content += "</div>" +
                         "<form action=\"/commentonpost\" method=\"post\">" +
                             "<div class=\"form-group\">" +
                                 "<label class=\"sr-only\" for=\"message\">post</label>" +
-                                "<textarea class=\"form-control\" style=\"height:70px; background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                "<textarea class=\"form-control\" style=\"height:70px;\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
                                 "<br>" +
-                                "<input type=\"hidden\" name=\"postID\" value=\"<%=post.postID%>\">" +
+                                "<input type=\"hidden\" name=\"postID\" value=\"newPost.postID%>\">" +
                                 "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
                             " </div>" +
                         "</form>" +
                     " </div>" +
                 "</div> ";
-            
-            postIDsOnClient.push("<%=post.postID%>");
-            postsOnClient.push("<%=post%>");
-            
-            container.innerHTML += content;
+            //postsOnClient[newPost.postID] = newPost;
 
-        // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
-
-        // add each post from the server into the list of posts stored on the client side
-        <% }); %>
-        console.log(postsOnClient);
-    }
-
-    function initAllComments() {
-
-    }
-
-    function renderPostsAndComments() {
-
+            //ADDS THE NEWEST POST AT THE BEGINNING OF ALL POSTS.
+            container.innerHTML = content + container.innerHTML;
+        });
     }
 
     // TODO: ejs form submit button (for making a new post) should have: onclick="makeNewPost()"
@@ -598,8 +622,8 @@
             })
     };
 
-    initAllComments();
-    initAllPosts();
+    initPostsandComments();
+    renderPostsAndComments();
 
     $(document).ready(function() {
         // CAN CHANGE CSS CODE (THE LINE BELOW) IF THERE ARE CONFLICTS
