@@ -319,7 +319,17 @@
         //console.log(typeOf(<%=comments%>));
         <%for (var i = 0; i < comments.length; i++) { %>
             console.log("kill me now");
-            console.log(JSON.stringify("<%comments[i].postID%>"));
+            
+            <% for (let j = 0; j < comments[i].length; j++) { %>
+            	// @@@@@@@@@@@@@@@@@@@ TODO (DI)
+	            console.log('HERE ARE ALL OF THE FUCKING FIELDS FOR A COMMENT');
+	            console.log("comment content: " + "<%=comments[i][j].comment%>");
+            	console.log("postID: " + "<%=comments[i][j].postID%>");
+            	console.log("username: " + "<%=comments[i][j].username%>");
+            	console.log("commentID: " + "<%=comments[i][j].commentID%>");
+            	console.log("fullname: " + "<%=comments[i][j].fullname%>");
+            	console.log("timestamp: " + "<%=comments[i][j].timestamp%>");
+            <% } %>
         <% }%>
 
         
