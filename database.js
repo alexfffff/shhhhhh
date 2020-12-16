@@ -245,6 +245,42 @@ var db_get_affiliation = function(username, callback) {
 };
 
 
+
+
+/**
+* Queries the affiliation of a list of users
+*
+* @param  usernames  list of usernames of some users
+* @return The affiliation of the user
+*/
+var db_get_all_affiliations = function(usernames, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var arrayOfPromises = [];
+	usernames.forEach(username => {
+		var params = {
+			TableName : "users",
+			KeyConditionExpression: "username = :username",
+			ExpressionAttributeValues: {
+				":username": username
+			}
+		};
+		arrayOfPromises.push(docClient.query(params).promise());
+	});
+	
+	// query the table with params, searching for item with the specified username
+	Promise.all(arrayOfPromises).then(
+		successResult => {
+			console.log(successResult);
+			callback(null, successResult);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
+
+
 /**
 * Updates the affiliation of the user with the specified username (current user) to the new affiliation. 
 *
@@ -1815,7 +1851,75 @@ var db_news_search = function(searchStr, username, callback) {
 
 
 
+/** 
+* GETS A USER'S ARTICLE RECOMMENDATIONS, HERE FOR DEBUGGING ROUTES (Philip)
+* INCORPORATE ALEX'S ALGORITHM WHEN WE GET IT, TO SORT THE ARTICLES
+*
+* @param  username  username of a user
+* @return List of recommended articles for user
+*/
+var get_article_recs = function(username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var newsUsername = "u:".concat(username);
+    var paramsRecommended = {
+    		TableName: "recommend",
+			KeyConditionExpression: "username = :user",
+			ExpressionAttributeValues: {
+				":user": newsUsername
+			}
+		};
+    
+    /* INSERT SORTING ALGORITHM SOMEWHERE AROUND HERE ??? */
+    
+    // array of promises to be resolved later, and array of final article recommendation results
+    var arrayOfPromises = [];
+    var finalResults = [];
 
+	// query the table with params, searching for item with the specified username
+	docClient.query(paramsRecommended).promise().then(
+		successResultRecommended => {
+			// add all of the article names to a list
+			var recommendedArticles = [];
+			for (let newsArticle of successResultRecommended.Items) {
+    			recommendedArticles.push(newsArticle.article.substring(2));
+    		}
+			
+			// Iterates through each article and pushes promise to query for the article to array of promises
+			for (var i = 0; i < recommendedArticles.length; i++) {
+				var params = {
+					TableName: 'news',
+					KeyConditionExpression: "article = :article",
+					ExpressionAttributeValues: {
+						":article": recommendedArticles[i]
+					}
+				};
+				var newPromise = docClient.query(params).promise();
+				arrayOfPromises.push(newPromise);
+			}
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	).then(function(successResult2) {
+		// Promise.all to resolve promises in array of promises
+		Promise.all(arrayOfPromises).then(
+			successResult2 => {
+				// push the actual article into the array finalResults
+				for (let i = 0; i < successResult2.length; i++) {
+					finalResults.push(successResult2[i].Items[0]);
+				}
+				
+				// send the finalResults back
+				callback(null, finalResults);
+			},
+			errResult => {
+				console.log(errResult);
+				callback(errResult, null);
+			}
+		);
+	});
+};
 
 
 
@@ -1834,6 +1938,7 @@ var database = {
   loginCheck: my_login_check,
   createAccount: create_account,
   getAffiliation: db_get_affiliation,
+  getAllAffiliations: db_get_all_affiliations,
   changeAffiliation: db_change_affiliation,
   addInterest: add_interest,
   removeInterest: db_remove_interest,
@@ -1858,7 +1963,8 @@ var database = {
   logout: db_logout,
   getName: db_get_name,
   searchName: db_search_name,
-  newsSearch: db_news_search
+  newsSearch: db_news_search,
+  getArticleRecs: get_article_recs
 };
 
 module.exports = database;
