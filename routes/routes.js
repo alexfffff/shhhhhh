@@ -174,14 +174,25 @@ var getHome = function(req, res) {
 						res.render('error.ejs');
 					} else {
 						var allComments = data2;
+						
+						var validComments = [];
 
-						console.log("All Posts look like this: ");
-						console.log(allPosts);
+						for (let c of allComments) {
+							if (c.Count > 0) {
+								validComments.push(c.Items);
+							}
+						}
+
+						console.log("data2: ");
+						console.log(data2);
+
+						console.log("All comments look like this: ");
+						console.log(validComments);
 						
 						// pass the data from the table and render the home page to the user
 						res.render('home.ejs', {
 							posts: allPosts, 
-							comments: allComments, 
+							comments: validComments, 
 							username: req.session.username
 						});
 					}
@@ -555,13 +566,13 @@ var postToWall = function(req, res) {
 	// generate the hashtags array from the post content
 	var hashtags = [];
 	// match alphanumeric characters after a hashtag, assumes that no user posts nested hashtags
-	/*var matches = content.match(/#([A-Z0-9]|[0-9A-Z])+( |$)/gi);
+	var matches = content.match(/#([A-Z0-9]|[0-9A-Z])+( |$)/gi);
 	if (matches) {
 		// get rid of whitespaces and # symbols before sending array to the database
 		for (var word of matches) {
 			hashtags.push(word.replace(/\s+/g, '').replace('#', ''));
 		}
-	}*/
+	}
 
 	// create the post ID from the poster and timestamp
 	var id = posterID.concat(timestamp);
@@ -612,7 +623,7 @@ var postToWall = function(req, res) {
 		});
 	} else {
 		// user makes a post on someone else's wall
-		db.makeWallPost(userID, poster, id, content, timestamp, hashtags, function(err2, data2) {
+		db.makeWallPost(userID, posterID, id, content, timestamp, hashtags, function(err2, data2) {
 			if (err2) {
 				// error with querying database
 				res.render('error.ejs');
@@ -621,7 +632,7 @@ var postToWall = function(req, res) {
 				console.log("Successfully made post on someone else's wall");
 				res.send({
 					wallsUser: username, 
-					posterID: poster, 
+					posterID: posterID, 
 					postID: id, 
 					content: content, 
 					timestamp: timestamp, 
