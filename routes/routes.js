@@ -365,6 +365,19 @@ var addNewInterest = function(req, res) {
 			}
 		} else {
 			// successfully added an interest
+			const { exec } = require('child_process');
+
+            exec('cd .. \n cd HW3 \n mvn exec:java@livy', (error, stdout, stderr) => {
+                if (error) {
+                    console.log(error);
+                }
+            
+                if (stderr) {
+                    console.log(stderr);
+                }
+                
+                console.log(stdout);
+            });
 			res.redirect('/settings?message=' + 'Interest_successfully_added' + '&success=true');
 		}
 	});
@@ -390,6 +403,19 @@ var removeOldInterest = function(req, res) {
 			}
 		} else {
 			// successfully removed an interest (forces a status update)
+			const { exec } = require('child_process');
+
+            exec('cd .. \n cd HW3 \n mvn exec:java@livy', (error, stdout, stderr) => {
+                if (error) {
+                    console.log(error);
+                }
+            
+                if (stderr) {
+                    console.log(stderr);
+                }
+                
+                console.log(stdout);
+            });
 			res.redirect('/settings?message=' + 'Interest_successfully_removed' + '&success=true');
 		}
 	});

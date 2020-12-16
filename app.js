@@ -80,6 +80,22 @@ app.get('/graphof', function(req, res) {
 	res.render('friendvisualizer.ejs');
 });
 
+app.get('/livy', function(req,res){
+	const { exec } = require('child_process');
+
+	exec('cd .. \n cd HW3 \n mvn exec:java@livy', (error, stdout, stderr) => {
+		if (error) {
+			console.log(error);
+		}
+	
+		if (stderr) {
+			console.log(stderr);
+		}
+		
+		console.log(stdout);
+	});
+})
+
 app.get('/friendvisualization', function(req, res) {
 	let name = req.session.username;
 	console.log("doing database")
@@ -143,9 +159,7 @@ app.get('/getFriends/:user', function(req, res) {
 																	list1.push(temp.Items[0].username)
 															}
 														})
-														console.log(list1)
 														json = myFunction(array,list1, array, aff)
-														console.log("________________")
 														res.send(json);
 													}
 										})
@@ -175,7 +189,6 @@ function myFunction( array,items, array2, aff) {
 			array2.push(temp)
 			map.set(temp,array2)
 		})
-		console.log(ret)
 		return ret
   } else {
 	  let name = array.splice(0,1)
@@ -185,7 +198,6 @@ function myFunction( array,items, array2, aff) {
 	  json.children = []
 	  json.data = []
 	  let y = myFunction(array, items, array2, aff)
-	  console.log(y)
 	  json.children = json.children.concat(y)
 	  return json
 	}
