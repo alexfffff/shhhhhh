@@ -148,8 +148,8 @@ var getHome = function(req, res) {
 		// redirect to the login page if not logged in
 		res.redirect('/');
 	} else {
-		// show only the most recent posts within the past day
-		var startTime = Date.now() - 86400000; // subtracts 1 day (in milliseconds) from current time
+		// show only the most recent posts within the past week
+		var startTime = Date.now() - 604800000; // subtracts 1 week (in milliseconds) from current time
 		var endTime = Date.now();
 
 		// show the home page to the user
@@ -860,7 +860,11 @@ var searchNews = function(req, res) {
 			res.render('error.ejs');
 		} else {
 			// render the news search results page, and the resulting articles based on keyword
-			res.render('newsresults.ejs', {username: req.session.username, articles: data, keyword: keyword});
+			res.render('newsresults.ejs', {
+				username: req.session.username, 
+				articles: data, 
+				keyword: keyword
+			});
 		}
 	});
 }
