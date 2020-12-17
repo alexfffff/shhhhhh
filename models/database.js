@@ -576,6 +576,47 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 									docClient.put(postParam).promise().then(
 										successResult2 => {
 											try  {
+												var recParams = {
+													TableName: "recommend",
+													KeyConditionExpression: "username = :username",
+													FilterExpression: "#c = :category",
+													ExpressionAttributeNames:{
+														"#un": "username",
+														"#c": "category"
+													},
+													ExpressionAttributeValues: {
+														":username": "u:"+username,
+														":category": "c:"+interest
+													}
+												};
+												docClient.query(recParams).promise().then(
+													successResultRecs => {
+														var arrayOfDelPromises = [];
+														successResultRecs.forEach(rec => {
+															var delParams = {
+																TableName : "recommend",
+																Key: {
+																	"username": "u:"+username,
+																	"chatID": "a:"+rec.article
+																}
+															};
+															arrayOfDelPromises.push(docClient.delete(delParams).promise());
+														});
+														Promise.all(arrayOfDelPromises).then(
+															successResult => {
+																console.log("ARTICLES DELETED");
+																callback(null, successResult);
+															}, errResult => {
+																callback(errResult, null);
+															}
+														);
+													},
+													errResult => {
+														console.log(errResult);
+														callback(errResult, null);
+													}
+												);
+
 												console.log("Added item");
 												callback(null, successResult2);
 										
@@ -1667,25 +1708,52 @@ var db_get_name = function(username, callback) {
 * @param  typedName  what the user has typed so far
 * @return Array with the usernames whose partition key contains typedName
 */
-//TODO: CHANGE TO A SCAN 
 var db_search_name = function(typedName, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
+	var lowerTypedName = typedName.toLowerCase();
 	let params = {
-		TableName : 'fullnames',
-		FilterExpression: "contains(#fn, :fullname)",
-		ExpressionAttributeNames: {
-			"#fn": "fullname",
+		TableName : "namePrefixes",
+		KeyConditionExpression: "#pf = :prefix",
+		ExpressionAttributeNames:{
+			"#pf": "prefix"
 		},
 		ExpressionAttributeValues: {
-			":fullname": typedName,
-		}       
+			":prefix": lowerTypedName
+		}    
 	};
 	
 
 	// query the table with params
-	docClient.scan(params).promise().then(
+	docClient.query(params).promise().then(
 		successResult => {
-			callback(null, successResult);
+			console.log(successResult);
+			var arrayOfPromisesNames = [];
+			successResult.Items.forEach(name => {
+				var lowerName = name.fullname.toLowerCase();
+				let nameParams = {
+					TableName : "fullnames",
+					KeyConditionExpression: "#fn = :fullname",
+					ExpressionAttributeNames:{
+						"#fn": "fullname"
+					},
+					ExpressionAttributeValues: {
+						":fullname": lowerName
+					}    
+				};
+				console.log(nameParams);
+				arrayOfPromisesNames.push(docClient.query(nameParams).promise());
+			});
+			Promise.all(arrayOfPromisesNames).then(
+				successResult3 => {
+					console.log("results");
+					callback(null, successResult3);
+				},
+				errResult => {
+					console.log(errResult);
+					callback(errResult, null);
+				}
+			);
+
 		},
 		errResult => {
 			console.log(errResult);
@@ -1955,7 +2023,7 @@ var get_article_recs = function(username, callback) {
                             ":article": recommendedArticles[i]
                         }
 					};
-					var newPromise2 = docClient.query(params2).promise();
+					var newPromise2 = docClient.delete(params2).promise();
                     var newPromise = docClient.query(params).promise();
 					arrayOfPromises.push(newPromise);
 					arrayDelete.push(newPromise2);
@@ -1978,6 +2046,7 @@ var get_article_recs = function(username, callback) {
 				console.log("deleted");
 			},
 			errResult => {
+				console.log("err2");
 				console.log(errResult);
 				callback(errResult, null);
 			}
