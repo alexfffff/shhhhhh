@@ -1074,7 +1074,7 @@ var db_make_wall_post = function(wallsUser, posterID, postID, content, timestamp
 			"#un": "username"
 		},
 		ExpressionAttributeValues: {
-			":username": poster
+			":username": posterID
 		}
 	};
 	arrayOfPromises1.push(docClient.query(getNameParam2).promise());
@@ -1579,13 +1579,18 @@ var db_unfriend = function(yourUsername, friendUsername, callback) {
 			};
 			docClient.delete(params2).promise().then(
 				successResult => {
+					console.log("successfully deleted friend");
 					callback(null, successResult);
 				},
 				errResult => {
+					console.log("err result 2");
+					console.log(errResult);
 					callback(errResult, null);
 				});
 		  },
 		  errResult => {
+			  console.log("error result with docClient.delete");
+			  console.log(errResult);
 			  callback(errResult, null);
 		  });
 
