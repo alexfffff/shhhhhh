@@ -55,7 +55,6 @@ var my_login_check = function(username, password, callback) {
 						  docClient.update(params).promise().then(
 							  successResult => {
 								  console.log("UPDATED");
-								  console.log(successResult);
 								  callback(null, {username: username, fullname: userFullName});
 							  },
 							  errResult => {
@@ -160,11 +159,9 @@ var create_account = function(username, password, name, email, affiliation, birt
 									},
 								TableName: "interests"
 								};
-			  					console.log(param2);
 			  					//Promise to query the keyword is pushed to array of promises
 		  						arrayOfPromises.push(docClient.put(param2).promise());
 	  							}
-	  							console.log(arrayOfPromises);
 	  							Promise.all(arrayOfPromises).then(
 			  						successResult => {
 										var nameParam = {
@@ -270,7 +267,6 @@ var db_get_all_affiliations = function(usernames, callback) {
 	// query the table with params, searching for item with the specified username
 	Promise.all(arrayOfPromises).then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -411,7 +407,6 @@ var add_interest = function(username, interest, timestamp, postID, callback) {
 								docClient.query(getNameParam).promise().then(
 									successResult => {
 										try {
-											console.log(successResult);
 											//NEED TO GET THE USERS FUCKING NAME
 											var param = {
 												TableName : "posts",
@@ -490,7 +485,6 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 	
 	docClient.query(params1).promise().then(
 		successResult => {
-			console.log(successResult);
 			try {
 				if (successResult.Count === 2) {
 					throw new Error("Must have at least 2 interests");
@@ -522,7 +516,6 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 						docClient.query(getNameParam).promise().then(
 							successResult => {
 								try {
-									console.log(successResult);
 									//NEED TO GET THE USERS FUCKING NAME
 									var postParam = {
 										TableName : "posts",
@@ -715,7 +708,6 @@ var db_change_email = function(username, currEmail, newEmail, callback) {
 			  		docClient.update(params).promise().then(
 					  	successResult => {
 						  	console.log("UPDATED");
-						  	console.log(successResult);
 						  	callback(null, successResult);
 					  	}, errResult => {
 						  	console.log(errResult);
@@ -824,7 +816,6 @@ var db_change_password = function(username, currPwd, newPwd, callback) {
 			  			docClient.update(params).promise().then(
 						  	successResult => {
 							  	console.log("UPDATED");
-							  	console.log(successResult);
 							  	callback(null, successResult);
 						  	}, errResult => {
 							  	console.log(errResult);
@@ -895,19 +886,14 @@ var db_get_homepage_posts = function(username, startTime, endTime, callback) {
 		  ":user": username
 		}
   	};
-	console.log(params);
   	docClient.query(params).promise().then(
 		successResult => {
 			try {
-				console.log("BELOW IS SUCCESSRESULT.ITEMS");
-				console.log(successResult.Items);
 				var usernames = [];
 				for (var i=0; i < successResult.Count; i++) {
 					usernames.push(successResult.Items[i].friendUsername);
 				}
 				usernames.push(username);
-				console.log("USERNAMES");
-				console.log(usernames);
 			
 				var arrayOfPromises = [];
 	  			//Iterates through the keywords and creates params for that keyword
@@ -926,14 +912,11 @@ var db_get_homepage_posts = function(username, startTime, endTime, callback) {
 							":end": endTime
 						}
 					};
-					console.log("PARAMS2");
-					console.log(params2);
 					//Promise to query the keyword is pushed to array of promises
 		  			arrayOfPromises.push(docClient.query(params2).promise());
 	  			}
 	  			Promise.all(arrayOfPromises).then(
 			  		successResult => {
-			  			console.log(successResult);
 						callback(null, successResult);
 					}, errResult => {
 						console.log("PROMISE ALL FAIL?");
@@ -1002,8 +985,6 @@ var db_get_user_Wall = function(username, callback) {
 	// query the table with params, searching for item with the specified username
 	Promise.all(arrayOfPromises).then(
 		successResult => {
-			console.log(successResult[0]);
-			console.log(successResult[1]);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1055,7 +1036,6 @@ var db_make_wall_post = function(wallsUser, posterID, postID, content, timestamp
 	arrayOfPromises1.push(docClient.query(getNameParam2).promise());
 	Promise.all(arrayOfPromises1).then(
 		successResultA => {
-			console.log(successResultA[0].Items[0]);
 			userName = successResultA[0].Items[0].fullname;
 			posterName = successResultA[1].Items[0].fullname;
 			var params = {
@@ -1144,7 +1124,6 @@ var db_make_post = function(username, postID, content, timestamp, hashtags, call
 	};
 	docClient.query(getNameParam).promise().then(
 		successResult => {
-			console.log(successResult.Items[0]);
 			userName = successResult.Items[0].fullname;
 			var params = {
 				TableName : "posts",
@@ -1224,7 +1203,6 @@ var db_get_hashtags = function(hashtag, callback) {
 	// query the table with params, searching for item with the specified username
 	docClient.query(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1293,7 +1271,6 @@ var db_get_post_comments = function(postID, callback) {
 	// query the table with params, searching for item with the specified username
 	Promise.all(arrayOfPromises).then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1329,7 +1306,6 @@ var db_add_comment = function(commentID, username, comment, postID, timestamp, c
 	};
 	docClient.query(getNameParam).promise().then(
 		successResult => {
-			console.log(successResult.Items[0]);
 			userName = successResult.Items[0].fullname;
 			var params = {
 				TableName : "comments",
@@ -1518,7 +1494,6 @@ var db_get_friends = function(yourUsername, callback) {
 	// query the table with params, searching for item with the specified username
 	docClient.query(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult.Items);
 		},
 		errResult => {
@@ -1599,7 +1574,6 @@ var db_logout = function(username, callback) {
   docClient.update(params).promise().then(
 		  successResult => {
 			  console.log("UPDATED");
-			  console.log(successResult);
 			  callback(null, successResult);
 		  },
 		  errResult => {
@@ -1667,7 +1641,6 @@ var db_search_name = function(typedName, callback) {
 	// query the table with params
 	docClient.scan(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1925,6 +1898,42 @@ var get_article_recs = function(username, callback) {
 
 
 
+/**
+* Adds post comment information into "comment" table
+*
+* @param  articleTitle generated postID
+* @param  username  username of current user
+* @return 
+*/
+var db_like_article = function(articleTitle, username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "reactions",
+		Item:{
+			"article": articleTitle,
+			"username": username
+		}
+	};
+
+	docClient.put(params).promise().then(
+			successResult => {
+		try  {
+			console.log("Added item");
+			callback(null, successResult);
+			
+		} catch (err) {
+			console.log("Unable to add item.");
+			callback(err, null);
+		}
+	},
+	errResult => {
+		callback(errResult, null);
+	});
+};
+
+
+
+
 
 
 /* We define an object with one field for each method. For instance, below we have
@@ -1964,7 +1973,8 @@ var database = {
   getName: db_get_name,
   searchName: db_search_name,
   newsSearch: db_news_search,
-  getArticleRecs: get_article_recs
+  getArticleRecs: get_article_recs,
+  likeArticle: db_like_article
 };
 
 module.exports = database;

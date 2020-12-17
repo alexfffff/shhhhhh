@@ -50,10 +50,6 @@ io.on('connection', function (socket) {
 	    userFullNames[username] = data.userFullname;
 	    users[username] = socket.id;
 	    console.log("i am client stuff");
-		console.log(data.message);
-		console.log(data.id);
-		console.log(users);
-		console.log(sockets);
    });
    
 	socket.on('message', function (data) {
@@ -73,7 +69,6 @@ io.on('connection', function (socket) {
 
    //RECEIVES NEW CHAT MSG THAT USER SENT
 	socket.on('newChatMsg', function(msg) { 
-		console.log(msg);
 		newly_sent_msg(socket, msg); 
 		// TODO: Add to db?
 	      //Send message to everyone
@@ -88,8 +83,11 @@ io.on('connection', function (socket) {
     socket.on('get_active_friends', function(msg) {
     	getOnlineFriends(socket, msg);
     });
-	
-	
+
+
+    socket.on('startGroup', function(msg) {
+		startGroupChat(socket, msg); 
+	});
 	
 	socket.on('disconnect', function() { 
         disconnect_user(socket); 
@@ -106,14 +104,11 @@ io.on('connection', function (socket) {
 //output: {chatID, timestamp, message, sender's username}
 var newly_sent_msg = function(socket, msg) {
 	var msgObj = {chatID: msg.chatID, timestamp: Date.now(), message: msg.message, sender: msg.sender, fullname: msg.fullname};
-	//messages[channelId].push(messageObj);
-	console.log(msgObj);
+	
 	chat_db.addMessage(msg.chatID, Date.now(), msg.message, msg.sender, msg.fullname, function (err, data) {
 		if (err) {
 			console.log("SOMETHING WRONG W PUTTING MSG IN DB");
 		} else {
-			console.log("IT WORKED");
-			console.log(msg.chatID);
 			io.in(msg.chatID).emit('newmsg', msgObj);
 		}
 	});
@@ -139,30 +134,23 @@ var disconnect_user = function(socket) {
 * @return 
 */
 var joinChatroom = function(socket, data) {
-	console.log("ON JOIN CHATROOM");
-	console.log(data);
     socket.join(data.chatID);
-    //currentChatID = data.chatID;
-    console.log(data.chatID);
     var invitedUser = sockets[socket.id];
-    console.log("inviteduser: " + invitedUser);
     var chatID = data.chatID;
     var chatName;
     // add the dm channel to persistent storage
     //IF THIS IS DM, CHECK IF YALL TALKED BEFORE
-    if ('member' in data && !(data.chatID in chats)) {
+    if ('member' in data) {
         if (invitedUser < data.member) {
             chatName = invitedUser + ', ' + data.member;
         } else {
             chatName = data.member + ', ' + invitedUser;
         }
-        console.log("chatname: " + chatName);
         chats[chatID] = {
             chatID: chatID,
             chatName: chatName,
             members: [invitedUser, data.member]
         };
-        console.log("chats: " + chats);
         chat_db.startChat(chatID, chatName, [invitedUser, data.member], function(err, data) {
             if (err) {
                 console.log('error adding to db, ' + err);
@@ -212,52 +200,43 @@ var joinChatroom = function(socket, data) {
 
 
 var joinDM = function(socket, data) {
-    console.log("ON JOIN CHATROOM");
-	console.log(data);
     socket.join(data.chatID);
-    //currentChatID = data.chatID;
-    console.log(data.chatID);
     var inviterID = sockets[socket.id];
-    console.log("inviteduser: " + inviterID);
     var chatID = data.chatID;
     var chatName;
     // add the dm channel to persistent storage
     //IF THIS IS DM, CHECK IF YALL TALKED BEFORE
-    if ('member' in data && !(data.chatID in chats)) {
-        if (inviterID < data.member) {
+    if ('member' in data) {
+        /*if (inviterID < data.member) {
             chatName = inviterID + ', ' + data.member;
         } else {
             chatName = data.member + ', ' + inviterID;
-        }
+        }*/
 
-        chat_db.inviteUser(chatID, data.member, inviterID, userFullNames[inviterID], function(err, data) {
+        chat_db.inviteUser(chatID, [data.member], inviterID, userFullNames[inviterID], function(err, data) {
             if (err) {
                 console.log("SOMETHING WRONG W INVITE");
             }
         });
 
-
-        console.log("chatname: " + chatName);
         chats[chatID] = {
             chatID: chatID,
-            chatName: chatName,
+            chatName: data.chatName,
             members: [inviterID, data.member]
         };
-        console.log("chats: " + chats);
-        chat_db.startChat(chatID, chatName, [inviterID, data.member], function(err, data) {
+        chat_db.startChat(chatID, data.chatName, [inviterID, data.member], function(err, data) {
             if (err) {
                 console.log('error adding to db, ' + err);
             } else {
-            	console.log("chat started: " + data);
             	chat_db.getMessages(chatID, 0, function(err, data) {
                     if (err) {
                         console.log('get message dynamo error, ' + err);
                     } else if (data.Count === 0) {
                     	console.log("NO OLD MSGS");
-                        socket.emit('get_messages', {chatID: chatID, chatName: chatName, messages:[]});
+                        socket.emit('get_messages', {chatID: chatID, chatName: data.chatName, messages:[]});
                     } else {
                     	console.log("HAS OLD MSGS");
-                        socket.emit('get_messages', {chatID: chatID, chatName: chatName, messages:data});
+                        socket.emit('get_messages', {chatID: chatID, chatName: data.chatName, messages:data});
                     }
                 });
             }
@@ -280,6 +259,40 @@ var acceptInvite = function(socket, msg) {
 }
 
 
+// takes in members: [current room members array (3 usernames)]
+var startGroupChat = function(socket, members) {
+    console.log("ON START GROUPCHAT");
+    console.log(members);
+    var chatID = uuid();
+    socket.join(chatID);
+    //currentChatID = data.chatID;
+    console.log(chatID);
+    var inviterID = sockets[socket.id];
+    console.log("invitation maker: " + inviterID);
+    var chatName = "New Group Chat";
+    // add the dm channel to persistent storage
+    chats[chatID] = {
+        chatID: chatID,
+        chatName: chatName,
+        members: members
+    };
+    console.log("chats: " + chats);
+    chat_db.startChat(chatID, chatName, members, function(err, data) {
+        if (err) {
+            console.log('error adding to db, ' + err);
+        } else {
+            chat_db.inviteUser(chatID, members, inviterID, userFullNames[inviterID], function(err, data) {
+                if (err) {
+                    console.log("SOMETHING WRONG W INVITE");
+                } else {
+                    socket.emit('get_messages', {chatID: chatID, chatName: chatName, messages:[]});
+                }
+            });
+        }
+    });
+}
+
+
 
 
 
@@ -290,12 +303,10 @@ var getOnlineFriends = function(socket, msg) {
 		if (err) {
 			console.log ("getOnlineFriends error: " + err);
 		} else {
-			console.log(data);
             data.forEach(friend => {
 				var friendInfo = {username: friend.username, fullname: friend.fullname};
 				activeFriends.push(friendInfo);
 			});
-			console.log("active friends: " + activeFriends);
 			socket.emit('onlineFriends', activeFriends);
         }
     });
@@ -307,8 +318,6 @@ var getChatInvites = function(socket, msg) {
         if(err) {
         	console.log('Problem getting invites: '+ err);
         } else {
-        	console.log("sending invitation info");
-        	console.log(data);
         	socket.emit('chatInvitations', data);
         }
     });

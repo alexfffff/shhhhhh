@@ -83,12 +83,26 @@
                         </div>
                         <div class="col-xl-8 col-lg-8 col-md-8 col-sm-9 col-9">
                             <div class="selected-user">
-                              <span><span id="currChatName" class="d-flex justify-content-center">Start Chatting!</span></span>
+                              <span>
+                              	<div id="currChatName" class="d-flex justify-content-center">Start Chatting!</div>
+                              	<div class="dropdown">
+                                  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="addActiveFriends">
+                                    <% friends.forEach(friend => { %>
+      	                                <a class="dropdown-item" href="#" id="group_<%= friend.username %>" onclick="addFriendToGroup(this.id)"><%= friend.fullname %></a>
+                                    <% }); %>
+                                  </div>
+                                </div>
+                              </span>
+                              
+                              
                             </div>
                             <div class="chat-container">
-                                <ul id="message-container" class="chat-box chatContainerScroll">
+                            	<div class="overflow-auto">
+                                <ul id="message-container" class="overflow-auto">
                                     
                                 </ul>
+                                </div>
                                 <div class="form-group mt-3 mb-0">
                                     <span><input type="text" id="message" class="form-control" 
                                     placeholder="Send a message..."><button class="btn btn-primary" name ="button" onclick = "sendMessage()">Send</button></span>
@@ -118,24 +132,20 @@
   <!-- Script -->
   <script src='/socket.io/socket.io.js'></script>
   <script>
-    $("#menu-toggle").click(function(e) {
-      e.preventDefault();
-      $("#wrapper").toggleClass("toggled");
-    });
     
     var username = '<%= username %>';
   	var userFullname = '<%= fullname %>';
   	var socket = io();
-	var myID = -1;
-	var currentRoomID = '';
-  	var currentRoomName = '';
+	  var currentRoomID = '';
+    var currentRoomName = '';
+    var currRoomMembers = [];
   	
   	
   	setInterval(function() {
   		socket.emit('get_chat_invites', username)}, 10000);
   		
     setInterval(function() {
-    	socket.emit('get_active_friends', username)}, 50000);
+    	socket.emit('get_active_friends', username)}, 10000);
 		
 	  socket.on('welcome', function (data) {
 		  currentRoomID = data.id;
@@ -151,14 +161,27 @@
         if (document.getElementById(friend.username) === null) {
           console.log('append: ' + $('#friend.username'));
           $('#activeFriends').append(get_online_list_element(friend));
+          if (!currRoomMembers.includes(friend.username)) {
+            console.log("Skip: " + friend.username);
+            $('#addActiveFriends').append(get_potential_group_element(friend));
+          }
         }
       });
-    console.log(idNames);
+      console.log(idNames);
       $('#activeFriends').find('button').each(function(index) {
         var currID = $(this).attr("id");
         console.log('user to check:: ' + currID);
         if (!idNames.includes(currID)) {
           console.log('Removing offline user ' + currID);
+          $(this).remove();
+        }
+      });
+
+      $('#addActiveFriends').find('button').each(function(index) {
+        var currID = $(this).attr("id");
+        console.log('user to check:: ' + currID);
+        if (!idNames.includes(currID.substr(currID.indexOf("_")+1))) {
+          console.log('Removing offline user from dropdown: ' + currID);
           $(this).remove();
         }
       });
@@ -170,30 +193,16 @@
       var chatIDs = [];
       data.forEach(invite => {
         chatIDs.push(invite.chatID);
-        console.log("invite.chatID is: " + invite.chatID);
         if (document.getElementById("inv_" + invite.inviterID + ":" + invite.chatID) === null) {
-          console.log('append: ' + invite.chatID);
           $('#chatInvites').append(get_invite_list_element(invite));
         }
       });
-      console.log(chatIDs);
       $('#chatInvites').find('button').each(function(index) {
         var currID = $(this).attr("id");
-        console.log("removing: " + currID);
-        console.log(currID.substr(currID.indexOf(":")+1));
         if (!chatIDs.includes(currID.substr(currID.indexOf(":")+1))) {
-          console.log('Removing offline user');
           $(this).remove();
         }
       });
-    });
-    
-    
-    
-    
-      
-	  socket.on('message', function (data) { 
-		  console.log(data);
     });
       
 	  function setUsername() {
@@ -207,7 +216,6 @@
 
 
     function sendMessage() {
-    console.log("GOT HERE TO SENDMSG");
         if ($('#message').val().trim() !== '') {
             socket.emit('newChatMsg', {
                 message: $('#message').val().trim(),
@@ -222,7 +230,9 @@
     
     
     function chatThisFriend(userID) {
-      console.log(userID);
+      currRoomMembers = [];
+      currRoomMembers.push(username);
+      currRoomMembers.push(userID);
       var newChatID;
       var newChatName;
       if (username < userID) {
@@ -234,14 +244,11 @@
       }
       currentRoomID = newChatID;
       currentRoomName = newChatName;
-      socket.emit('join_DM', {chatID: newChatID, member: userID});
+      socket.emit('join_DM', {chatID: newChatID, chatName: newChatName, member: userID});
     }
 
     socket.on('newmsg', function(data) {
-        console.log(data);
-        console.log("GOT HERE TO NEWMSG");
         if (username === data.sender) {
-        console.log("GOT HERE TO IS USER");
           $('#message-container').append(get_my_msgs(data.fullname, data.message));
           $('#message-container').animate({
             scrollTop: $('#message-container').get(0).scrollHeight
@@ -257,37 +264,35 @@
 
 
     function joinThisChat(buttonID) {
-      console.log(buttonID);
+     document.getElementById(buttonID).remove();
+      var inviterID = buttonID.substr(4, buttonID.indexOf(":")+1);
+      currRoomMembers = [];
+      currRoomMembers.push(username);
+      currRoomMembers.push(inviterID);
       var targetChatID = buttonID.substr(buttonID.indexOf(":")+1);
-      console.log("targetCatID: " + targetChatID);
       currentRoomID = targetChatID;
       socket.emit('accept_invite', {chatID: targetChatID});
     }
 
 
-
+    function addFriendToGroup(userID) {
+      currRoomMembers.push(userID.substr(6));
+      socket.emit('startGroup', currRoomMembers);
+    }
 
 
 
     socket.on('get_messages', function(msg) {
       currentRoomName = msg.chatName;
-      console.log(currentRoomName);
     	change_chat_name(currentRoomName);
-      // clear then populate the messages
-      console.log("in get messages");
-      console.log(msg);
-      
-      console.log('messages: ' + JSON.stringify(msg));
       $('#message-container').empty();
       if (msg.messages.length === 0) {
-      	console.log("returning");
         return;
       }
       var messages = msg.messages.Items;
       for (var i=0; i<messages.length; i++) {
         var senderName = messages[i].fullname;
         var message = messages[i].message;
-        console.log('Adding message: ' + senderName + ' ; ' + message);
         if (messages[i].username === username) {
           $('#message-container').append(get_my_msgs(senderName, message));
         } else {
@@ -298,22 +303,6 @@
     
     
     
-    socket.on('get_chatroom', function(msg) {
-      console.log('received channel: ' + JSON.stringify(msg));
-      if ('chatID' in msg) {
-        currentRoomID = msg.chatID;
-        currentChannelData = msg;
-      }
-      if ($('#channel_'+currentChannelId).length == 0) {
-        // new channel has been created, add the entry to the list
-        console.log('Add new channel to channel list!');
-        $('#channel_list').append(get_channel_list_element(currentChannelId, msg.channelName));
-      }
-      currentRoomName = msg.chatName;
-      change_chat_name(currentRoomName);
-    });
-    
-    
 
     function get_others_msgs(username, message) {
         return '<div class="float-left">\
@@ -322,8 +311,8 @@
                     <h6 class="card-subtitle mb-2 text-muted">'+ username + '</h6>\
                       <p class="card-text">' + message + '</p>\
                   </div>\
-                </div><br>\
-              </div>'
+                </div>\
+              </div><br><br>'
     }
 
 
@@ -334,18 +323,22 @@
                     <h6 class="card-subtitle mb-2 text-muted">'+ username + '</h6>\
                       <p class="card-text">' + message + '</p>\
                   </div>\
-                </div><br>\
-              </div>'
+                </div>\
+              </div><br><br>'
     }
 
     function change_chat_name(chatroomName) {
-      console.log('updating chatroom title to: ' + chatroomName);
       $('#currChatName').text(chatroomName);
     }
     
     function get_online_list_element(friend) {
     console.log("adding firend to active");
       return '<button id="' + friend.username + '" class="btn btn-light" onclick="chatThisFriend(this.id)">' + friend.fullname + '</button>';
+    }
+
+    function get_potential_group_element(friend) {
+      console.log("adding firend to Dropdown");
+      return '<a class="dropdown-item" href="#" id="group_' + friend.username + '" onclick="addFriendToGroup(this.id)">' + friend.fullname + '</a>';
     }
     
     

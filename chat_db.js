@@ -74,8 +74,6 @@ var db_get_messages = function(chatID, iteration, callback) {
 	// query the table with params
 	docClient.query(params).promise().then(
 		successResult => {
-			//TODO: SEE FORMAT TO PROEPRLY GET SUBSET
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -149,6 +147,35 @@ var db_get_chat_users = function(chatID, callback) {
 };
 
 
+
+/**
+* Changes the current users logged_in status to false in "users" table
+*
+* @param  chatID  ID of chatroom
+* @param  username  username of user who sent message
+* @param  fullname  fullname of user who sent message
+* @return Does not return anything
+*/
+var db_add_chat_user = function(chatID, username, fullname, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "chatUsers",
+		Item:{
+			"chatID": chatID,
+			"username": username
+		}
+	};
+	docClient.put(params).promise().then(
+		successResult => {
+			callback(null, successResult);
+		}, errResult => {
+			callback(errResult, null);
+		});
+};
+
+
+
+
 /**
 * Changes the current users logged_in status to false in "users" table
 *
@@ -171,7 +198,6 @@ var db_get_chat_name = function(chatID, callback) {
 	// query the table with params
 	docClient.query(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult.Items[0].chatName);
 		},
 		errResult => {
@@ -274,8 +300,6 @@ var db_rename_chat = function(chatID, newName, callback) {
   
   	docClient.update(params).promise().then(
 		successResult => {
-			console.log("UPDATED");
-			console.log(successResult);
 			callback(null, successResult);
 		}, errResult => {
 			console.log(errResult);
@@ -307,8 +331,6 @@ var db_get_online_friends = function(username, callback) {
 	// query the table with params
 	docClient.query(friendParams).promise().then(
 		successResult => {
-			//DOUBLE CHECK FORMAT OF successResult
-			console.log(successResult);
 			var arrayOfPromises = [];
 			successResult.Items.forEach(friend => {
 				var params = {
@@ -324,14 +346,12 @@ var db_get_online_friends = function(username, callback) {
 						":logged_in": true
 					}
 				};
-				console.log(params);
 				arrayOfPromises.push(docClient.query(params).promise());
 			});
 
 			Promise.all(arrayOfPromises).then(
 				successResult => {
 					var results = [];
-					console.log(successResult);
 					successResult.forEach(result => {
 						if (result.Count !== 0) {
 							results.push({username: result.Items[0].username, fullname: result.Items[0].fullname});
@@ -358,23 +378,29 @@ var db_get_online_friends = function(username, callback) {
 * Creates invitation for user
 *
 * @param  chatID  ID of chatroom
-* @param  invitedUserID  username of person getting invited
+* @param  invitedUserID  array of usernames of people getting invited
 * @param  inviterID  username of person who sent invitation
 * @param  inviterName  fullname of person who sent invitation
 * @return Does not return anything
 */
 var db_invite_user = function(chatID, invitedUserID, inviterID, inviterName, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
-	var params = {
-		TableName : "chatInvitations",
-		Item:{
-			"username": invitedUserID,
-			"chatID": chatID,
-			"inviterID": inviterID,
-			"inviterName": inviterName
+	var arrayOfPromises = [];
+	invitedUserID.forEach(invitedUser => {
+		if (invitedUser !== inviterID) {
+			var params = {
+				TableName : "chatInvitations",
+				Item:{
+					"username": invitedUser,
+					"chatID": chatID,
+					"inviterID": inviterID,
+					"inviterName": inviterName
+				}
+			};
+			arrayOfPromises.push(docClient.put(params).promise());
 		}
-	};
-	docClient.put(params).promise().then(
+	});
+	Promise.all(arrayOfPromises).then(
 		successResult => {
 			callback(null, successResult);
 		}, errResult => {
@@ -408,7 +434,6 @@ var db_get_invites = function(username, callback) {
 	// query the table with params
 	docClient.query(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult.Items);
 		},
 		errResult => {
@@ -457,6 +482,7 @@ var chat_db = {
     addMessage: db_add_message,
     startChat: db_start_chat,
 	getChatUsers: db_get_chat_users,
+	addChatUser: db_add_chat_user,
 	getChatName: db_get_chat_name,
     joinChat: db_join_chat,
     leaveChat: db_leave_chat,
