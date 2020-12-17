@@ -1884,9 +1884,9 @@ var get_article_recs = function(username, callback) {
 			var index;
 			for (i = 0; i< 5; i++){
 				index = weighted_random(items,weights);
-				recommendedArtciles.push(items[i])
-				items.splice(i,1);
-				weights.splice(i,1);
+				recommendedArtciles.push(items[index])
+				items.splice(index,1);
+				weights.splice(index,1);
 			}
 			
 			// Iterates through each article and pushes promise to query for the article to array of promises
