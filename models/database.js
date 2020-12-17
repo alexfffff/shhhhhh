@@ -55,7 +55,6 @@ var my_login_check = function(username, password, callback) {
 						  docClient.update(params).promise().then(
 							  successResult => {
 								  console.log("UPDATED");
-								  console.log(successResult);
 								  callback(null, {username: username, fullname: userFullName});
 							  },
 							  errResult => {
@@ -160,16 +159,15 @@ var create_account = function(username, password, name, email, affiliation, birt
 									},
 								TableName: "interests"
 								};
-			  					console.log(param2);
 			  					//Promise to query the keyword is pushed to array of promises
 		  						arrayOfPromises.push(docClient.put(param2).promise());
 	  							}
-	  							console.log(arrayOfPromises);
 	  							Promise.all(arrayOfPromises).then(
 			  						successResult => {
+										  var lowerfullname = name.toLowerCase();
 										var nameParam = {
 											Item: {
-												"fullname": name,
+												"fullname": lowerfullname,
 												"username": username
 											},
 										TableName: "fullnames"
@@ -179,7 +177,30 @@ var create_account = function(username, password, name, email, affiliation, birt
 												console.log(err);
 												callback(err, null);
 											} else {
-												callback(null, username);
+												console.log("prefixes");
+												var arrayOfPrefixPromises = [];
+												var prefixArr = makePrefixes(name);
+												prefixArr.forEach (prefix => {
+													if (prefix.length > 0) {
+														var prefixParams = {
+																Item: {
+																	"prefix": prefix,
+																	"fullname": name
+																},
+															TableName: "namePrefixes"
+															};
+														arrayOfPrefixPromises.push(docClient.put(prefixParams).promise());
+													}
+												});
+
+												Promise.all(arrayOfPrefixPromises).then(
+													successResult => {
+														callback(null, username);
+													}, errResult => {
+														console.log("PUT IN PREFIXES");
+														console.log(errResult);
+														callback(errResult, null);
+													});
 											}
 										});
 			  						}, errResult => {
@@ -198,6 +219,7 @@ var create_account = function(username, password, name, email, affiliation, birt
 					throw new Error("Already in db");
 				}
 			} catch (error) {
+				console.log(error);
 				callback(4, null);
 			}
 			
@@ -207,6 +229,25 @@ var create_account = function(username, password, name, email, affiliation, birt
 		}
 	);
 };
+
+
+
+// Helper method that takes in a full name and then generates all of the name prefixes for that name
+// Returns an array of prefixes for this particular name to be added to the namePrefixes table
+var makePrefixes = function(fullname) {
+	console.log("Making prefixes");
+	var lowerfullname = fullname.toLowerCase();
+	var namePartsArr = lowerfullname.split(" ");
+	var prefixArr = [];
+	namePartsArr.forEach(name => {
+		for (var i = name.length; i >= 0; i--) {
+			prefixArr.push(name.substr(0,i));
+		}
+		console.log(prefixArr);
+	});
+	return prefixArr;
+}
+
 
 
 
@@ -270,7 +311,6 @@ var db_get_all_affiliations = function(usernames, callback) {
 	// query the table with params, searching for item with the specified username
 	Promise.all(arrayOfPromises).then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -411,7 +451,6 @@ var add_interest = function(username, interest, timestamp, postID, callback) {
 								docClient.query(getNameParam).promise().then(
 									successResult => {
 										try {
-											console.log(successResult);
 											//NEED TO GET THE USERS FUCKING NAME
 											var param = {
 												TableName : "posts",
@@ -490,7 +529,6 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 	
 	docClient.query(params1).promise().then(
 		successResult => {
-			console.log(successResult);
 			try {
 				if (successResult.Count === 2) {
 					throw new Error("Must have at least 2 interests");
@@ -522,7 +560,6 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 						docClient.query(getNameParam).promise().then(
 							successResult => {
 								try {
-									console.log(successResult);
 									//NEED TO GET THE USERS FUCKING NAME
 									var postParam = {
 										TableName : "posts",
@@ -715,7 +752,6 @@ var db_change_email = function(username, currEmail, newEmail, callback) {
 			  		docClient.update(params).promise().then(
 					  	successResult => {
 						  	console.log("UPDATED");
-						  	console.log(successResult);
 						  	callback(null, successResult);
 					  	}, errResult => {
 						  	console.log(errResult);
@@ -824,7 +860,6 @@ var db_change_password = function(username, currPwd, newPwd, callback) {
 			  			docClient.update(params).promise().then(
 						  	successResult => {
 							  	console.log("UPDATED");
-							  	console.log(successResult);
 							  	callback(null, successResult);
 						  	}, errResult => {
 							  	console.log(errResult);
@@ -895,19 +930,14 @@ var db_get_homepage_posts = function(username, startTime, endTime, callback) {
 		  ":user": username
 		}
   	};
-	console.log(params);
   	docClient.query(params).promise().then(
 		successResult => {
 			try {
-				console.log("BELOW IS SUCCESSRESULT.ITEMS");
-				console.log(successResult.Items);
 				var usernames = [];
 				for (var i=0; i < successResult.Count; i++) {
 					usernames.push(successResult.Items[i].friendUsername);
 				}
 				usernames.push(username);
-				console.log("USERNAMES");
-				console.log(usernames);
 			
 				var arrayOfPromises = [];
 	  			//Iterates through the keywords and creates params for that keyword
@@ -926,14 +956,11 @@ var db_get_homepage_posts = function(username, startTime, endTime, callback) {
 							":end": endTime
 						}
 					};
-					console.log("PARAMS2");
-					console.log(params2);
 					//Promise to query the keyword is pushed to array of promises
 		  			arrayOfPromises.push(docClient.query(params2).promise());
 	  			}
 	  			Promise.all(arrayOfPromises).then(
 			  		successResult => {
-			  			console.log(successResult);
 						callback(null, successResult);
 					}, errResult => {
 						console.log("PROMISE ALL FAIL?");
@@ -1002,8 +1029,6 @@ var db_get_user_Wall = function(username, callback) {
 	// query the table with params, searching for item with the specified username
 	Promise.all(arrayOfPromises).then(
 		successResult => {
-			console.log(successResult[0]);
-			console.log(successResult[1]);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1055,7 +1080,6 @@ var db_make_wall_post = function(wallsUser, posterID, postID, content, timestamp
 	arrayOfPromises1.push(docClient.query(getNameParam2).promise());
 	Promise.all(arrayOfPromises1).then(
 		successResultA => {
-			console.log(successResultA[0].Items[0]);
 			userName = successResultA[0].Items[0].fullname;
 			posterName = successResultA[1].Items[0].fullname;
 			var params = {
@@ -1144,7 +1168,6 @@ var db_make_post = function(username, postID, content, timestamp, hashtags, call
 	};
 	docClient.query(getNameParam).promise().then(
 		successResult => {
-			console.log(successResult.Items[0]);
 			userName = successResult.Items[0].fullname;
 			var params = {
 				TableName : "posts",
@@ -1224,7 +1247,6 @@ var db_get_hashtags = function(hashtag, callback) {
 	// query the table with params, searching for item with the specified username
 	docClient.query(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1293,7 +1315,6 @@ var db_get_post_comments = function(postID, callback) {
 	// query the table with params, searching for item with the specified username
 	Promise.all(arrayOfPromises).then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1329,7 +1350,6 @@ var db_add_comment = function(commentID, username, comment, postID, timestamp, c
 	};
 	docClient.query(getNameParam).promise().then(
 		successResult => {
-			console.log(successResult.Items[0]);
 			userName = successResult.Items[0].fullname;
 			var params = {
 				TableName : "comments",
@@ -1518,7 +1538,6 @@ var db_get_friends = function(yourUsername, callback) {
 	// query the table with params, searching for item with the specified username
 	docClient.query(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult.Items);
 		},
 		errResult => {
@@ -1599,7 +1618,6 @@ var db_logout = function(username, callback) {
   docClient.update(params).promise().then(
 		  successResult => {
 			  console.log("UPDATED");
-			  console.log(successResult);
 			  callback(null, successResult);
 		  },
 		  errResult => {
@@ -1667,7 +1685,6 @@ var db_search_name = function(typedName, callback) {
 	// query the table with params
 	docClient.scan(params).promise().then(
 		successResult => {
-			console.log(successResult);
 			callback(null, successResult);
 		},
 		errResult => {
@@ -1851,6 +1868,28 @@ var db_news_search = function(searchStr, username, callback) {
 
 
 
+
+
+
+
+function weighted_random(items, weights) {
+    var i;
+
+    for (i = 0; i < weights.length; i++)
+        weights[i] += weights[i - 1] || 0;
+    
+    var random = Math.random() * weights[weights.length - 1];
+    
+    for (i = 0; i < weights.length; i++)
+        if (weights[i] > random)
+			break;
+			
+    return i;
+}
+
+
+
+
 /** 
 * GETS A USER'S ARTICLE RECOMMENDATIONS, HERE FOR DEBUGGING ROUTES (Philip)
 * INCORPORATE ALEX'S ALGORITHM WHEN WE GET IT, TO SORT THE ARTICLES
@@ -1872,36 +1911,78 @@ var get_article_recs = function(username, callback) {
     /* INSERT SORTING ALGORITHM SOMEWHERE AROUND HERE ??? */
     
     // array of promises to be resolved later, and array of final article recommendation results
-    var arrayOfPromises = [];
+	var arrayOfPromises = [];
+	var arrayDelete = [];
     var finalResults = [];
 
 	// query the table with params, searching for item with the specified username
 	docClient.query(paramsRecommended).promise().then(
 		successResultRecommended => {
-			// add all of the article names to a list
-			var recommendedArticles = [];
-			for (let newsArticle of successResultRecommended.Items) {
-    			recommendedArticles.push(newsArticle.article.substring(2));
-    		}
+            // add all of the article names to a list
+            if (successResultRecommended.Items.length > 0){
+                var recommendedArticles = [];
+                var items = []
+                var weights = []
+                for (let newsArticle of successResultRecommended.Items) {
+                    items.push(newsArticle.article.substring(2))
+                    weights.push(newsArticle.weight)
+                }
+                var i;
+                var index;
+                var max = 5; 
+                if (successResultRecommended.Items.length < 5){
+                    max = successResultRecommended.Items.length;
+                }
+
+                for (i = 0; i< max; i++){
+                    index = weighted_random(items,weights);
+                    recommendedArticles.push(items[index])
+                    items.splice(index,1);
+                    weights.splice(index,1);
+                }
+                for (var i = 0; i < recommendedArticles.length; i++) {
+					var params2 = {
+						TableName : "recommend",
+						Key: {
+							"username": "u:"+ username,
+							"article": "a:" + recommendedArticles[i]
+						}
+					}
+                    var params = {
+                        TableName: 'news',
+                        KeyConditionExpression: "article = :article",
+                        ExpressionAttributeValues: {
+                            ":article": recommendedArticles[i]
+                        }
+					};
+					var newPromise2 = docClient.query(params2).promise();
+                    var newPromise = docClient.query(params).promise();
+					arrayOfPromises.push(newPromise);
+					arrayDelete.push(newPromise2);
+                }
+			}
+			
+
 			
 			// Iterates through each article and pushes promise to query for the article to array of promises
-			for (var i = 0; i < recommendedArticles.length; i++) {
-				var params = {
-					TableName: 'news',
-					KeyConditionExpression: "article = :article",
-					ExpressionAttributeValues: {
-						":article": recommendedArticles[i]
-					}
-				};
-				var newPromise = docClient.query(params).promise();
-				arrayOfPromises.push(newPromise);
-			}
+
 		},
 		errResult => {
 			console.log(errResult);
 			callback(errResult, null);
 		}
-	).then(function(successResult2) {
+	).then(function(sucessx){
+		Promise.all(arrayDelete).then(
+			successResult2 => {
+				// push the actual article into the array finalResults
+				console.log("deleted");
+			},
+			errResult => {
+				console.log(errResult);
+				callback(errResult, null);
+			}
+		);
+	}).then(function(successResult2) {
 		// Promise.all to resolve promises in array of promises
 		Promise.all(arrayOfPromises).then(
 			successResult2 => {
@@ -1909,7 +1990,6 @@ var get_article_recs = function(username, callback) {
 				for (let i = 0; i < successResult2.length; i++) {
 					finalResults.push(successResult2[i].Items[0]);
 				}
-				
 				// send the finalResults back
 				callback(null, finalResults);
 			},
@@ -1921,6 +2001,41 @@ var get_article_recs = function(username, callback) {
 	});
 };
 
+
+
+
+/**
+* Adds post comment information into "comment" table
+*
+* @param  articleTitle generated postID
+* @param  username  username of current user
+* @return 
+*/
+var db_like_article = function(articleTitle, username, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var params = {
+		TableName : "reactions",
+		Item:{
+			"article": articleTitle,
+			"username": username
+		}
+	};
+
+	docClient.put(params).promise().then(
+			successResult => {
+		try  {
+			console.log("Added item");
+			callback(null, successResult);
+			
+		} catch (err) {
+			console.log("Unable to add item.");
+			callback(err, null);
+		}
+	},
+	errResult => {
+		callback(errResult, null);
+	});
+};
 
 
 
@@ -1964,7 +2079,8 @@ var database = {
   getName: db_get_name,
   searchName: db_search_name,
   newsSearch: db_news_search,
-  getArticleRecs: get_article_recs
+  getArticleRecs: get_article_recs,
+  likeArticle: db_like_article
 };
 
 module.exports = database;
