@@ -759,6 +759,7 @@ var showFriends = function(req, res) {
 			// redirect to the home page if the URL has missing parameters
 			res.redirect('/home');
 		}
+		
 		// get the user's current list of friends
 		db.getFriends(req.query.user, function(err, data) {
 			if (err) {
@@ -767,22 +768,59 @@ var showFriends = function(req, res) {
 			} else {
 				var userFriends = data;
 				
-				// get the user's full name
-				db.getName(req.query.user, function(err2, data2) {
-					if (err) {
-						// error with querying database
-						res.render('error.ejs');
-					} else {
-						var fullname = data2;
-						
-						// render the friends page, where a user can see someone's friends
-						res.render('friends.ejs', {
-							friends: userFriends, 
-							friendsOf: fullname, 
-							username: req.session.username
-						});
+				// check if user is looking at their own friends list (can see login status of friends)
+				if (req.query.user === req.session.username) {
+					// get the usernames of all of their friends
+					var allFriendUsernames = [];
+					for (let f of userFriends) {
+						allFriendUsernames.push(f.friendUsername);
 					}
-				});
+					
+					// get a map from user to their current login status
+					db.getLoginStatuses(allFriendUsernames, function(err1, data1) {
+						if (err1) {
+							// error with querying database
+							res.render('error.ejs');
+						} else {
+							var loginStatusMap = data1;
+							
+							// get the user's full name
+							db.getName(req.query.user, function(err3, data3) {
+								if (err3) {
+									// error with querying database
+									res.render('error.ejs');
+								} else {
+									var fullname = data3;
+									
+									// render a user's own friends page, where they can see their friends and login statuses
+									res.render('friends.ejs', {
+										friends: userFriends, 
+										friendsOf: fullname, 
+										username: req.session.username, 
+										userToLoginStatus: loginStatusMap
+									});
+								}
+							});
+						}
+					});
+				} else {
+					// get the user's full name
+					db.getName(req.query.user, function(err2, data2) {
+						if (err2) {
+							// error with querying database
+							res.render('error.ejs');
+						} else {
+							var fullname = data2;
+							
+							// render the user's friends page, where a user can see someone else's friends
+							res.render('friends.ejs', {
+								friends: userFriends, 
+								friendsOf: fullname, 
+								username: req.session.username
+							});
+						}
+					});
+				}
 			}
 		});
 	}

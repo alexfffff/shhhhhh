@@ -2111,7 +2111,43 @@ var db_like_article = function(articleTitle, username, callback) {
 	});
 };
 
-
+/**
+* Queries the login statuses of an array of usernames parameter. 
+*
+* @param  usernames array of usernames
+* @return Map from login status to user, for of all of the users in the argument array
+*/
+var db_get_login_statuses = function(usernames, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var arrayOfPromises = [];
+	let userToLoginStatus = new Map();
+	
+	usernames.forEach(username => {
+		// create params to query for an item with the username
+		var params = {
+				TableName: "users",
+				KeyConditionExpression: "username = :username",
+				ExpressionAttributeValues: {
+					":username": username
+				}
+		};
+		arrayOfPromises.push(docClient.query(params).promise());
+	});
+		
+	// query the table with params, searching for item with the specified username
+	Promise.all(arrayOfPromises).then(
+		successResult => {
+			for (item of successResult) {
+				userToLoginStatus.set(item.Items[0].username, item.Items[0].logged_in);
+			}
+			callback(null, userToLoginStatus);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
 
 
 
@@ -2154,7 +2190,8 @@ var database = {
   searchName: db_search_name,
   newsSearch: db_news_search,
   getArticleRecs: get_article_recs,
-  likeArticle: db_like_article
+  likeArticle: db_like_article,
+  getLoginStatuses: db_get_login_statuses
 };
 
 module.exports = database;
