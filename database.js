@@ -1667,25 +1667,52 @@ var db_get_name = function(username, callback) {
 * @param  typedName  what the user has typed so far
 * @return Array with the usernames whose partition key contains typedName
 */
-//TODO: CHANGE TO A SCAN 
 var db_search_name = function(typedName, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
+	var lowerTypedName = typedName.toLowerCase();
 	let params = {
-		TableName : 'fullnames',
-		FilterExpression: "contains(#fn, :fullname)",
-		ExpressionAttributeNames: {
-			"#fn": "fullname",
+		TableName : "namePrefixes",
+		KeyConditionExpression: "#pf = :prefix",
+		ExpressionAttributeNames:{
+			"#pf": "prefix"
 		},
 		ExpressionAttributeValues: {
-			":fullname": typedName,
-		}       
+			":prefix": lowerTypedName
+		}    
 	};
 	
 
 	// query the table with params
-	docClient.scan(params).promise().then(
+	docClient.query(params).promise().then(
 		successResult => {
-			callback(null, successResult);
+			console.log(successResult);
+			var arrayOfPromisesNames = [];
+			successResult.Items.forEach(name => {
+				var lowerName = name.fullname.toLowerCase();
+				let nameParams = {
+					TableName : "fullnames",
+					KeyConditionExpression: "#fn = :fullname",
+					ExpressionAttributeNames:{
+						"#fn": "fullname"
+					},
+					ExpressionAttributeValues: {
+						":fullname": lowerName
+					}    
+				};
+				console.log(nameParams);
+				arrayOfPromisesNames.push(docClient.query(nameParams).promise());
+			});
+			Promise.all(arrayOfPromisesNames).then(
+				successResult3 => {
+					console.log("results");
+					callback(null, successResult3);
+				},
+				errResult => {
+					console.log(errResult);
+					callback(errResult, null);
+				}
+			);
+
 		},
 		errResult => {
 			console.log(errResult);
