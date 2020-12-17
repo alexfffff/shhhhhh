@@ -576,6 +576,47 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 									docClient.put(postParam).promise().then(
 										successResult2 => {
 											try  {
+												var recParams = {
+													TableName: "recommend",
+													KeyConditionExpression: "username = :username",
+													FilterExpression: "#c = :category",
+													ExpressionAttributeNames:{
+														"#un": "username",
+														"#c": "category"
+													},
+													ExpressionAttributeValues: {
+														":username": "u:"+username,
+														":category": "c:"+interest
+													}
+												};
+												docClient.query(recParams).promise().then(
+													successResultRecs => {
+														var arrayOfDelPromises = [];
+														successResultRecs.forEach(rec => {
+															var delParams = {
+																TableName : "recommend",
+																Key: {
+																	"username": "u:"+username,
+																	"chatID": "a:"+rec.article
+																}
+															};
+															arrayOfDelPromises.push(docClient.delete(delParams).promise());
+														});
+														Promise.all(arrayOfDelPromises).then(
+															successResult => {
+																console.log("ARTICLES DELETED");
+																callback(null, successResult);
+															}, errResult => {
+																callback(errResult, null);
+															}
+														);
+													},
+													errResult => {
+														console.log(errResult);
+														callback(errResult, null);
+													}
+												);
+
 												console.log("Added item");
 												callback(null, successResult2);
 										
