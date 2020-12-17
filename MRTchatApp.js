@@ -88,6 +88,10 @@ io.on('connection', function (socket) {
     socket.on('startGroup', function(msg) {
 		startGroupChat(socket, msg); 
 	});
+
+
+	
+	
 	
 	socket.on('disconnect', function() { 
         disconnect_user(socket); 
@@ -336,6 +340,6 @@ app.get('/chat', routes.get_chat);
 app.get('/logout', routes.get_logout);
 
 
-http.listen(3000, function() {
+http.listen(8080, function() {
    console.log('listening on localhost:3000');
 });
