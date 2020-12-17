@@ -53,6 +53,10 @@
 	
 	<font color="white"><font size="20"><center>Recommended News</center></font></font>
 	
+	<% if (articles.length == 0) { %>
+		<font color="red"><font size="15">Like more articles to get news recommendations.</font></font>
+	<% } %>
+	
 	<!--- All articles in a div -->
     <div id="allArticles">
     
@@ -120,6 +124,10 @@
 				success: function(data) {
 					// list containing the differences between the server and client
 					var newArticles = [];
+					
+					if (data.length == 0) {
+						alert("No new articles to display.");
+					}
 						
 					// iterate through data (articles) sent from server
 					data.forEach(a => {
