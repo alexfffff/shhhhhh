@@ -164,9 +164,10 @@ var create_account = function(username, password, name, email, affiliation, birt
 	  							}
 	  							Promise.all(arrayOfPromises).then(
 			  						successResult => {
+										  var lowerfullname = name.toLowerCase();
 										var nameParam = {
 											Item: {
-												"fullname": name,
+												"fullname": lowerfullname,
 												"username": username
 											},
 										TableName: "fullnames"
@@ -176,7 +177,30 @@ var create_account = function(username, password, name, email, affiliation, birt
 												console.log(err);
 												callback(err, null);
 											} else {
-												callback(null, username);
+												console.log("prefixes");
+												var arrayOfPrefixPromises = [];
+												var prefixArr = makePrefixes(name);
+												prefixArr.forEach (prefix => {
+													if (prefix.length > 0) {
+														var prefixParams = {
+																Item: {
+																	"prefix": prefix,
+																	"fullname": name
+																},
+															TableName: "namePrefixes"
+															};
+														arrayOfPrefixPromises.push(docClient.put(prefixParams).promise());
+													}
+												});
+
+												Promise.all(arrayOfPrefixPromises).then(
+													successResult => {
+														callback(null, username);
+													}, errResult => {
+														console.log("PUT IN PREFIXES");
+														console.log(errResult);
+														callback(errResult, null);
+													});
 											}
 										});
 			  						}, errResult => {
@@ -195,6 +219,7 @@ var create_account = function(username, password, name, email, affiliation, birt
 					throw new Error("Already in db");
 				}
 			} catch (error) {
+				console.log(error);
 				callback(4, null);
 			}
 			
@@ -207,10 +232,21 @@ var create_account = function(username, password, name, email, affiliation, birt
 
 
 
-
-
-
-
+// Helper method that takes in a full name and then generates all of the name prefixes for that name
+// Returns an array of prefixes for this particular name to be added to the namePrefixes table
+var makePrefixes = function(fullname) {
+	console.log("Making prefixes");
+	var lowerfullname = fullname.toLowerCase();
+	var namePartsArr = lowerfullname.split(" ");
+	var prefixArr = [];
+	namePartsArr.forEach(name => {
+		for (var i = name.length; i >= 0; i--) {
+			prefixArr.push(name.substr(0,i));
+		}
+		console.log(prefixArr);
+	});
+	return prefixArr;
+}
 
 
 
@@ -1832,6 +1868,28 @@ var db_news_search = function(searchStr, username, callback) {
 
 
 
+
+
+
+
+function weighted_random(items, weights) {
+    var i;
+
+    for (i = 0; i < weights.length; i++)
+        weights[i] += weights[i - 1] || 0;
+    
+    var random = Math.random() * weights[weights.length - 1];
+    
+    for (i = 0; i < weights.length; i++)
+        if (weights[i] > random)
+			break;
+			
+    return i;
+}
+
+
+
+
 /** 
 * GETS A USER'S ARTICLE RECOMMENDATIONS, HERE FOR DEBUGGING ROUTES (Philip)
 * INCORPORATE ALEX'S ALGORITHM WHEN WE GET IT, TO SORT THE ARTICLES
@@ -1853,36 +1911,78 @@ var get_article_recs = function(username, callback) {
     /* INSERT SORTING ALGORITHM SOMEWHERE AROUND HERE ??? */
     
     // array of promises to be resolved later, and array of final article recommendation results
-    var arrayOfPromises = [];
+	var arrayOfPromises = [];
+	var arrayDelete = [];
     var finalResults = [];
 
 	// query the table with params, searching for item with the specified username
 	docClient.query(paramsRecommended).promise().then(
 		successResultRecommended => {
-			// add all of the article names to a list
-			var recommendedArticles = [];
-			for (let newsArticle of successResultRecommended.Items) {
-    			recommendedArticles.push(newsArticle.article.substring(2));
-    		}
+            // add all of the article names to a list
+            if (successResultRecommended.Items.length > 0){
+                var recommendedArticles = [];
+                var items = []
+                var weights = []
+                for (let newsArticle of successResultRecommended.Items) {
+                    items.push(newsArticle.article.substring(2))
+                    weights.push(newsArticle.weight)
+                }
+                var i;
+                var index;
+                var max = 5; 
+                if (successResultRecommended.Items.length < 5){
+                    max = successResultRecommended.Items.length;
+                }
+
+                for (i = 0; i< max; i++){
+                    index = weighted_random(items,weights);
+                    recommendedArticles.push(items[index])
+                    items.splice(index,1);
+                    weights.splice(index,1);
+                }
+                for (var i = 0; i < recommendedArticles.length; i++) {
+					var params2 = {
+						TableName : "recommend",
+						Key: {
+							"username": "u:"+ username,
+							"article": "a:" + recommendedArticles[i]
+						}
+					}
+                    var params = {
+                        TableName: 'news',
+                        KeyConditionExpression: "article = :article",
+                        ExpressionAttributeValues: {
+                            ":article": recommendedArticles[i]
+                        }
+					};
+					var newPromise2 = docClient.query(params2).promise();
+                    var newPromise = docClient.query(params).promise();
+					arrayOfPromises.push(newPromise);
+					arrayDelete.push(newPromise2);
+                }
+			}
+			
+
 			
 			// Iterates through each article and pushes promise to query for the article to array of promises
-			for (var i = 0; i < recommendedArticles.length; i++) {
-				var params = {
-					TableName: 'news',
-					KeyConditionExpression: "article = :article",
-					ExpressionAttributeValues: {
-						":article": recommendedArticles[i]
-					}
-				};
-				var newPromise = docClient.query(params).promise();
-				arrayOfPromises.push(newPromise);
-			}
+
 		},
 		errResult => {
 			console.log(errResult);
 			callback(errResult, null);
 		}
-	).then(function(successResult2) {
+	).then(function(sucessx){
+		Promise.all(arrayDelete).then(
+			successResult2 => {
+				// push the actual article into the array finalResults
+				console.log("deleted");
+			},
+			errResult => {
+				console.log(errResult);
+				callback(errResult, null);
+			}
+		);
+	}).then(function(successResult2) {
 		// Promise.all to resolve promises in array of promises
 		Promise.all(arrayOfPromises).then(
 			successResult2 => {
@@ -1890,7 +1990,6 @@ var get_article_recs = function(username, callback) {
 				for (let i = 0; i < successResult2.length; i++) {
 					finalResults.push(successResult2[i].Items[0]);
 				}
-				
 				// send the finalResults back
 				callback(null, finalResults);
 			},
@@ -1901,7 +2000,6 @@ var get_article_recs = function(username, callback) {
 		);
 	});
 };
-
 
 
 
