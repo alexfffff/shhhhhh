@@ -183,15 +183,24 @@ var getHome = function(req, res) {
 							}
 						}
 
-						console.log("data2: ");
+						/*console.log("data2: ");
 						console.log(data2);
 
 						console.log("All comments look like this: ");
 						console.log(validComments);
+
+						console.log("All posts look like this: ");
+						console.log(allPosts);*/
+
+						var postsMap = new Map();
+						for (let p of allPosts) {
+							postsMap.set(p.postID, p);
+						}
+
 						
 						// pass the data from the table and render the home page to the user
 						res.render('home.ejs', {
-							posts: allPosts, 
+							posts: postsMap, 
 							comments: validComments, 
 							username: req.session.username
 						});
@@ -454,9 +463,15 @@ var getWall = function(req, res) {
 					console.log("Looking at my own wall...");
 					
 					// get all of the post IDs
+
+					var postsMap = new Map();
 					for (let p of posts) {
 						allPostIDs.push(p.postID);
+						postsMap.set(p.postID, p);
 					}
+
+					console.log("postsMap looks like:");
+					console.log(postsMap);
 					
 					// get all of the comments for each post
 					db.getPostComments(allPostIDs, function(err1b, data1b) {
@@ -465,6 +480,14 @@ var getWall = function(req, res) {
 							res.render('error.ejs');
 						} else {
 							comments = data1b;
+
+							var validComments = [];
+
+							for (let c of comments) {
+								if (c.Count > 0) {
+									validComments.push(c.Items);
+								}
+							}
 							
 							// render the user's own page if they click on their own page
 							res.render('wall.ejs', {
@@ -472,8 +495,8 @@ var getWall = function(req, res) {
 								isFriend: false, 
 								isSelf: true, 
 								username: req.session.username, 
-								wallPosts: posts, 
-								wallComments: comments
+								wallPosts: postsMap, 
+								wallComments: validComments
 							});
 						}
 					});

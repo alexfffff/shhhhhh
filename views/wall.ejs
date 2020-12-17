@@ -67,24 +67,24 @@
     <div class="container-fluid gedf-wrapper">
         <div class="row">
             <div class="col-md-3">
-                <div class="card">
+                <div class="card" style="background-color:#242526;border-radius:10px">
                     <div class="card-body">
                         <a href="/wall?wallToVisit=<%=user%>" class="h5">@<%=user%></a>
                         <div class="h7 text-muted">Fullname : FULL NAME</div>  
-                        <div class="h7"> BIO GOES HERE
+                        <div class="h7" style="color:#535353"> BIO GOES HERE
                         </div>
                     </div>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <div class="h6 text-muted">Friends</div>
+                        <li class="list-group-item" style="background-color:#242526">
+                            <div class="h6 text-muted" style="color:#E1E1E1">Friends</div>
                             <div class="h5">
                                 <div class="friend-list">
                                     <a class="button" href="/friendsof?user=<%=user%>">Friends</a>
                                 </div>
                             </div>
                         </li>
-                        <li class="list-group-item">
-                            <div class="h6 text-muted">Network</div>
+                        <li class="list-group-item" style="background-color:#242526;border-bottom-left-radius:10px;border-bottom-right-radius:10px">
+                            <div class="h6 text-muted" style="color:#E1E1E1">Network</div>
                             <div class="h5">
                                 <div class="network-graph">
                                     <a class="button" href="/graphof">Graph Link</a>
@@ -97,24 +97,31 @@
             <div class="col-md-6 gedf-main">
 
                 <!--- \\\\\\\Post-->
-                <div class="card gedf-card">
-                    <div class="card-header" style="font-size:20px">
+                <div class="card gedf-card" style="background-color:#242526;border-radius:10px">
+                    <div class="card-header" style="font-size:20px; color:#E1E1E1">
                         Make a Post
                     </div>
                     <div class="card-body">
                         <div class="tab-content" id="myTabContent">
                            <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
-                                <div class="form-group">
-                                    <label class="sr-only" for="message">post</label>
-                                    <textarea class="form-control" id="message" rows="3" placeholder="What's on your mind, <%=user%>?"></textarea>
-                                </div>
+                            <form>
+                                
+                                    
+                                    <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" class="form-control" style="background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1"required></textarea>
+                                    <br>
+                                   
+                                    <input type="hidden" name="currentWall" value="<%=username%>">
+                                    <input type="hidden" name="posterID" value="<%=username%>">
+                                    <input type="hidden" name="friend" value="false">
+                                    <button type="button" class="btn btn-lg btn-primary btn-block" onclick="makeNewPost()">Post</button>
+                                
+                                
+                            </form>
+                               
                            </div>
-                            
                         </div>
                         <div class="btn-toolbar justify-content-between">
-                            <div class="btn-group">
-                                <button type="submit" class="btn btn-primary">share</button>
-                            </div>
+                      
                             <div class="btn-group">
                                 <button id="btnGroupDrop1" type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
                                     aria-expanded="false">
@@ -133,7 +140,7 @@
 
                 <!--- \\\\\\\Post-->
                 <!--Only render posts submitted by current user-->
-                <div class="user-posts">
+                <div id="user-posts">
 
                 </div>
                 <!--///// POST-->
@@ -251,31 +258,77 @@
     </div>
 </body>
 <script>
-var postsOnClient = [];
+    var IDsToPostsMap = new Map();
+    var IDsToCommentsMap = new Map();
 
-function initWall() {
-    // TODO: ACTUALLY DISPLAY POSTS ON THE HOME PAGE SOMEHOW
-    // iterate through all of the posts
-    console.log("initWall called");
-    var container = document.getElementById('user-posts');
-    var i;
-    <% wallPosts.forEach(post => { %>
-        var content = "<div class=\"card gedf-card\">" +
-                    "<div class=\"card-header\">" +
-                        "<div class=\"d-flex justify-content-between align-items-center\">" +
-                            "<div class=\"d-flex justify-content-between align-items-center\">" +
-                                "<div class=\"mr-2\">" +
-                                    "<img class=\"rounded-circle\" width=\"45\" src=\"https://picsum.photos/50/50\">" +
-                                "</div>";
-        <% if(post.friend) { %>
-            content += "<div class=\"ml-2\">" +
-                            "<div class=\"h5 m-0\">@<%=post.posterName%> posted on @<%=post.userName%>'s wall</div>" +
-                        "</div>";
-        <%} else { %>
-            content += "<div class=\"ml-2\">" +
-                            "<div class=\"h5 m-0\">@<%=post.posterName%> </div>" +
-                        "</div>";
+    var postIDsOnClient = [];
+
+    var postList = [];
+
+    function initPostsandComments() {
+        // TODO: DISPLAY POSTS ON THE HOME PAGE
+        // iterate through all of the posts
+        console.log("initAllPosts called");
+        var container = document.getElementById("user-posts");
+
+        <% for (let[postID, post] of wallPosts) { %>
+            IDsToCommentsMap.set("<%=postID%>", []);
+            console.log("WHATEVER IS HERE IN THE MAP:");
+            console.log(IDsToCommentsMap.get("<%=postID%>"));
         <% } %>
+        
+        <% for (var i = 0; i < wallComments.length; i++) { %>
+            console.log("kill me now");
+            //console.log("commentList: ");
+            //console.log(commentList);
+            <% for (let j = 0; j < wallComments[i].length; j++) { %>
+            	// @@@@@@@@@@@@@@@@@@@ TODO (DI)
+	            console.log('HERE ARE ALL OF THE FUCKING FIELDS FOR A COMMENT');
+	            console.log("comment content: " + "<%=wallComments[i][j].comment%>");
+            	console.log("postID: " + "<%=wallComments[i][j].postID%>");
+            	console.log("username: " + "<%=wallComments[i][j].username%>");
+            	console.log("commentID: " + "<%=wallComments[i][j].commentID%>");
+            	console.log("fullname: " + "<%=wallComments[i][j].fullname%>");
+                console.log("timestamp: " + "<%=wallComments[i][j].timestamp%>");
+
+                var commentList = IDsToCommentsMap.get("<%=wallComments[i][j].postID%>");
+                console.log("commentLIst: ");
+                console.log(commentList);
+
+                var stringDiv = "<p style=\"color:#E1E1E1\">username: <%=wallComments[i][j].username%></p>" +
+                                "<p style=\"color:#E1E1E1\">commentID: <%=wallComments[i][j].commentID%></p>" +
+                                "<p style=\"color:#E1E1E1\">comment: <%=wallComments[i][j].comment%></p>";
+                commentList.push(stringDiv);
+            <% } %>
+        <%}%>
+
+        <%for (let [postID, post] of wallPosts) { %>
+            var commentList = IDsToCommentsMap.get("<%=postID%>");
+            console.log("rendering posts...");
+            console.log("comentList for post looks like thsi:");
+            console.log(commentList);
+            var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
+                        "<div class=\"card-header\">" +
+                            "<div class=\"d-flex justify-content-between align-items-center\">" +
+								"<div class=\"d-flex justify-content-between align-items-center\">" +
+									"<div class=\"mr-2\">" +
+										"<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
+                                    "</div>";
+            <% if(post.friend) { %>
+                //DO NOTHING ABOUT THE HEADER
+            <%} else { %>
+                <% if (post.posterID) { %>
+                    //someone posted on someone else's wall
+                    content += "<div class=\"ml-2\">" +
+                                "<div class=\"h5 m-0\"><%=post.posterName%> posted on <%=post.userName%>'s wall </div>" +
+							"</div>";
+                <% } else { %>
+                    //anything involving just you, i.e changing interest, posted on your own wall, etc.
+                    content += "<div class=\"ml-2\">" +
+                                "<div class=\"h5 m-0\" style=\"color:#E1E1E1\"><%=post.userName%> </div>" +
+							"</div>";
+                <% } %>
+            <% } %>
             content +=      "</div>" +
                         "</div>" +
                     "</div>" +
@@ -284,88 +337,277 @@ function initWall() {
                         "<a class=\"card-link\" href=\"#\">" +
                             "<h5 class=\"card-title\"><%=post.postID%></h5>" +
                         "</a>" +
-                        "<p class=\"card-text\"> <%=post.content%></p>";
+                        "<p class=\"card-text\" style=\"color:#E1E1E1\"> <%=post.content%></p>" +
+                        "</div>" +
+                        "<div class=\"card-footer\">" + 
+                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
+                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
+                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                    "</div>" +
+                    "<div class=\"card-body\">" +
+                        "<div class=\"card-subtitle\">" +
+                            "Comments" +
+                        "</div>" +
+                        "<div class=\"comment-list\">";
+
+            for (var i = 0; i < commentList.length; i++) {
+                content += commentList[i];
+            }    
+            
             content += "</div>" +
-                   "</div>";
-        postsOnClient.push("<%=post%>");
-        container.innerHTML += content;
+                        "<form action=\"/commentonpost\" method=\"post\">" +
+                            "<div class=\"form-group\">" +
+                                "<label class=\"sr-only\" for=\"message\">post</label>" +
+                                "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                "<br>" +
+                                "<input type=\"hidden\" name=\"postID\" value=\"<%=post.postID%>\">" +
+                                "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
+                            " </div>" +
+                        "</form>" +
+                    " </div>" +
+                "</div> ";
+            postIDsOnClient.push("<%=post.postID%>");
+            postList.push("<%=post%>");
+            IDsToPostsMap.set("<%=post.postID%>", content);
+            container.innerHTML += content;
+        <% } %>
 
-    // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
+        console.log("postIDsOnClient looks like this:");
+        console.log(postIDsOnClient);
+        console.log("Ids to posts map looks like this:");
+        console.log(IDsToPostsMap);
 
-    // add each post from the server into the list of posts stored on the client side
-    <% }); %>
-    console.log(container);
-}
-
-// TODO: ejs form submit button (for making a new post) should have: onclick="makeNewPost()"
-// makes a new post when the user submits the form for creating a post
-function makeNewPost() {
-    // get the user's inputted fields
-    var postContent = $('input[name="newPostContent"]').val();
-    // TODO: get the timestamp that the user pressed the "post" button when they create a post
-    var postTimestamp = Date.now();
-    // TODO: get the hashtags from a user's post (if present)
-    //var postHashtags = ...
-    $.ajax({
-        url: "/wall",
-        type: "POST",
-        data:
-            {
-                content: postContent,
-                timestamp: postTimestamp,
-                hashtag: postHashtags
-            },
-        success: function(data) {
-            // TODO: SHOW THE NEW POST ON THE USER'S HOME PAGE
-
-            // add the new post to the list of posts on the client side
-            //postsOnClient.push(theNewPost);
-            // TODO: var theNewPost -> THIS MUST BE IN THE SAME FORM AS THE POSTS THAT RETURN FROM THE ARRAY OF POSTS SENT FROM THE DATABASE
+        for (var i = 0; i < postList.length; i++) {
+            console.log("ITER: ");
+            console.log(postList[i]);
         }
-    })
-}
 
-// automatic refresh every 5 seconds to update home page
-var refreshTime = function() {
-    // set clock to refresh every 5000 ms
-    $("#clock").html((new Date()).toString());
-    setTimeout(refreshTime, 5000);
-    // make AJAX call to get the home page posts and compare the data from the server to the data on the client
-    $.ajax({
-            url: "/homepageposts",
-            type: "GET",
+        
+        // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
+        // add each post from the server into the list of posts stored on the client side
+        //console.log(postsOnClient);
+    }
+
+
+    // TODO: ejs form submit button (for making a new post) should have: onclick="makeNewPost()"
+    // makes a new post when the user submits the form for creating a post
+    function makeNewPost() {
+    	//alert("You made a new post. TODO (Di): Display the new post on the home page.");
+        // get the user's inputted fields
+        var postContent = $('textarea[name="content"]').val();
+        console.log("post Content:" + postContent);
+
+        $.ajax({
+            url: "/postonwall",
+            type: "POST",
+            data:
+                {   
+                    content: postContent
+                },
             success: function(data) {
-                // list containing the differences between the server and client
-                var newPosts = [];
-                    
-                // iterate through data (posts) sent from server
-                data.forEach(p => {
-                    // put the post in the list if it's from the server but not on the client
-                    if (!postsOnClient.includes(p)) {
-                        newPosts.push(p);
-                        // update the client-side list to contain new posts from the server
-                        postsOnClient.push(p);
-                    }
-                });
-                    
-                // TODO: ACTUALLY DISPLAY THE NEW POSTS THAT THE SERVER HAS SENT TO THE CLIENT
-                newPosts.forEach(newPost => {
-                    // SEE ABOVE
-                    
-                });
-            },
-            error: function(err) {
-                // TODO: HANDLE ERRORS WITH AJAX CALLING DATABASE
-                //alert(err);
+                // TODO: SHOW THE NEW POST ON THE USER'S HOME PAGE. THESE ARE THE FIELDS OF DATA
+                // Example: Do data.username, data.postID, etc.
+                
+                /* username: poster, 
+					postID: id, 
+					content: content, 
+					timestamp: timestamp, 
+					hashtags: hashtags
+                */
+
+                console.log("userid GOT: " + data.userName);
+                console.log("postID GOT: " + data.postID);
+                console.log("content GOT: " + data.content);
+                console.log("timestamp GOT: " + data.timestamp);
+                var container = document.getElementById("user-posts");
+
+                var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
+                "<div class=\"card-header\">" +
+                    "<div class=\"d-flex justify-content-between align-items-center\">" +
+                        "<div class=\"d-flex justify-content-between align-items-center\">" +
+                            "<div class=\"mr-2\">" +
+                                "<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
+                            "</div>";
+                content += "<div class=\"ml-2\">" +
+                                "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + data.userName+ "</div>" +
+                            "</div>";
+                content +=      "</div>" +
+                            "</div>" +
+                        "</div>" +
+                        "<div class=\"card-body\">" +
+                            "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i>" + data.timestamp + "</div>" +
+                            "<a class=\"card-link\" href=\"#\">" +
+                                "<h5 class=\"card-title\">" + data.postID + "</h5>" +
+                            "</a>" +
+                            "<p class=\"card-text\" style=\"color:#E1E1E1\">" + data.content + "</p>" +
+                        "</div>" +
+                        "<div class=\"card-footer\">" + 
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                        "</div>" +
+                        "<div class=\"card-body\">" +
+                            "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
+                                "Comments" +
+                            "</div>" +
+                            "<form action=\"/commentonpost\" method=\"post\">" +
+                                "<div class=\"form-group\">" +
+                                    "<label class=\"sr-only\" for=\"message\">post</label>" +
+                                    "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                    "<br>" +
+                                    "<input type=\"hidden\" name=\"postID\" value=\"" + data.postID + "\">" +
+                                    "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
+                                " </div>" +
+                            "</form>" +
+                        " </div>" +
+                    "</div> ";
+                //postsOnClient.push(data);
+                postIDsOnClient.push(data.postID);
+                IDsToPostsMap.set(data.postID, data);
+                console.log("post added to list: ");
+                console.log(data);
+                //push comment list
+
+                //ADDS THE NEWEST POST AT THE BEGINNING OF ALL P OSTS.
+                container.innerHTML = (content + container.innerHTML);
+
+                // add the new post to the list of posts on the client side
+                //postsOnClient.push(theNewPost);
+                // TODO: var theNewPost -> THIS MUST BE IN THE SAME FORM AS THE POSTS THAT RETURN FROM THE ARRAY OF POSTS SENT FROM THE DATABASE
             }
         })
-};
+    }
 
-initWall();
+    // automatic refresh every 5 seconds to update home page
+    var refreshTime = function() {
+        // set clock to refresh every 5000 ms
+        console.log("refresh time called");
+        $("#clock").html((new Date()).toString());
+        setTimeout(refreshTime, 5000);
+        // make AJAX call to get the home page posts and compare the data from the server to the data on the client
+        $.ajax({
+                url: "/homepageposts",
+                type: "GET",
+                success: function(data) {
+                    // lists containing the differences between the server and client
+                    var newPosts = [];
+                    var newComments = [];
+                    
+                    console.log("5 second refresh. The data returned from routes is:");
+                    console.log(data);
+                    
+                    if (data) {
+                    	if (data.posts) {
+		                    // iterate through data (posts) sent from server
+		                    data.posts.forEach(p => {
+		                    	console.log("New post added, see below");
+		                    	console.log(JSON.stringify(p));
+		                        // put the post in the list if it's from the server but not on the client
+		                        //if (!postsOnClient.includes(p)) {
+                                if (!postIDsOnClient.includes(p.postID)) {
+                                    console.log("cur list doesn't include p");
+                                    console.log(p);
+		                            newPosts.push(p);
+		                            // update the client-side list to contain new posts from the server
+                                    postsOnClient.push(p);
+                                }
+		                    });
+	                    }
+	                    if (data.comments) {
+		                    // iterate through data (comments) sent from server
+		                    data.comments.forEach(c => {
+		                    	console.log("New comment added, see below");
+		                    	console.log(JSON.stringify(c));
+		                    	
+		                    	// AAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+		                        // put the post in the list if it's from the server but not on the client
+		                        if (!commentsOnPosts.includes(c)) {
+		                            newComments.push(c);
+		                            // update the client-side list to contain new posts from the server
+		                            commentsOnPosts.push(c);
+		                        }
+		                    });
+                        }
+                    }
+                    
+                    console.log("440:");
+                    console.log(newPosts);
+                        
+                    // TODO: ACTUALLY DISPLAY THE NEW POSTS THAT THE SERVER HAS SENT TO THE CLIENT
 
-$(document).ready(function() {
-    // CAN CHANGE CSS CODE (THE LINE BELOW) IF THERE ARE CONFLICTS
-    $("#clock").css("color", "white");
-    setTimeout(refreshTime, 5000);
-});
+                    var container = document.getElementById("user-posts");
+                    newPosts.forEach(newPost => {
+                        //VISUAL RENDER OF THE NEWPOST
+                        console.log("make new post");
+                        var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
+                        "<div class=\"card-header\">" +
+                            "<div class=\"d-flex justify-content-between align-items-center\">" +
+								"<div class=\"d-flex justify-content-between align-items-center\">" +
+									"<div class=\"mr-2\">" +
+										"<img class=\"rounded-circle\" width=\"45\" src=\"https://icon-library.com/images/default-profile-icon/default-profile-icon-17.jpg\">" +
+                                    "</div>";
+                        if(newPost.friend) {
+                            //DO NOTHING ABOUT THE HEADER
+                        } else {
+                            if (newPost.posterID) {
+                                //someone posted on someone else's wall
+                                content += "<div class=\"ml-2\">" +
+                                            "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + newPost.posterName + " posted on " + newPost.userName + "'s wall </div>" +
+                                        "</div>";
+                            } else {
+                                //anything involving just you, i.e changing interest, posted on your own wall, etc.
+                                content += "<div class=\"ml-2\">" +
+                                            "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + newPost.userName + "</div>" +
+                                        "</div>";
+                            }
+                        }
+                        content +=      "</div>" +
+                                    "</div>" +
+                                "</div>" +
+                                "<div class=\"card-body\">" +
+                                    "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i>" + newPost.timestamp + "</div>" +
+                                    "<a class=\"card-link\" href=\"#\">" +
+                                        "<h5 class=\"card-title\">" + newPost.postID + "</h5>" +
+                                    "</a>" +
+                                    "<p class=\"card-text\" style=\"color:#E1E1E1\">" + newPost.content + "</p>" +
+                                "</div>" +
+                                "<div class=\"card-footer\">" + 
+                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
+                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
+                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                                "</div>" +
+                                "<div class=\"card-body\">" +
+                                    "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
+                                        "Comments" +
+                                    "</div>" +
+                                    "<form action=\"/commentonpost\" method=\"post\">" +
+                                        "<div class=\"form-group\">" +
+                                            "<label class=\"sr-only\" for=\"message\">post</label>" +
+                                            "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                            "<br>" +
+                                            "<input type=\"hidden\" name=\"postID\" value=\"" + newPost.postID + "\">" +
+                                            "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
+                                        " </div>" +
+                                    "</form>" +
+                                " </div>" +
+                            "</div> ";
+                        postIDsonClient.push(newPost.postID);
+                        postsOnClient.push(newPost);
+                        //postsOnClient[newPost.postID] = newPost;
+
+                        // ADDS THE NEWEST POST AT THE BEGINNING OF ALL POSTS
+                        container.innerHTML = content + container.innerHTML;
+                    });
+                }
+            })
+    };
+
+    initPostsandComments();
+
+    //renderPostsAndComments();
+
+    $(document).ready(function() {
+        $("#clock").css("color", "white");
+        setTimeout(refreshTime, 5000);
+    });
 </script>
