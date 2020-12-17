@@ -303,6 +303,30 @@ body {
   }
 }
 
+/* CSS FOR PAGINATION */
+
+.pagination {
+  display: inline-block;
+}
+
+.pagination a {
+  color: white;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+.pagination a.active {
+  background-color: #99DFFF;
+  color: white;
+  border-radius: 5px;
+}
+
+.pagination a:hover:not(.active) {
+  background-color: #ddd;
+  border-radius: 5px;
+}
+
 /**Reset Bootstrap*/
 .dropdown-toggle::after {
     content: none;

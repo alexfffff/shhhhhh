@@ -37,10 +37,11 @@
 			Log Out
 		</a>
     </div>
-		<!-- News Search Bar-->
+		<!-- News Search Bar -->
 		<form action="/searchnews" method="post" class="form-inline">
 			<div class="input-group">
-				<label><font color="white">Search for an article:&nbsp</font></label><input type="text" name="keyword" required class="form-control" aria-describedby="button-addon2">
+				<label><font color="white">Search for an article:&nbsp</font></label>
+				<input type="text" name="keyword" required class="form-control" aria-describedby="button-addon2">
 				<div class="input-group-append">
 					<button class="btn btn-outline-primary" type="submit" id="button-addon2">
 						<i class="fa fa-search"></i>
@@ -56,8 +57,10 @@
 			<% if (articles.length == 0) { %>
 				No articles found.</font></font>
 			<% } else { %>
-				Showing <%=articles.length%> search results for: <%=keyword%></font></font><br>
-				<% articles.forEach(article => { %>
+				<% if (articles.length <= 15) { %>
+					Showing <%=articles.length%> search results for: <%=keyword%></font></font><br>
+					
+					<% articles.forEach(article => { %>
 					<!--- Display each of the articles -->
 					<div class="blog-card">
 					    <div class="meta">
@@ -87,6 +90,179 @@
 					    </div>
 					  </div>
 				<% }); %>
+					
+				<% } else { %>
+					Showing search results for: <%=keyword%></font></font><br>
+				<% } %>
+				
+				<!-- Container for all of the articles -->
+				<div id="articleContainer">
+				
+				</div>
+				
 			<% } %>
 	</div>
+	
+	<!-- Pagination (only shows up with more than 15 results) -->
+	<% if (articles.length > 15) { %>
+	<div align="right">
+		<div class="pagination">
+			<button type="button" class="btn btn-primary btn-block" onclick="loadPrevious()">&laquo; Previous Page</button>
+			<button type="button" class="btn btn-primary btn-block" onclick="loadNext()">Next Page &raquo;</button>
+		</div>
+	</div>
+	<% } %>
+	
 </body>
+
+<script>
+	// list of all article names
+	var articleNames = [];
+	
+	// maps from each article name to its properties
+	let nameToDescription = new Map();
+	let nameToCategory = new Map();
+	let nameToLink = new Map();
+	let nameToDate = new Map();
+	let nameToAuthors = new Map();
+	
+	// counter variable for pagination
+	var counter = 0;
+	var beginningOfArticles = true;
+	var endOfArticles = false;
+	
+	function storeAllArticles() {
+		<% articles.forEach(article => { %>
+			articleNames.push("<%=article.article%>");
+			nameToDescription.set("<%=article.article%>", "<%=article.description%>");
+			nameToCategory.set("<%=article.article%>", "<%=article.category%>");
+			nameToLink.set("<%=article.article%>", "<%=article.link%>");
+			nameToDate.set("<%=article.article%>", "<%=article.date%>");
+			
+			<% if (article.authors) { %>
+				nameToAuthors.set("<%=article.article%>", "<%=article.authors%>");
+			<% } else { %>
+				nameToAuthors.set("<%=article.article%>", "No authors found.");
+			<% } %>
+		<% }); %>
+	}
+	
+	function loadNext() {
+		if (endOfArticles) {
+			alert("No more articles to display.");
+			return;
+		} else {
+			beginningOfArticles = false;
+		}
+		
+		var newCounter = counter + 15;
+		var container = document.getElementById("articleContainer");
+		var content = "";
+		
+		while (counter < newCounter) {
+			if (counter < articleNames.length) {
+				content += "<div class=\"blog-card\"><div class=\"meta\"><div class=\"photo\" ";
+				content += "style=\"background-image: url(https://www.nyacknewsandviews.com/wp-content/uploads/2016/03/trump-600x450.jpg)\"></div>";
+				content += "<ul class=\"details\"><li class=\"author\">";
+					        
+				content += nameToAuthors.get(articleNames[counter]);
+				
+				content += "</li><li class=\"date\">";
+				
+				content += nameToDate.get(articleNames[counter]);
+				
+				content += "</li><li class=\"tags\"><ul><li>";
+					            
+				content += nameToCategory.get(articleNames[counter]);
+				
+				content += "</li></ul></li></ul></div><div class=\"description\"><h1>";
+					      
+				content += articleNames[counter];
+				
+				content += "</h1><p> ";
+					      
+				content += nameToDescription.get(articleNames[counter]);
+				
+				content += "</p><p class=\"read-more\"><a href=\"";
+					        
+				content += nameToLink.get(articleNames[counter]);
+				
+				content += "\">Read More</a></p></div></div>";
+				
+				// update the counter
+				counter++;
+			} else {
+				endOfArticles = true;
+				break;
+			}
+		}
+		
+		// place the content into the container
+		container.innerHTML = content;
+	}
+	
+	function loadPrevious() {
+		if (beginningOfArticles) {
+			alert("No more articles to display.");
+			return;
+		} else {
+			endOfArticles = false;
+		}
+		
+		var newCounter = counter - (counter % 15);
+		counter -= (counter % 15);
+		counter -= 15;
+		var container = document.getElementById("articleContainer");
+		var content = "";
+		
+		if (counter <= 14) {
+			beginningOfArticles = true;
+		}
+		
+		while (counter < newCounter) {
+			if (counter >= 0) {
+				content += "<div class=\"blog-card\"><div class=\"meta\"><div class=\"photo\" ";
+				content += "style=\"background-image: url(https://www.nyacknewsandviews.com/wp-content/uploads/2016/03/trump-600x450.jpg)\"></div>";
+				content += "<ul class=\"details\"><li class=\"author\">";
+					        
+				content += nameToAuthors.get(articleNames[counter]);
+				
+				content += "</li><li class=\"date\">";
+				
+				content += nameToDate.get(articleNames[counter]);
+				
+				content += "</li><li class=\"tags\"><ul><li>";
+					            
+				content += nameToCategory.get(articleNames[counter]);
+				
+				content += "</li></ul></li></ul></div><div class=\"description\"><h1>";
+					      
+				content += articleNames[counter];
+				
+				content += "</h1><p> ";
+					      
+				content += nameToDescription.get(articleNames[counter]);
+				
+				content += "</p><p class=\"read-more\"><a href=\"";
+					        
+				content += nameToLink.get(articleNames[counter]);
+				
+				content += "\">Read More</a></p></div></div>";
+				
+				// update the counter
+				counter++;
+			}
+		}
+		
+		// place the content into the container
+		container.innerHTML = content;
+	}
+	
+	storeAllArticles();
+	
+	<% if (articles.length > 15) { %>
+		loadNext();
+		beginningOfArticles = true;
+	<% } %>
+
+</script>
