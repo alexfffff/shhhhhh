@@ -1872,35 +1872,45 @@ var get_article_recs = function(username, callback) {
 	// query the table with params, searching for item with the specified username
 	docClient.query(paramsRecommended).promise().then(
 		successResultRecommended => {
-			// add all of the article names to a list
-			var recommendedArticles = [];
-			var items = []
-			var weights = []
-			for (let newsArticle of successResultRecommended.Items) {
-				items.push(newsArticle.article.substring(2))
-				weights.push(newsArticle.weight)
-			}
-			var i;
-			var index;
-			for (i = 0; i< 5; i++){
-				index = weighted_random(items,weights);
-				recommendedArtciles.push(items[index])
-				items.splice(index,1);
-				weights.splice(index,1);
-			}
+            // add all of the article names to a list
+            if (successResultRecommended.Items.length > 0){
+                var recommendedArticles = [];
+                var items = []
+                var weights = []
+                for (let newsArticle of successResultRecommended.Items) {
+                    items.push(newsArticle.article.substring(2))
+                    weights.push(newsArticle.weight)
+                }
+                var i;
+                var index;
+                var max = 5; 
+                if (successResultRecommended.Items.length < 5){
+                    max = successResultRecommended.Items.length;
+                }
+
+                for (i = 0; i< max; i++){
+                    index = weighted_random(items,weights);
+                    console.log(index)
+                    recommendedArticles.push(items[index])
+                    items.splice(index,1);
+                    weights.splice(index,1);
+                }
+                for (var i = 0; i < recommendedArticles.length; i++) {
+                    var params = {
+                        TableName: 'news',
+                        KeyConditionExpression: "article = :article",
+                        ExpressionAttributeValues: {
+                            ":article": recommendedArticles[i]
+                        }
+                    };
+                    var newPromise = docClient.query(params).promise();
+                    arrayOfPromises.push(newPromise);
+                }
+            }
+
 			
 			// Iterates through each article and pushes promise to query for the article to array of promises
-			for (var i = 0; i < recommendedArticles.length; i++) {
-				var params = {
-					TableName: 'news',
-					KeyConditionExpression: "article = :article",
-					ExpressionAttributeValues: {
-						":article": recommendedArticles[i]
-					}
-				};
-				var newPromise = docClient.query(params).promise();
-				arrayOfPromises.push(newPromise);
-			}
+
 		},
 		errResult => {
 			console.log(errResult);
