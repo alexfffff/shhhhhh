@@ -176,27 +176,16 @@ var getHome = function(req, res) {
 						var allComments = data2;
 						
 						var validComments = [];
-
 						for (let c of allComments) {
 							if (c.Count > 0) {
 								validComments.push(c.Items);
 							}
 						}
 
-						/*console.log("data2: ");
-						console.log(data2);
-
-						console.log("All comments look like this: ");
-						console.log(validComments);
-
-						console.log("All posts look like this: ");
-						console.log(allPosts);*/
-
 						var postsMap = new Map();
 						for (let p of allPosts) {
 							postsMap.set(p.postID, p);
 						}
-
 						
 						// pass the data from the table and render the home page to the user
 						res.render('home.ejs', {
@@ -448,7 +437,7 @@ var getWall = function(req, res) {
 			wallToVisit = req.session.username;
 		}
 		
-		// TODO - TESTING URL ... use /wall?wallToVisit=
+		// use URL /wall?wallToVisit=
 		console.log("Looking at wall of: " + wallToVisit);
 
 		// check if user clicked on their own page
@@ -464,7 +453,6 @@ var getWall = function(req, res) {
 					console.log("Looking at my own wall...");
 					
 					// get all of the post IDs
-
 					var postsMap = new Map();
 					for (let p of posts) {
 						allPostIDs.push(p.postID);
@@ -483,7 +471,6 @@ var getWall = function(req, res) {
 							comments = data1b;
 
 							var validComments = [];
-
 							for (let c of comments) {
 								if (c.Count > 0) {
 									validComments.push(c.Items);
@@ -548,7 +535,6 @@ var getWall = function(req, res) {
 										comments = data3b;
 
 										var validComments = [];
-
 										for (let c of comments) {
 											if (c.Count > 0) {
 												validComments.push(c.Items);
@@ -604,7 +590,6 @@ var getWall = function(req, res) {
 										comments = data4b;
 
 										var validComments = [];
-
 										for (let c of comments) {
 											if (c.Count > 0) {
 												validComments.push(c.Items);
@@ -814,7 +799,6 @@ var getHomePagePosts = function(req, res) {
 				} else {
 					var allComments = data2;
 					
-					console.log("AJAX SUCCESSFUL CALL every 5 seconds from routes");
 					console.log("Sending the following posts (from the last 5 seconds) to home.ejs...");
 					console.log(allPosts);
 					console.log("Sending the following comments (from the last 5 seconds) to home.ejs...");
@@ -852,7 +836,6 @@ var commentOnPost = function(req, res) {
 			console.log("addComment error with database");
 			res.render('error.ejs');
 		} else {
-			// TODO: ideally have the comment appear immediately, with no redirect
 			// successfully added a new comment, send the comment information
 			res.send({
 				commentID: commentID, 
@@ -865,7 +848,6 @@ var commentOnPost = function(req, res) {
 	});
 };
 
-// TODO - news, may need updating depending on database.js
 var getNews = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
@@ -880,8 +862,7 @@ var getNews = function(req, res) {
 			} else {
 				var myArticles = data;
 				
-				// TODO: delete these print statements later
-				console.log("recommended articles are");
+				console.log("My recommended articles are");
 				console.log(myArticles);
 				
 				// render the news recommendations page for this user based on their interests
@@ -891,7 +872,6 @@ var getNews = function(req, res) {
 	}
 };
 
-// TODO - may need updating depending on database.js
 var searchNews = function(req, res) {
 	var keyword = req.body.keyword;
 
@@ -911,7 +891,24 @@ var searchNews = function(req, res) {
 	});
 }
 
-// TODO - may need updating depending on database.js
+var likeArticle = function(req, res) {
+	// get the username and the article that the user liked
+	var user = req.session.username;
+	var article = req.body.articleToLike;
+	
+	console.log("User: " + user + " just liked the article: " + article);
+	
+	db.likeArticle(user, article, function(err, data) {
+		if (err) {
+			// handle error with querying database
+			res.render('error.ejs');
+		} else {
+			// redirect the user back to their news feed
+			res.redirect('/news');
+		}
+	});
+}
+
 var newsFeedUpdate = function(req, res) {
 	// send the data from the database to display up-to-date version of the news page to the user
 	db.getArticleRecs(req.session.username, function(err, data) {
@@ -924,6 +921,22 @@ var newsFeedUpdate = function(req, res) {
 		}
 	});
 };
+
+var searchName = function(req, res) {
+	// get the currently typed characters in the search bar
+	var nameToQuery = req.body.nameToSearch;
+	
+	// get the full name search results from the database
+	db.searchName(nameToQuery, function(err, data) {
+		if (err) {
+			// handle error with querying database
+			res.render('error.ejs');
+		} else {
+			// send the search results
+			res.send(data);
+		}
+	});
+}
 
 var logout = function(req, res) {
 	// check if user is logged in
@@ -966,28 +979,23 @@ var routes = {
 	add_interest: addNewInterest,
 	remove_interest: removeOldInterest,
 
-	// TODO: Wall is not so simple
-
 	get_wall: getWall,
 	post_to_wall: postToWall,
 	
 	get_friends: showFriends,
-
 	add_friend: addNewFriend,
 	delete_friend: deleteFriend,
 
 	home_page_posts: getHomePagePosts,
 
-	// TODO: Comment and other stuff below
-
 	comment_on_post: commentOnPost,
-
-	// TODO: News
 
 	get_news: getNews,
 	search_news: searchNews,
-
+	like_article: likeArticle,
 	news_feed_update: newsFeedUpdate,
+	
+	search_user: searchName,
 
 	log_out: logout
 };

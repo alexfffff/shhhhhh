@@ -89,6 +89,13 @@
 					      </p>
 					    </div>
 					  </div>
+					  
+					<!--- Display the like button below each article -->
+					<form action="/likearticle" method="post" class="blog-card">
+						<input id="articleToLike" name="articleToLike" type="hidden" align="center" value="<%=article.article%>">
+						<button type="submit" class="btn btn-primary btn-block">Like</button>
+					</form>
+				
 				<% }); %>
 					
 				<% } else { %>
@@ -189,6 +196,12 @@
 				
 				content += "\">Read More</a></p></div></div>";
 				
+				// display the like button
+				content += "<form action=\"/likearticle\" method=\"post\" class=\"blog-card\">";
+				content += "<input id=\"articleToLike\" name=\"articleToLike\" type=\"hidden\" align=\"center\" value=\"";
+				content += articleNames[counter];
+				content += "\"><button type=\"submit\" class=\"btn btn-primary btn-block\">Like</button></form>";
+				
 				// update the counter
 				counter++;
 			} else {
@@ -248,6 +261,12 @@
 				content += nameToLink.get(articleNames[counter]);
 				
 				content += "\">Read More</a></p></div></div>";
+				
+				// display the like button
+				content += "<form action=\"/likearticle\" method=\"post\" class=\"blog-card\">";
+				content += "<input id=\"articleToLike\" name=\"articleToLike\" type=\"hidden\" align=\"center\" value=\"";
+				content += articleNames[counter];
+				content += "\"><button type=\"submit\" class=\"btn btn-primary btn-block\">Like</button></form>";
 				
 				// update the counter
 				counter++;

@@ -222,6 +222,13 @@ app.post('/searchnews', routes.search_news);
 // support dynamic content on the news page by updating it hourly (gets the list of articles to show on the news page)
 app.get('/newsfeedupdate', routes.news_feed_update);
 
+// enable users to like articles
+app.post('/likearticle', routes.like_article);
+
+// shows the full names of users from search
+app.get('/usersearch', routes.search_user);
+
+// logs the user out of their account
 app.get('/logout', routes.log_out);
 
 /* 

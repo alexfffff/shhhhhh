@@ -101,6 +101,12 @@
         	content += "</p><p class=\"read-more\"><a href=\"";
         	content += "<%=article.link%>";
         	content += "\">Read More</a></p></div></div>";
+        	
+        	// display the like button below each article
+			content += "<form action=\"/likearticle\" method=\"post\" class=\"blog-card\">";
+			content += "<input id=\"articleToLike\" name=\"articleToLike\" type=\"hidden\" align=\"center\" value=\"";
+			content += htmlDecode("<%=article.article%>");
+			content += "\"><button type=\"submit\" class=\"btn btn-primary btn-block\">Like</button></form>";
 			
 			// append the content to the container's inner HTML
 			container.innerHTML += content;
@@ -114,9 +120,9 @@
 	
 	// automatic refresh every 1 hour to update the news page
 	var refreshTime = function() {
-		// set clock to refresh every 5000 ms (TODO: CHANGE THIS TO ONE HOUR AFTER IT WORKS)
+		// set clock to refresh every 1 hour (1 hour = 3600000 ms)
 		$("#clock").html((new Date()).toString());
-		setTimeout(refreshTime, 5000);		
+		setTimeout(refreshTime, 3600000);
 		// make AJAX call to get the news articles and compare the data from the server to the data on the client
 		$.ajax({
 				url: "/newsfeedupdate",
@@ -167,6 +173,12 @@
 			        	content += "</p><p class=\"read-more\"><a href=\"";
 			        	content += newArticle.link;
 			        	content += "\">Read More</a></p></div></div>";
+			        	
+			        	// display the like button below each article
+						content += "<form action=\"/likearticle\" method=\"post\" class=\"blog-card\">";
+						content += "<input id=\"articleToLike\" name=\"articleToLike\" type=\"hidden\" align=\"center\" value=\"";
+						content += htmlDecode(newArticle.article);
+						content += "\"><button type=\"submit\" class=\"btn btn-primary btn-block\">Like</button></form>";
 						
 						// append the content to the beginning of the container's inner HTML
 						container.innerHTML = (content + container.innerHTML);
@@ -182,7 +194,7 @@
 	
 	$(document).ready(function() {
 		$("#clock").css("color", "white");
-		setTimeout(refreshTime, 5000);
+		setTimeout(refreshTime, 3600000);
 	});
 	
 </script>
