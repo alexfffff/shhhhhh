@@ -202,7 +202,8 @@ var getHome = function(req, res) {
 						res.render('home.ejs', {
 							posts: postsMap, 
 							comments: validComments, 
-							username: req.session.username
+							username: req.session.username,
+							fullname: req.session.fullname
 						});
 					}
 				});
@@ -496,7 +497,8 @@ var getWall = function(req, res) {
 								isSelf: true, 
 								username: req.session.username, 
 								wallPosts: postsMap, 
-								wallComments: validComments
+								wallComments: validComments,
+								wallFullName: req.session.fullname
 							});
 						}
 					});
@@ -552,15 +554,23 @@ var getWall = function(req, res) {
 												validComments.push(c.Items);
 											}
 										}
-										
-										// render the user's friend's page and the posts on it
-										res.render('wall.ejs', {
-											user: wallToVisit, 
-											isFriend: true, 
-											isSelf: false, 
-											username: req.session.username, 
-											wallPosts: postsMap, 
-											wallComments: validComments
+
+										db.getName(wallToVisit, function(err3c, data3c) {
+											if (err3c) {
+												// handle error with database
+												res.render('error.ejs');
+											} else {
+												// render the user's friend's page and the posts on it
+												res.render('wall.ejs', {
+													user: wallToVisit, 
+													isFriend: true, 
+													isSelf: false, 
+													username: req.session.username, 
+													wallPosts: postsMap, 
+													wallComments: validComments,
+													wallFullName: data3c
+												});
+											}
 										});
 									}
 								});
@@ -600,16 +610,23 @@ var getWall = function(req, res) {
 												validComments.push(c.Items);
 											}
 										}
-										
-										
-										// render the non-friend page and the posts on it
-										res.render('wall.ejs', {
-											user: wallToVisit, 
-											isFriend: false, 
-											isSelf: false, 
-											username: req.session.username, 
-											wallPosts: postsMap, 
-											wallComments: validComments
+
+										db.getName(wallToVisit, function(err4c, data4c) {
+											if (err4c) {
+												// handle error with database
+												res.render('error.ejs');
+											} else {
+												// render the non-friend page and the posts on it
+												res.render('wall.ejs', {
+													user: wallToVisit, 
+													isFriend: false, 
+													isSelf: false, 
+													username: req.session.username, 
+													wallPosts: postsMap, 
+													wallComments: validComments,
+													wallFullName: data4c
+												});
+											}
 										});
 									}
 								});
@@ -697,7 +714,7 @@ var postToWall = function(req, res) {
 				// successfully made a new post on someone else's wall, sends the post information
 				console.log("Successfully made post on someone else's wall");
 				res.send({
-					wallsUser: username, 
+					wallsUser: userID, 
 					posterID: posterID, 
 					postID: id, 
 					content: content, 
@@ -731,6 +748,9 @@ var deleteFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
 	var user = req.session.username;
 	var userToUnfriend = req.query.wallToVisit;
+
+	console.log("user: " + user);
+	console.log("userToUnfriend: " + userToUnfriend);
 
 	db.unfriend(user, userToUnfriend, function(err, data) {
 		if (err) {
