@@ -1822,7 +1822,20 @@ var db_news_search = function(searchStr, username, callback) {
     );
 };
 
+function weighted_random(items, weights) {
+    var i;
 
+    for (i = 0; i < weights.length; i++)
+        weights[i] += weights[i - 1] || 0;
+    
+    var random = Math.random() * weights[weights.length - 1];
+    
+    for (i = 0; i < weights.length; i++)
+        if (weights[i] > random)
+			break;
+			
+    return i;
+}
 
 /** 
 * GETS A USER'S ARTICLE RECOMMENDATIONS, HERE FOR DEBUGGING ROUTES (Philip)
@@ -1853,9 +1866,20 @@ var get_article_recs = function(username, callback) {
 		successResultRecommended => {
 			// add all of the article names to a list
 			var recommendedArticles = [];
+			var items = []
+			var weights = []
 			for (let newsArticle of successResultRecommended.Items) {
-    			recommendedArticles.push(newsArticle.article.substring(2));
-    		}
+				items.push(newsArticle.article.substring(2))
+				weights.push(newsArticle.weight)
+			}
+			var i;
+			var index;
+			for (i = 0; i< 5; i++){
+				index = weighted_random(items,weights);
+				recommendedArtciles.push(items[i])
+				items.splice(i,1);
+				weights.splice(i,1);
+			}
 			
 			// Iterates through each article and pushes promise to query for the article to array of promises
 			for (var i = 0; i < recommendedArticles.length; i++) {
@@ -1882,7 +1906,6 @@ var get_article_recs = function(username, callback) {
 				for (let i = 0; i < successResult2.length; i++) {
 					finalResults.push(successResult2[i].Items[0]);
 				}
-				
 				// send the finalResults back
 				callback(null, finalResults);
 			},
