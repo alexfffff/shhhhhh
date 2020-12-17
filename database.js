@@ -238,13 +238,17 @@ var makePrefixes = function(fullname) {
 	console.log("Making prefixes");
 	var lowerfullname = fullname.toLowerCase();
 	var namePartsArr = lowerfullname.split(" ");
-	var prefixArr = [];
+	//var prefixArr = [];
+	var prefixArr = new Set();
 	namePartsArr.forEach(name => {
 		for (var i = name.length; i >= 0; i--) {
-			prefixArr.push(name.substr(0,i));
+			prefixArr.add(name.substr(0,i));
 		}
 		console.log(prefixArr);
 	});
+	for (var i = lowerfullname.length; i >= 0; i--) {
+		prefixArr.add(lowerfullname.substr(0,i));
+	}
 	return prefixArr;
 }
 
@@ -1115,7 +1119,7 @@ var db_make_wall_post = function(wallsUser, posterID, postID, content, timestamp
 			"#un": "username"
 		},
 		ExpressionAttributeValues: {
-			":username": poster
+			":username": posterID
 		}
 	};
 	arrayOfPromises1.push(docClient.query(getNameParam2).promise());
@@ -1620,13 +1624,18 @@ var db_unfriend = function(yourUsername, friendUsername, callback) {
 			};
 			docClient.delete(params2).promise().then(
 				successResult => {
+					console.log("successfully deleted friend");
 					callback(null, successResult);
 				},
 				errResult => {
+					console.log("err result 2");
+					console.log(errResult);
 					callback(errResult, null);
 				});
 		  },
 		  errResult => {
+			  console.log("error result with docClient.delete");
+			  console.log(errResult);
 			  callback(errResult, null);
 		  });
 
@@ -2023,7 +2032,7 @@ var get_article_recs = function(username, callback) {
                             ":article": recommendedArticles[i]
                         }
 					};
-					var newPromise2 = docClient.query(params2).promise();
+					var newPromise2 = docClient.delete(params2).promise();
                     var newPromise = docClient.query(params).promise();
 					arrayOfPromises.push(newPromise);
 					arrayDelete.push(newPromise2);
@@ -2046,6 +2055,7 @@ var get_article_recs = function(username, callback) {
 				console.log("deleted");
 			},
 			errResult => {
+				console.log("err2");
 				console.log(errResult);
 				callback(errResult, null);
 			}
@@ -2105,7 +2115,43 @@ var db_like_article = function(articleTitle, username, callback) {
 	});
 };
 
-
+/**
+* Queries the login statuses of an array of usernames parameter. 
+*
+* @param  usernames array of usernames
+* @return Map from login status to user, for of all of the users in the argument array
+*/
+var db_get_login_statuses = function(usernames, callback) {
+	var docClient = new AWS.DynamoDB.DocumentClient();
+	var arrayOfPromises = [];
+	let userToLoginStatus = new Map();
+	
+	usernames.forEach(username => {
+		// create params to query for an item with the username
+		var params = {
+				TableName: "users",
+				KeyConditionExpression: "username = :username",
+				ExpressionAttributeValues: {
+					":username": username
+				}
+		};
+		arrayOfPromises.push(docClient.query(params).promise());
+	});
+		
+	// query the table with params, searching for item with the specified username
+	Promise.all(arrayOfPromises).then(
+		successResult => {
+			for (item of successResult) {
+				userToLoginStatus.set(item.Items[0].username, item.Items[0].logged_in);
+			}
+			callback(null, userToLoginStatus);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
+};
 
 
 
@@ -2148,7 +2194,8 @@ var database = {
   searchName: db_search_name,
   newsSearch: db_news_search,
   getArticleRecs: get_article_recs,
-  likeArticle: db_like_article
+  likeArticle: db_like_article,
+  getLoginStatuses: db_get_login_statuses
 };
 
 module.exports = database;
