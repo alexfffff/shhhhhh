@@ -207,6 +207,14 @@ var create_account = function(username, password, name, email, affiliation, birt
 
 
 
+
+
+
+
+
+
+
+
 /**
 * Queries the affiliation of a user with the username parameter. 
 * Can be used to see affiliation of a user.
