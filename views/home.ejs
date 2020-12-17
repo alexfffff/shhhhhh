@@ -297,29 +297,40 @@
 </body>
 
 <script>
-    var IDsToPostsMap = [];
-    var IDsToCommentsMap = [];
+    var IDsToPostsMap = new Map();
+    var IDsToCommentsMap = new Map();
+
+    var postList = [];
 
     function initPostsandComments() {
         // TODO: DISPLAY POSTS ON THE HOME PAGE
         // iterate through all of the posts
         console.log("initPostsandComments called");
-        <% posts.forEach(post => { %>
-            IDsToPostsMap["<%=post.postID%>"] = "<%=post%>";
-            console.log("placed into post map: ");
-            console.log(IDsToPostsMap["<%=post.postID%>"]);
+        <%for (var i = 0; i < posts.length; i++) { %>
+            console.log("postID:" + "<%=posts[i].postID%>");
+            // PHILIP ANOTHER CHANGE IN THE LINE BELOW
+            //var shit = <%=posts[i]%>;
+            console.log("post looks like this ");
+            console.log(JSON.stringify("<%=posts[i]%>")); // delete later maybe
+            IDsToPostsMap.set("<%=posts[i].postID%>", i); // PHILIP CHANGED SOMETHING ON THIS LINE
+            IDsToCommentsMap.set("<%=posts[i].postID%>", []);
 
-            IDsToCommentsMap["<%=post.postID%>"] = [];
-            console.log("placed into comments map: ");
-            console.log(IDsToCommentsMap["<%=post.postID%>"]);
-        <% }); %>
-
+            postList[i] = <%=posts[i]%>;
+        <% } %>
         
+        console.log("POST LIST: ");
+        for (var i = 0; i < postList.length; i++) {
+            console.log("POST ID:" + postList[i].postID);
+        } 
+            
 
         //console.log(typeOf(<%=comments%>));
         <%for (var i = 0; i < comments.length; i++) { %>
             console.log("kill me now");
-            
+            //var commentList = IDsToCommentsMap["<%=comments[i][0].postID%>"];
+            var commentList = IDsToCommentsMap.get("<%=comments[i][0].postID%>");
+            console.log("commentList: ");
+            console.log(commentList);
             <% for (let j = 0; j < comments[i].length; j++) { %>
             	// @@@@@@@@@@@@@@@@@@@ TODO (DI)
 	            console.log('HERE ARE ALL OF THE FUCKING FIELDS FOR A COMMENT');
@@ -328,8 +339,15 @@
             	console.log("username: " + "<%=comments[i][j].username%>");
             	console.log("commentID: " + "<%=comments[i][j].commentID%>");
             	console.log("fullname: " + "<%=comments[i][j].fullname%>");
-            	console.log("timestamp: " + "<%=comments[i][j].timestamp%>");
+                console.log("timestamp: " + "<%=comments[i][j].timestamp%>");
+
+                commentList.push("<%=comments[i][j]%>"); // PHILIP CHANGED SOMETHING ON THIS LINE hmm th is one miht not work but try it out
+                // let me use the vm, can prob just ignore this for now and test one thing at a time
+
             <% } %>
+
+            console.log("after putting comments in: ");
+            console.log(commentList);
         <% }%>
 
         
@@ -340,11 +358,23 @@
     }
 
     function renderPostsAndComments() {
-        IDsToPostsMap.forEach((postID, post) => {
+        console.log("rendering posts and comments....");
+        var container = document.getElementById("allposts");
 
-            var commentList = IDsToCommentsMap(postID);
-
-            console.log("rendering content.....");
+        for (const [postID, post] of IDsToPostsMap.entries()) {
+            var acPost = IDsToPostsMap.get(postID);
+            console.log("map entry: " + postID + " , " + post);
+            var commentList = IDsToCommentsMap.get(postID);
+            console.log("commentList of each mapping: ");
+            console.log(commentList);
+            
+            console.log("post friend: " + post.friend);
+            console.log("post ID: " + post.postID);
+            console.log("post posterName: " + post.posterName);
+            console.log("post userName: " + post.userName);
+            console.log("post posterID: " + post.posterID);
+            console.log("post timestamp: " + post.timestamp);
+            console.log("post content: " + post.content);
 
             var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
             "<div class=\"card-header\">" +
@@ -407,7 +437,9 @@
 
             //ADDS THE NEWEST POST AT THE BEGINNING OF ALL POSTS.
             container.innerHTML = content + container.innerHTML;
-        });
+        }
+
+        
     }
 
     // TODO: ejs form submit button (for making a new post) should have: onclick="makeNewPost()"
@@ -624,6 +656,7 @@
     };
 
     initPostsandComments();
+
     renderPostsAndComments();
 
     $(document).ready(function() {
