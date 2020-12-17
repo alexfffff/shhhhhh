@@ -2023,7 +2023,7 @@ var get_article_recs = function(username, callback) {
                             ":article": recommendedArticles[i]
                         }
 					};
-					var newPromise2 = docClient.query(params2).promise();
+					var newPromise2 = docClient.delete(params2).promise();
                     var newPromise = docClient.query(params).promise();
 					arrayOfPromises.push(newPromise);
 					arrayDelete.push(newPromise2);
@@ -2046,6 +2046,7 @@ var get_article_recs = function(username, callback) {
 				console.log("deleted");
 			},
 			errResult => {
+				console.log("err2");
 				console.log(errResult);
 				callback(errResult, null);
 			}
