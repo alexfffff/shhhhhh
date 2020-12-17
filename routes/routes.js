@@ -530,9 +530,11 @@ var getWall = function(req, res) {
 								
 								console.log("Looking at a friend's wall...");
 								
+								var postsMap = new Map();
 								// get all of the post IDs
 								for (let p of posts) {
 									allPostIDs.push(p.postID);
+									postsMap.set(p.postID, p);
 								}
 								
 								// get all of the comments for each post
@@ -542,15 +544,23 @@ var getWall = function(req, res) {
 										res.render('error.ejs');
 									} else {
 										comments = data3b;
+
+										var validComments = [];
+
+										for (let c of comments) {
+											if (c.Count > 0) {
+												validComments.push(c.Items);
+											}
+										}
 										
 										// render the user's friend's page and the posts on it
 										res.render('wall.ejs', {
 											user: wallToVisit, 
-											isFriend: false, 
-											isSelf: true, 
+											isFriend: true, 
+											isSelf: false, 
 											username: req.session.username, 
-											wallPosts: posts, 
-											wallComments: comments
+											wallPosts: postsMap, 
+											wallComments: validComments
 										});
 									}
 								});
@@ -568,8 +578,11 @@ var getWall = function(req, res) {
 								console.log("Looking at a non-friend's wall...");
 								
 								// get all of the post IDs
+								var postsMap = new Map();
+								// get all of the post IDs
 								for (let p of posts) {
 									allPostIDs.push(p.postID);
+									postsMap.set(p.postID, p);
 								}
 								
 								// get all of the comments for each post
@@ -579,15 +592,24 @@ var getWall = function(req, res) {
 										res.render('error.ejs');
 									} else {
 										comments = data4b;
+
+										var validComments = [];
+
+										for (let c of comments) {
+											if (c.Count > 0) {
+												validComments.push(c.Items);
+											}
+										}
+										
 										
 										// render the non-friend page and the posts on it
 										res.render('wall.ejs', {
 											user: wallToVisit, 
 											isFriend: false, 
-											isSelf: true, 
+											isSelf: false, 
 											username: req.session.username, 
-											wallPosts: posts, 
-											wallComments: comments
+											wallPosts: postsMap, 
+											wallComments: validComments
 										});
 									}
 								});

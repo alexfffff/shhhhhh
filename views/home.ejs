@@ -101,8 +101,6 @@
                         <div class="tab-content" id="myTabContent">
                            <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
                             <form>
-                                
-                                    
                                     <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" class="form-control" style="background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1"required></textarea>
                                     <br>
                                    
@@ -110,8 +108,6 @@
                                     <input type="hidden" name="posterID" value="<%=username%>">
                                     <input type="hidden" name="friend" value="false">
                                     <button type="button" class="btn btn-lg btn-primary btn-block" onclick="makeNewPost()">Post</button>
-                                
-                                
                             </form>
                                
                            </div>
@@ -380,9 +376,9 @@
                         "<p class=\"card-text\" style=\"color:#E1E1E1\"> <%=post.content%></p>" +
                         "</div>" +
                         "<div class=\"card-footer\">" + 
-                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
-                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
-                        "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\" style=\"color:red\"></i> Like</a>" +
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\" style=\"color:yellow\"></i> Comment</a>" + 
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\" style=\"color:green\"></i> Share</a>" +
                     "</div>" +
                     "<div class=\"card-body\">" +
                         "<div class=\"card-subtitle\">" +
@@ -481,9 +477,9 @@
                             "<p class=\"card-text\" style=\"color:#E1E1E1\">" + data.content + "</p>" +
                         "</div>" +
                         "<div class=\"card-footer\">" + 
-                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
-                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
-                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\" style=\"color:red\"></i> Like</a>" +
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\" style=\"color:yellow\"></i> Comment</a>" + 
+                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\" style=\"color:green\"></i> Share</a>" +
                         "</div>" +
                         "<div class=\"card-body\">" +
                             "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
@@ -492,7 +488,7 @@
                             "<form action=\"/commentonpost\" method=\"post\">" +
                                 "<div class=\"form-group\">" +
                                     "<label class=\"sr-only\" for=\"message\">post</label>" +
-                                    "<textarea class=\"form-control\" style=\"height:70px;\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                    "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
                                     "<br>" +
                                     "<input type=\"hidden\" name=\"postID\" value=\"newPost.postID\">" +
                                     "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
@@ -611,9 +607,9 @@
                                     "<p class=\"card-text\" style=\"color:#E1E1E1\">" + newPost.content + "</p>" +
                                 "</div>" +
                                 "<div class=\"card-footer\">" + 
-                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
-                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
-                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\" style=\"color:red\"></i> Like</a>" +
+                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\" style=\"color:yellow\"></i> Comment</a>" + 
+                                    "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\" style=\"color:green\"></i> Share</a>" +
                                 "</div>" +
                                 "<div class=\"card-body\">" +
                                     "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
@@ -622,7 +618,7 @@
                                     "<form action=\"/commentonpost\" method=\"post\">" +
                                         "<div class=\"form-group\">" +
                                             "<label class=\"sr-only\" for=\"message\">post</label>" +
-                                            "<textarea class=\"form-control\" style=\"height:70px;\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                            "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
                                             "<br>" +
                                             "<input type=\"hidden\" name=\"postID\" value=\"newPost.postID%>\">" +
                                             "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
