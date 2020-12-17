@@ -855,7 +855,6 @@ var newsFeedUpdate = function(req, res) {
 			res.render('error.ejs');
 		} else {
 			// send the data for the most updated news feed
-			
 			res.send(data);
 		}
 	});
