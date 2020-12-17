@@ -75,7 +75,7 @@ app.post('/postonwall', routes.post_to_wall);
 // view a page displaying a user's list of friends
 app.get('/friendsof', routes.get_friends);
 
-//view visualizer
+// view visualizer
 app.get('/graphof', function(req, res) {
 	res.render('friendvisualizer.ejs');
 });

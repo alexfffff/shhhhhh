@@ -764,9 +764,25 @@ var showFriends = function(req, res) {
 			if (err) {
 				// error with querying database
 				res.render('error.ejs');
-			} else {				
-				// render the friends page, where a user can see someone's friends
-				res.render('friends.ejs', {friends: data, friendsOf: req.query.user, username: req.session.username});
+			} else {
+				var userFriends = data;
+				
+				// get the user's full name
+				db.getName(req.query.user, function(err2, data2) {
+					if (err) {
+						// error with querying database
+						res.render('error.ejs');
+					} else {
+						var fullname = data2;
+						
+						// render the friends page, where a user can see someone's friends
+						res.render('friends.ejs', {
+							friends: userFriends, 
+							friendsOf: fullname, 
+							username: req.session.username
+						});
+					}
+				});
 			}
 		});
 	}
