@@ -1665,15 +1665,47 @@ var db_logout = function(username, callback) {
 	        }
 	    };
   
-  docClient.update(params).promise().then(
-		  successResult => {
-			  console.log("UPDATED");
-			  callback(null, successResult);
-		  },
-		  errResult => {
-			  console.log(errResult);
-			  callback(errResult, null);
-		  });
+  	docClient.update(params).promise().then(
+		successResult => {
+			var params1 = {
+				TableName: "chatInvitations",
+				 KeyConditionExpression: "username = :key",
+				 ExpressionAttributeValues: {
+					 ":key": username
+				}
+			};
+		
+			docClient.query(params1).promise().then(
+				successResult => {
+					console.log(successResult);
+					var promiseArr = [];
+					successResult.Items.forEach(invite => {
+						var params = {
+							TableName : "chatInvitations",
+							Key: {
+								"username": username,
+								"chatID": invite.chatID
+							}
+						};
+						promiseArr.push(docClient.delete(params).promise());
+					});
+					Promise.all(promiseArr).then(
+						successResult => {
+							callback(null, successResult);
+					  	}, errResult => {
+							callback(errResult, null);
+					  	}
+				  	);
+				}, errResult => {
+					callback(errResult, null);
+				}
+			);
+
+		}, errResult => {
+			console.log(errResult);
+			callback(errResult, null);
+		}
+	);
 };
 
 
