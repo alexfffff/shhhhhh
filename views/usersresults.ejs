@@ -1,0 +1,62 @@
+<head>
+    <title>Search Results</title>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<!------ Include the above in your HEAD tag ---------->
+	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+        crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous"/>
+	<link rel="stylesheet" type="text/css" href="pennbook.css"/>
+</head>
+
+<body>
+	<!--Top Header bar: Title of page, Toolbar, Search bar-->
+	<nav class="navbar">
+		<!--Title-->
+	<a href="/home" class="navbar-brand" style="font-size:36px; color:#99DFFF">PennBook</a>
+	<!--Toolbar-->
+	<div class="toolbar-container">
+        <a class="button" href="/home" role="button">
+            &#127969;
+            Home
+        </a>
+        <a class="button" href="/wall?wallToVisit=<%=username%>" role="button">
+            &#128204;
+            My Wall
+        </a>
+        <a class="button" href="/settings" role="button">
+            &#128295;
+            Settings
+        </a>
+        <a class="button" href="/news" role="button">
+            &#128240;
+            News
+        </a>
+        <a class="button" href="/logout" role="button">
+            &#128682;
+			Log Out
+		</a>
+    </div>
+		<!--Search Bar-->
+		<form class="form-inline">
+			<div class="input-group">
+				<input type="text" class="form-control" aria-label="Recipient's username" aria-describedby="button-addon2">
+				<div class="input-group-append">
+					<button class="btn btn-outline-primary" type="button" id="button-addon2" style="color:#535353">
+						<i class="fa fa-search"></i>
+					</button>
+				</div>
+			</div>
+		</form>
+	</nav>
+	<font color="white"><font size="20">Here are the results for: <%=keyword%></font></font><br>
+	<font color="white">
+	<% if (searchResults.length == 0) { %>
+		No results found.
+	<% } else { %>
+		<% searchResults.forEach(user => { %>
+			<a href="/wall?wallToVisit=<%=user.username%>"<font color="white"><%=user.fullname%></font></a>
+			<br>
+			<% }); %>
+	<% } %>
+	</font>
+</body>

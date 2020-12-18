@@ -986,8 +986,42 @@ var searchName = function(req, res) {
 			// handle error with querying database
 			res.render('error.ejs');
 		} else {
+			var results = [];
+			for (result of data) {
+				if (result.Count > 0) {
+					results.push(result.Items[0]);
+				}
+			}
+			
 			// send the search results
-			res.send(data);
+			res.send(results);
+		}
+	});
+}
+
+var searchNameSubmit = function(req, res) {
+	// get the typed characters that the user submitted from the search bar
+	var nameToQuery = req.body.nameToSearch;
+	
+	// get the full name search results from the database	
+	db.searchName(nameToQuery, function(err, data) {
+		if (err) {
+			// handle error with querying database
+			res.render('error.ejs');
+		} else {
+			var results = [];
+			for (result of data) {
+				if (result.Count > 0) {
+					results.push(result.Items[0]);
+				}
+			}
+			
+			// render the search results page 
+			res.render('usersresults.ejs', {
+				username: req.session.username, 
+				keyword: nameToQuery, 
+				searchResults: results
+			});
 		}
 	});
 }
@@ -1050,6 +1084,7 @@ var routes = {
 	news_feed_update: newsFeedUpdate,
 	
 	search_user: searchName,
+	search_user_submit: searchNameSubmit,
 
 	log_out: logout
 };

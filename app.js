@@ -228,6 +228,9 @@ app.post('/likearticle', routes.like_article);
 // shows the full names of users from search
 app.get('/usersearch', routes.search_user);
 
+// results from searching for users
+app.post('/searchforuser', routes.search_user_submit);
+
 // logs the user out of their account
 app.get('/logout', routes.log_out);
 
