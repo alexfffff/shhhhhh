@@ -9,6 +9,7 @@
     "express-session": "^1.17.1",
     "jquery": "^3.5.1",
     "node.js": "^0.0.1-security",
+    "socket.io": "^3.0.4",
     "stemmer": "^1.0.5"
   }
 }
