@@ -1,5 +1,7 @@
 const { time } = require('console');
 var db = require('../models/database.js');
+var chat_db = require('../models/chat_db.js');
+
 
 // helper function for sorting posts in reverse chronological order
 function sortPosts(data) {
@@ -1002,6 +1004,19 @@ var searchNameSubmit = function(req, res) {
 	});
 }
 
+var getChat = function(req, res) {
+	chat_db.getOnlineFriends(req.session.username, function(err, data) {
+		if (err) {
+			res.redirect('/?message=' + 'problem');
+	    } else {
+	    	console.log(data);
+	    	res.render('chat.ejs', {username: req.session.username, fullname: req.session.fullname, friends: data});
+	    }
+	});
+	
+};
+
+
 var logout = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
@@ -1061,6 +1076,8 @@ var routes = {
 	
 	search_user: searchName,
 	search_user_submit: searchNameSubmit,
+
+	get_chat: getChat,
 
 	log_out: logout
 };
