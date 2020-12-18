@@ -978,7 +978,7 @@ var newsFeedUpdate = function(req, res) {
 
 var searchName = function(req, res) {
 	// get the currently typed characters in the search bar
-	var nameToQuery = req.body.nameToSearch;
+	var nameToQuery = req.query.nameToSearch;
 	
 	// get the full name search results from the database
 	db.searchName(nameToQuery, function(err, data) {
