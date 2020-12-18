@@ -75,7 +75,7 @@
                                 <div class="d-flex justify-content-center"><label style="color:#E1E1E1;font-size: 20px">Active Friends</label></div>
                                 <div class="list-group list-group-flush" id="activeFriends">
                                     <% friends.forEach(friend => { %>
-      	                                <button id="<%= friend.username %>" class="btn" onclick="chatThisFriend(this.id)" style="color:#E1E1E1"><%= friend.fullname %></button>
+      	                                <button id="<%= friend.username %>" class="btn" style="color:green" onclick="chatThisFriend(this.id)" style="color:#E1E1E1"><%= friend.fullname %></button>
                                     <% }); %>
                                 </div>
                                 <br>
@@ -104,7 +104,7 @@
                             <div class="chat-box">
                               <div class="chat-container"> 
                                
-                                <ul id="message-container" style="overflow-y: scroll; height:500px">
+                                <ul id="message-container" style="overflow-y: scroll; height:500px; background-color:#242526">
                                     
                                 </ul>
                               
@@ -286,8 +286,8 @@
                           "</ul>" +
                         "</div>" +
                         "<div class=\"form-group mt-3 mb-0\">" +
-                            "<span><input type=\"text\" id=\"message\" class=\"form-control\" style=\"width:50rem;margin:auto\"" +
-                            "placeholder=\"Send a message...\"><button class=\"btn btn-primary\" name=\"button\" onclick=\"sendMessage()\">Send</button></span>" +
+                            "<div><input type=\"text\" id=\"message\" class=\"form-control\" style=\"width:50rem;margin:auto\"" +
+                            "placeholder=\"Send a message...\"><button class=\"btn btn-primary\" style=\"margin:auto\" name=\"button\" onclick=\"sendMessage()\">Send</button></div>" +
                         "</div>" +
                       "</div>";
         messagebox.innerHTML += boxcode;
@@ -341,8 +341,8 @@
                           "</ul>" +
                         "</div>" +
                         "<div class=\"form-group mt-3 mb-0\">" +
-                            "<span><input type=\"text\" id=\"message\" class=\"form-control\" style=\"width:50rem; margin:auto\"" +
-                            "placeholder=\"Send a message...\"><button class=\"btn btn-primary\" name=\"button\" onclick=\"sendMessage()\">Send</button></span>" +
+                            "<div><input type=\"text\" id=\"message\" class=\"form-control\" style=\"width:50rem; margin:auto\"" +
+                            "placeholder=\"Send a message...\"><button class=\"btn btn-primary\" style=\"margin:auto\" name=\"button\" onclick=\"sendMessage()\">Send</button></div>" +
                         "</div>" +
                       "</div>";
         messagebox.innerHTML += boxcode;
@@ -417,7 +417,7 @@
     
     function get_online_list_element(friend) {
     console.log("adding firend to active");
-      return '<button id="' + friend.username + '" class="btn btn-light" onclick="chatThisFriend(this.id)">' + friend.fullname + '</button>';
+      return '<button id="' + friend.username + '" class="btn" onclick="chatThisFriend(this.id)" style="color:green">' + friend.fullname + '</button>';
     }
 
     function get_potential_group_element(friend) {

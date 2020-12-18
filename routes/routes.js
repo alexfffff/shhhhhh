@@ -660,6 +660,8 @@ var postToWall = function(req, res) {
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on user's own wall, sends the post information
+				console.log("the new hashtags: ");
+				console.log(hashtags);
 				res.send({
 					userName: posterName, 
 					content: content, 
@@ -679,6 +681,8 @@ var postToWall = function(req, res) {
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on someone else's wall, sends the post information
+				console.log("the new hashtags: ");
+				console.log(hashtags);
 				res.send({
 					wallsUser: userID, 
 					posterID: posterID, 
