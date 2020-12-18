@@ -69,10 +69,20 @@
             <div class="col-md-3">
                 <div class="card" style="background-color:#242526;border-radius:10px">
                     <div class="card-body">
-                        <a href="/wall?wallToVisit=<%=user%>" class="h5">@<%=user%></a>
-                        <div class="h7 text-muted">Fullname : FULL NAME</div>  
-                        <div class="h7" style="color:#535353"> BIO GOES HERE
-                        </div>
+                        <a href="/wall?wallToVisit=<%=user%>" class="h5">@<%=user%></a><br>
+                        <% if (isFriend) { %>
+                            <br>
+                            <form action="/deletefriend?wallToVisit=<%=user%>" method="post">
+                                <button type="submit" class="btn btn-primary" style="background-color:#D10000; color:#E1E1E1; border-color:#830000">Remove Friend</button>
+                            </form>
+                        <% } else if (!isSelf) {%>
+                            <br>
+                            <form action="/addfriend?wallToVisit=<%=user%>" method="post">
+                                <button type="submit" class="btn btn-primary" style="background-color:#99DFFF">Add Friend</button>
+                            </form>
+                        <% } %>
+                        <div class="h7 text-muted">Fullname: <%=wallFullName%></div>  
+                        <div class="h7" style="color:#535353">Bio: </div>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item" style="background-color:#242526">
@@ -106,8 +116,6 @@
                         <div class="tab-content" id="myTabContent">
                            <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
                             <form>
-                                
-                                    
                                     <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" class="form-control" style="background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1"required></textarea>
                                     <br>
                                    
@@ -115,8 +123,42 @@
                                     <input type="hidden" name="posterID" value="<%=username%>">
                                     <input type="hidden" name="friend" value="false">
                                     <button type="button" class="btn btn-lg btn-primary btn-block" onclick="makeNewPost()">Post</button>
-                                
-                                
+                            </form>
+                               
+                           </div>
+                        </div>
+                        <div class="btn-toolbar justify-content-between">
+                      
+                            <div class="btn-group">
+                                <button id="btnGroupDrop1" type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">
+                                    <i class="fa fa-globe"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                                    <a class="dropdown-item" href="#"><i class="fa fa-globe"></i> Public</a>
+                                    <a class="dropdown-item" href="#"><i class="fa fa-users"></i> Friends</a>
+                                    <a class="dropdown-item" href="#"><i class="fa fa-user"></i> Just me</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } else if (isFriend) {%>
+                <div class="card gedf-card" style="background-color:#242526;border-radius:10px">
+                    <div class="card-header" style="font-size:20px; color:#E1E1E1">
+                        Make a Post on <%=user%>'s Wall
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="myTabContent">
+                           <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+                            <form>
+                                    <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" class="form-control" style="background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1"required></textarea>
+                                    <br>
+                                   
+                                    <input type="hidden" name="currentWall" value="<%=username%>">
+                                    <input type="hidden" name="posterID" value="<%=username%>">
+                                    <input type="hidden" name="friend" value="true">
+                                    <button type="button" class="btn btn-lg btn-primary btn-block" onclick="makeNewPost()">Post</button>
                             </form>
                                
                            </div>
@@ -322,7 +364,7 @@
                 <% if (post.posterID) { %>
                     //someone posted on someone else's wall
                     content += "<div class=\"ml-2\">" +
-                                "<div class=\"h5 m-0\"><%=post.posterName%> posted on <%=post.userName%>'s wall </div>" +
+                                "<div class=\"h5 m-0\" style=\"color:#E1E1E1\"><%=post.posterName%> posted on <%=post.userName%>'s wall </div>" +
 							"</div>";
                 <% } else { %>
                     //anything involving just you, i.e changing interest, posted on your own wall, etc.
@@ -397,87 +439,171 @@
     	//alert("You made a new post. TODO (Di): Display the new post on the home page.");
         // get the user's inputted fields
         var postContent = $('textarea[name="content"]').val();
-        console.log("post Content:" + postContent);
+        //console.log("post Content:" + postContent);
 
-        $.ajax({
-            url: "/postonwall",
-            type: "POST",
-            data:
-                {   
-                    content: postContent
-                },
-            success: function(data) {
-                // TODO: SHOW THE NEW POST ON THE USER'S HOME PAGE. THESE ARE THE FIELDS OF DATA
-                // Example: Do data.username, data.postID, etc.
-                
-                /* username: poster, 
-					postID: id, 
-					content: content, 
-					timestamp: timestamp, 
-					hashtags: hashtags
-                */
+        <% if (user == username) { %>
+            console.log("on your own wall lol");
+            $.ajax({
+                url: "/postonwall",
+                type: "POST",
+                data:
+                    {   
+                        content: postContent
+                    },
+                success: function(data) {
+                    // TODO: SHOW THE NEW POST ON THE USER'S HOME PAGE. THESE ARE THE FIELDS OF DATA
+                    // Example: Do data.username, data.postID, etc.
+                    
+                    /* username: poster, 
+                        postID: id, 
+                        content: content, 
+                        timestamp: timestamp, 
+                        hashtags: hashtags
+                    */
 
-                console.log("userid GOT: " + data.userName);
-                console.log("postID GOT: " + data.postID);
-                console.log("content GOT: " + data.content);
-                console.log("timestamp GOT: " + data.timestamp);
-                var container = document.getElementById("user-posts");
+                    console.log("userid GOT: " + data.userName);
+                    console.log("postID GOT: " + data.postID);
+                    console.log("content GOT: " + data.content);
+                    console.log("timestamp GOT: " + data.timestamp);
+                    var container = document.getElementById("user-posts");
 
-                var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
-                "<div class=\"card-header\">" +
-                    "<div class=\"d-flex justify-content-between align-items-center\">" +
+                    var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
+                    "<div class=\"card-header\">" +
                         "<div class=\"d-flex justify-content-between align-items-center\">" +
-                            "<div class=\"mr-2\">" +
-                                "<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
-                            "</div>";
-                content += "<div class=\"ml-2\">" +
-                                "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + data.userName+ "</div>" +
-                            "</div>";
-                content +=      "</div>" +
+                            "<div class=\"d-flex justify-content-between align-items-center\">" +
+                                "<div class=\"mr-2\">" +
+                                    "<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
+                                "</div>";
+                    content += "<div class=\"ml-2\">" +
+                                    "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + data.userName+ "</div>" +
+                                "</div>";
+                    content +=      "</div>" +
+                                "</div>" +
                             "</div>" +
-                        "</div>" +
-                        "<div class=\"card-body\">" +
-                            "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i>" + data.timestamp + "</div>" +
-                            "<a class=\"card-link\" href=\"#\">" +
-                                "<h5 class=\"card-title\">" + data.postID + "</h5>" +
-                            "</a>" +
-                            "<p class=\"card-text\" style=\"color:#E1E1E1\">" + data.content + "</p>" +
-                        "</div>" +
-                        "<div class=\"card-footer\">" + 
-                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
-                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
-                            "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
-                        "</div>" +
-                        "<div class=\"card-body\">" +
-                            "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
-                                "Comments" +
+                            "<div class=\"card-body\">" +
+                                "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i>" + data.timestamp + "</div>" +
+                                "<a class=\"card-link\" href=\"#\">" +
+                                    "<h5 class=\"card-title\">" + data.postID + "</h5>" +
+                                "</a>" +
+                                "<p class=\"card-text\" style=\"color:#E1E1E1\">" + data.content + "</p>" +
                             "</div>" +
-                            "<form action=\"/commentonpost\" method=\"post\">" +
-                                "<div class=\"form-group\">" +
-                                    "<label class=\"sr-only\" for=\"message\">post</label>" +
-                                    "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
-                                    "<br>" +
-                                    "<input type=\"hidden\" name=\"postID\" value=\"" + data.postID + "\">" +
-                                    "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
-                                " </div>" +
-                            "</form>" +
-                        " </div>" +
-                    "</div> ";
-                //postsOnClient.push(data);
-                postIDsOnClient.push(data.postID);
-                IDsToPostsMap.set(data.postID, data);
-                console.log("post added to list: ");
-                console.log(data);
-                //push comment list
+                            "<div class=\"card-footer\">" + 
+                                "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
+                                "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
+                                "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                            "</div>" +
+                            "<div class=\"card-body\">" +
+                                "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
+                                    "Comments" +
+                                "</div>" +
+                                "<form action=\"/commentonpost\" method=\"post\">" +
+                                    "<div class=\"form-group\">" +
+                                        "<label class=\"sr-only\" for=\"message\">post</label>" +
+                                        "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                        "<br>" +
+                                        "<input type=\"hidden\" name=\"postID\" value=\"" + data.postID + "\">" +
+                                        "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
+                                    " </div>" +
+                                "</form>" +
+                            " </div>" +
+                        "</div> ";
+                    //postsOnClient.push(data);
+                    postIDsOnClient.push(data.postID);
+                    IDsToPostsMap.set(data.postID, data);
+                    console.log("post added to list: ");
+                    console.log(data);
+                    //push comment list
 
-                //ADDS THE NEWEST POST AT THE BEGINNING OF ALL P OSTS.
-                container.innerHTML = (content + container.innerHTML);
+                    //ADDS THE NEWEST POST AT THE BEGINNING OF ALL P OSTS.
+                    container.innerHTML = (content + container.innerHTML);
 
-                // add the new post to the list of posts on the client side
-                //postsOnClient.push(theNewPost);
-                // TODO: var theNewPost -> THIS MUST BE IN THE SAME FORM AS THE POSTS THAT RETURN FROM THE ARRAY OF POSTS SENT FROM THE DATABASE
-            }
-        })
+                    // add the new post to the list of posts on the client side
+                    //postsOnClient.push(theNewPost);
+                    // TODO: var theNewPost -> THIS MUST BE IN THE SAME FORM AS THE POSTS THAT RETURN FROM THE ARRAY OF POSTS SENT FROM THE DATABASE
+                }
+            })
+        <%} else { %>
+            console.log("on someone else's wall lol");
+            $.ajax({
+                url: "/postonwall?wallToVisit=<%=user%>",
+                type: "POST",
+                data:
+                    {   
+                        content: postContent
+                    },
+                success: function(data) {
+                    // TODO: SHOW THE NEW POST ON THE USER'S HOME PAGE. THESE ARE THE FIELDS OF DATA
+                    // Example: Do data.username, data.postID, etc.
+                    
+                    /* username: poster, 
+                        postID: id, 
+                        content: content, 
+                        timestamp: timestamp, 
+                        hashtags: hashtags
+                    */
+
+                    console.log("userid GOT: " + data.userName);
+                    console.log("postID GOT: " + data.postID);
+                    console.log("content GOT: " + data.content);
+                    console.log("timestamp GOT: " + data.timestamp);
+                    var container = document.getElementById("user-posts");
+
+                    var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
+                    "<div class=\"card-header\">" +
+                        "<div class=\"d-flex justify-content-between align-items-center\">" +
+                            "<div class=\"d-flex justify-content-between align-items-center\">" +
+                                "<div class=\"mr-2\">" +
+                                    "<img class=\"rounded-circle\" width=\"45\" src=\"https://tastyethnics.com/wp-content/uploads/bb-plugin/cache/default-profile-square.png\">" +
+                                "</div>";
+                    content += "<div class=\"ml-2\">" +
+                                    "<div class=\"h5 m-0\" style=\"color:#E1E1E1\">" + data.userName + " posted on " + data.wallsUser + "'s Wall" + "</div>" +
+                                "</div>";
+                    content +=      "</div>" +
+                                "</div>" +
+                            "</div>" +
+                            "<div class=\"card-body\">" +
+                                "<div class=\"text-muted h7 mb-2\"> <i class=\"fa fa-clock-o\"></i>" + data.timestamp + "</div>" +
+                                "<a class=\"card-link\" href=\"#\">" +
+                                    "<h5 class=\"card-title\">" + data.postID + "</h5>" +
+                                "</a>" +
+                                "<p class=\"card-text\" style=\"color:#E1E1E1\">" + data.content + "</p>" +
+                            "</div>" +
+                            "<div class=\"card-footer\">" + 
+                                "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-gittip\"></i> Like</a>" +
+                                "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-comment\"></i> Comment</a>" + 
+                                "<a href=\"#\" class=\"card-link\"><i class=\"fa fa-mail-forward\"></i> Share</a>" +
+                            "</div>" +
+                            "<div class=\"card-body\">" +
+                                "<div class=\"card-subtitle\" style=\"color:#E1E1E1\">" +
+                                    "Comments" +
+                                "</div>" +
+                                "<form action=\"/commentonpost\" method=\"post\">" +
+                                    "<div class=\"form-group\">" +
+                                        "<label class=\"sr-only\" for=\"message\">post</label>" +
+                                        "<textarea class=\"form-control\" style=\"height:70px;background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1\" name=\"commentContent\" rows=\"3\" placeholder=\"Leave a comment, <%=username%>!\" required></textarea>" +
+                                        "<br>" +
+                                        "<input type=\"hidden\" name=\"postID\" value=\"" + data.postID + "\">" +
+                                        "<input type=\"submit\" value=\"Comment\" class=\"btn btn-lg btn-primary\">" +
+                                    " </div>" +
+                                "</form>" +
+                            " </div>" +
+                        "</div> ";
+                    //postsOnClient.push(data);
+                    postIDsOnClient.push(data.postID);
+                    IDsToPostsMap.set(data.postID, data);
+                    console.log("post added to list: ");
+                    console.log(data);
+                    //push comment list
+
+                    //ADDS THE NEWEST POST AT THE BEGINNING OF ALL P OSTS.
+                    container.innerHTML = (content + container.innerHTML);
+
+                    // add the new post to the list of posts on the client side
+                    //postsOnClient.push(theNewPost);
+                    // TODO: var theNewPost -> THIS MUST BE IN THE SAME FORM AS THE POSTS THAT RETURN FROM THE ARRAY OF POSTS SENT FROM THE DATABASE
+                }
+            })
+        <%} %> 
     }
 
     // automatic refresh every 5 seconds to update home page
