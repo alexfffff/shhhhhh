@@ -51,6 +51,15 @@
 		</form>
 	</nav>
 	
+	<!-- Button for on-demand AJAX call -->
+	<div align="right">
+		<div class="pagination">
+			<button type="button" class="btn btn-lg btn-primary btn-block" onclick="onDemandRefresh()">
+				Update News Feed
+			</button>
+		</div>
+	</div>
+	
 	<font color="white"><font size="20"><center>Recommended News</center></font></font>
 	
 	<% if (articles.length == 0) { %>
@@ -123,6 +132,77 @@
 		// set clock to refresh every 1 hour (1 hour = 3600000 ms)
 		$("#clock").html((new Date()).toString());
 		setTimeout(refreshTime, 3600000);
+		// make AJAX call to get the news articles and compare the data from the server to the data on the client
+		$.ajax({
+				url: "/newsfeedupdate",
+				type: "GET",
+				success: function(data) {
+					// list containing the differences between the server and client
+					var newArticles = [];
+					
+					if (data.length == 0) {
+						alert("No new articles to display.");
+					}
+						
+					// iterate through data (articles) sent from server
+					data.forEach(a => {
+						// put the article in the list if it's from the server but not on the client
+						if (!articleNamesOnClient.includes(htmlDecode(a.article))) {
+							newArticles.push(a);
+							// update the client-side list to contain new articles from the server
+							articleNamesOnClient.push(htmlDecode(a.article));
+						}
+					});
+					
+					// get the container for all of the articles displayed
+					var container = document.getElementById("allArticles");
+						
+					// iterate over all of the new articles
+					newArticles.forEach(newArticle => {
+						// display the new articles that the server has sent to the client
+						var content = "<div class=\"blog-card\"><div class=\"meta\"><div class=\"photo\" style=\"background-image: ";
+					    content += "url(https://www.nyacknewsandviews.com/wp-content/uploads/2016/03/trump-600x450.jpg)\"></div>";
+						content += "<ul class=\"details\"><li class=\"author\">";
+			        	if (newArticle.authors) {
+							content += newArticle.authors;
+						} else {
+							content += "No authors found.";
+						}
+						content += "</li>";
+			        	content += "<li class=\"date\">";
+			        	content += newArticle.date;
+			        	content += "</li>";
+			        	content += "<li class=\"tags\"><ul><li>";
+			        	content += newArticle.category;
+			        	content += "</li></ul></li></ul></div>";
+			        	content += "<div class=\"description\"><h1>";
+			        	content += htmlDecode(newArticle.article);
+			        	content += "</h1><p>";
+			        	content += newArticle.description;
+			        	content += "</p><p class=\"read-more\"><a href=\"";
+			        	content += newArticle.link;
+			        	content += "\">Read More</a></p></div></div>";
+			        	
+			        	// display the like button below each article
+						content += "<form action=\"/likearticle\" method=\"post\" class=\"blog-card\">";
+						content += "<input id=\"articleToLike\" name=\"articleToLike\" type=\"hidden\" align=\"center\" value=\"";
+						content += htmlDecode(newArticle.article);
+						content += "\"><button type=\"submit\" class=\"btn btn-primary btn-block\">Like</button></form>";
+						
+						// append the content to the beginning of the container's inner HTML
+						container.innerHTML = (content + container.innerHTML);
+					});
+				},
+				error: function(err) {
+					// handle errors with AJAX calling database
+					alert("Error with AJAX automatic refresh. Could not load new articles.");
+					alert(err);
+				}
+			})
+	};
+	
+	// on-demand AJAX call, simulates the news feed hourly update
+	var onDemandRefresh = function() {
 		// make AJAX call to get the news articles and compare the data from the server to the data on the client
 		$.ajax({
 				url: "/newsfeedupdate",
