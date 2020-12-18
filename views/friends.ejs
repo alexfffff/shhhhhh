@@ -48,12 +48,29 @@
 			</div>
 		</form>
 	</nav>
-	<font color="white">TODO (Di): DISPLAY THE FRIENDS HERE. Make it look better. Username (friend.friendUsername) is used for URLs/links to their walls, full name (friend.fullname) is used for displaying in HTML.</font><br>
+	<% if (friendsOf) { %>
+	<font color="white"><font size="20"><%=friendsOf%>'s Friend List</font></font><br>
+	<% } %>
 	<% if (typeof friends !== 'undefined' && friends.length > 0) { %>
-    	<% friends.forEach(friend => { %>
-		<a href="/wall?wallToVisit=<%=friend.friendUsername%>"<font color="white"><%=friend.fullname%></font></a>
-		<br>
-		<% }); %>
+		<% if (userToLoginStatus) { %>
+	    	<% friends.forEach(friend => { %>
+	    	<% var loggedIn = userToLoginStatus.get(friend.friendUsername); %>
+			<a href="/wall?wallToVisit=<%=friend.friendUsername%>"<font color="white"><%=friend.fullname%></font></a>
+			<font color="white">
+			<% if (loggedIn) { %>
+				is currently <font color="green">online.</font>
+			<% } else { %>
+				is currently <font color="red">offline.</font>
+			<% } %>
+			</font>
+			<br>
+			<% }); %>
+		<% } else { %>
+			<% friends.forEach(friend => { %>
+			<a href="/wall?wallToVisit=<%=friend.friendUsername%>"<font color="white"><%=friend.fullname%></font></a>
+			<br>
+			<% }); %>
+		<% } %>
     <% } else { %>
     	<font color="white">No friends found.</font>
 	<% } %>

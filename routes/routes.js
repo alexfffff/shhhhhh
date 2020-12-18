@@ -759,14 +759,68 @@ var showFriends = function(req, res) {
 			// redirect to the home page if the URL has missing parameters
 			res.redirect('/home');
 		}
+		
 		// get the user's current list of friends
 		db.getFriends(req.query.user, function(err, data) {
 			if (err) {
 				// error with querying database
 				res.render('error.ejs');
-			} else {				
-				// render the friends page, where a user can see someone's friends
-				res.render('friends.ejs', {friends: data, friendsOf: req.query.user, username: req.session.username});
+			} else {
+				var userFriends = data;
+				
+				// check if user is looking at their own friends list (can see login status of friends)
+				if (req.query.user === req.session.username) {
+					// get the usernames of all of their friends
+					var allFriendUsernames = [];
+					for (let f of userFriends) {
+						allFriendUsernames.push(f.friendUsername);
+					}
+					
+					// get a map from user to their current login status
+					db.getLoginStatuses(allFriendUsernames, function(err1, data1) {
+						if (err1) {
+							// error with querying database
+							res.render('error.ejs');
+						} else {
+							var loginStatusMap = data1;
+							
+							// get the user's full name
+							db.getName(req.query.user, function(err3, data3) {
+								if (err3) {
+									// error with querying database
+									res.render('error.ejs');
+								} else {
+									var fullname = data3;
+									
+									// render a user's own friends page, where they can see their friends and login statuses
+									res.render('friends.ejs', {
+										friends: userFriends, 
+										friendsOf: fullname, 
+										username: req.session.username, 
+										userToLoginStatus: loginStatusMap
+									});
+								}
+							});
+						}
+					});
+				} else {
+					// get the user's full name
+					db.getName(req.query.user, function(err2, data2) {
+						if (err2) {
+							// error with querying database
+							res.render('error.ejs');
+						} else {
+							var fullname = data2;
+							
+							// render the user's friends page, where a user can see someone else's friends
+							res.render('friends.ejs', {
+								friends: userFriends, 
+								friendsOf: fullname, 
+								username: req.session.username
+							});
+						}
+					});
+				}
 			}
 		});
 	}
@@ -932,8 +986,42 @@ var searchName = function(req, res) {
 			// handle error with querying database
 			res.render('error.ejs');
 		} else {
+			var results = [];
+			for (result of data) {
+				if (result.Count > 0) {
+					results.push(result.Items[0]);
+				}
+			}
+			
 			// send the search results
-			res.send(data);
+			res.send(results);
+		}
+	});
+}
+
+var searchNameSubmit = function(req, res) {
+	// get the typed characters that the user submitted from the search bar
+	var nameToQuery = req.body.nameToSearch;
+	
+	// get the full name search results from the database	
+	db.searchName(nameToQuery, function(err, data) {
+		if (err) {
+			// handle error with querying database
+			res.render('error.ejs');
+		} else {
+			var results = [];
+			for (result of data) {
+				if (result.Count > 0) {
+					results.push(result.Items[0]);
+				}
+			}
+			
+			// render the search results page 
+			res.render('usersresults.ejs', {
+				username: req.session.username, 
+				keyword: nameToQuery, 
+				searchResults: results
+			});
 		}
 	});
 }
@@ -996,6 +1084,7 @@ var routes = {
 	news_feed_update: newsFeedUpdate,
 	
 	search_user: searchName,
+	search_user_submit: searchNameSubmit,
 
 	log_out: logout
 };
