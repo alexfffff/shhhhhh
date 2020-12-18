@@ -90,7 +90,9 @@ io.on('connection', function (socket) {
 	});
 
 
-	
+    socket.on('leave_chatRoom', function(roomID) {
+        leaveRoom(socket, roomID);
+    });
 	
 	
 	socket.on('disconnect', function() { 
@@ -125,6 +127,15 @@ var disconnect_user = function(socket) {
     delete users[loggingOutUser];
     //notify_friends_logout(logout_username);
     io.emit('message', 'user left');
+}
+
+
+
+var leaveRoom = function(socket, roomID) {
+    delete chats[roomID];
+    socket.leave(roomID);
+    //notify_friends_logout(logout_username);
+    io.emit('left_room', roomID);
 }
 
 
@@ -207,7 +218,7 @@ var joinDM = function(socket, data) {
     socket.join(data.chatID);
     var inviterID = sockets[socket.id];
     var chatID = data.chatID;
-    var chatName;
+    var chatName = data.chatName;
     // add the dm channel to persistent storage
     //IF THIS IS DM, CHECK IF YALL TALKED BEFORE
     if ('member' in data) {
@@ -228,6 +239,7 @@ var joinDM = function(socket, data) {
             chatName: data.chatName,
             members: [inviterID, data.member]
         };
+        console.log(chats[chatID]);
         chat_db.startChat(chatID, data.chatName, [inviterID, data.member], function(err, data) {
             if (err) {
                 console.log('error adding to db, ' + err);
@@ -237,10 +249,10 @@ var joinDM = function(socket, data) {
                         console.log('get message dynamo error, ' + err);
                     } else if (data.Count === 0) {
                     	console.log("NO OLD MSGS");
-                        socket.emit('get_messages', {chatID: chatID, chatName: data.chatName, messages:[]});
+                        socket.emit('get_messages', {chatID: chatID, chatName: chatName, messages:[]});
                     } else {
                     	console.log("HAS OLD MSGS");
-                        socket.emit('get_messages', {chatID: chatID, chatName: data.chatName, messages:data});
+                        socket.emit('get_messages', {chatID: chatID, chatName: chatName, messages:data});
                     }
                 });
             }

@@ -84,7 +84,8 @@
                         <div class="col-xl-8 col-lg-8 col-md-8 col-sm-9 col-9">
                             <div class="selected-user">
                               <span>
-                              	<div id="currChatName" class="d-flex justify-content-center">Start Chatting!</div>
+                                <div id="currChatName" class="d-flex justify-content-center">Start Chatting!</div>
+                                <button id="leaveChat" class="btn btn-light" onclick="leaveChat()">Leave Chat</button>
                               	<div class="dropdown">
                                   <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="addActiveFriends">
@@ -151,6 +152,14 @@
 		  currentRoomID = data.id;
 		  console.log(data.message);
 		  socket.emit('i am client', { message: 'hello!', id: data.id, username: username, userFullname: userFullname});
+    });
+
+
+    socket.on('left_room', function (data) { 
+      currRoomMembers = [];
+      currentRoomID = '';
+      currentRoomName = '';
+			console.log("USER LEFT: " + data);
     });
     
     
@@ -244,6 +253,7 @@
       }
       currentRoomID = newChatID;
       currentRoomName = newChatName;
+      console.log(currentRoomName);
       socket.emit('join_DM', {chatID: newChatID, chatName: newChatName, member: userID});
     }
 
@@ -283,7 +293,9 @@
 
 
     socket.on('get_messages', function(msg) {
+      console.log(msg);
       currentRoomName = msg.chatName;
+      console.log(currentRoomName);
     	change_chat_name(currentRoomName);
       $('#message-container').empty();
       if (msg.messages.length === 0) {
@@ -328,6 +340,7 @@
     }
 
     function change_chat_name(chatroomName) {
+      console.log(chatroomName);
       $('#currChatName').text(chatroomName);
     }
     
@@ -344,6 +357,11 @@
     
     function get_invite_list_element(invite) {
       return '<button id="inv_' + invite.inviterID + ":" + invite.chatID + '" class="btn btn-light" onclick="joinThisChat(this.id)">' + invite.inviterName + '</button>';
+    }
+
+    function leaveChat() {
+      $('#message-container').empty();
+      $('#currChatName').text("Start Chatting!");
     }
     
     
