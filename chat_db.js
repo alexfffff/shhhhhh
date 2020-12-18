@@ -383,7 +383,7 @@ var db_get_online_friends = function(username, callback) {
 * @param  inviterName  fullname of person who sent invitation
 * @return Does not return anything
 */
-var db_invite_user = function(chatID, invitedUserID, inviterID, inviterName, callback) {
+var db_invite_user = function(chatID, invitedUserID, inviterID, inviterName, isGroup, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var arrayOfPromises = [];
 	invitedUserID.forEach(invitedUser => {
@@ -394,7 +394,8 @@ var db_invite_user = function(chatID, invitedUserID, inviterID, inviterName, cal
 					"username": invitedUser,
 					"chatID": chatID,
 					"inviterID": inviterID,
-					"inviterName": inviterName
+					"inviterName": inviterName,
+					"isGroup": isGroup
 				}
 			};
 			arrayOfPromises.push(docClient.put(params).promise());

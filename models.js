@@ -210,7 +210,8 @@ var initTables = function(callback) {
         ],
         AttributeDefinitions: [       
             { AttributeName: "article", AttributeType: "S" },
-            { AttributeName: "date", AttributeType: "S" }
+            { AttributeName: "date", AttributeType: "S" },
+            { AttributeName: "category", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
             ReadCapacityUnits: 30,
@@ -228,6 +229,19 @@ var initTables = function(callback) {
                 },
                 KeySchema: [
                     { AttributeName: 'date', KeyType: 'HASH' }
+                ]
+            },
+            { 
+                IndexName: 'category-index', 
+                Projection: {
+                    ProjectionType: 'KEYS_ONLY'
+                },
+                ProvisionedThroughput: {
+                    ReadCapacityUnits: 5,
+                    WriteCapacityUnits: 5
+                },
+                KeySchema: [
+                    { AttributeName: 'category', KeyType: 'HASH' }
                 ]
             }
         ]

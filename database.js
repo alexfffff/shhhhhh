@@ -164,7 +164,7 @@ var create_account = function(username, password, name, email, affiliation, birt
 	  							}
 	  							Promise.all(arrayOfPromises).then(
 			  						successResult => {
-										  var lowerfullname = name.toLowerCase();
+										var lowerfullname = name.toLowerCase();
 										var nameParam = {
 											Item: {
 												"fullname": lowerfullname,
@@ -195,7 +195,45 @@ var create_account = function(username, password, name, email, affiliation, birt
 
 												Promise.all(arrayOfPrefixPromises).then(
 													successResult => {
-														callback(null, username);
+														
+														var newsParams = {
+															TableName: "news",
+															 IndexName: "category-index",
+															 FilterExpression: "#d = :date",
+															 KeyConditionExpression: "#c = :category",
+															 ExpressionAttributeNames:{
+																"#c": "category",
+																"#d": "date"
+															},
+															 ExpressionAttributeValues: {
+																 ":category": interests[0],
+																 ":date": "2020-12-17"
+															}
+														};
+														docClient.query(newsParams).promise().then(
+															successResult => {
+																console.log(successResult);
+																var params = {
+																	TableName : "reactions",
+																	Item:{
+																		"username": username,
+																		"article": successResult.Items[0].article
+																	}
+																};
+																docClient.put(params).promise().then(
+																	successResult => {
+																		callback(null, successResult);
+																	}, errResult => {
+																		callback(errResult, null);
+																	});
+
+															},
+															errResult => {
+																console.log(errResult);
+																callback(errResult, null);
+															}
+														);
+
 													}, errResult => {
 														console.log("PUT IN PREFIXES");
 														console.log(errResult);
