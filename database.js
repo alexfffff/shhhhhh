@@ -620,7 +620,7 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 											try  {
 												var recParams = {
 													TableName: "recommend",
-													KeyConditionExpression: "username = :username",
+													KeyConditionExpression: "#un = :username",
 													FilterExpression: "#c = :category",
 													ExpressionAttributeNames:{
 														"#un": "username",
@@ -633,8 +633,9 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 												};
 												docClient.query(recParams).promise().then(
 													successResultRecs => {
+														console.log(successResultRecs);
 														var arrayOfDelPromises = [];
-														successResultRecs.forEach(rec => {
+														successResultRecs.Items.forEach(rec => {
 															var delParams = {
 																TableName : "recommend",
 																Key: {
@@ -658,9 +659,6 @@ var db_remove_interest = function(username, interest, timestamp, postID, callbac
 														callback(errResult, null);
 													}
 												);
-
-												console.log("Added item");
-												callback(null, successResult2);
 										
 											} catch (err) {
 												console.log("Unable to add item.");
@@ -2158,31 +2156,54 @@ var get_article_recs = function(username, callback) {
 * @param  articleTitle generated postID
 * @param  username  username of current user
 * @return 
+
+	
 */
 var db_like_article = function(articleTitle, username, callback) {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var params = {
-		TableName : "reactions",
-		Item:{
-			"article": articleTitle,
-			"username": username
+		TableName : "news",
+		KeyConditionExpression: "#a = :article",
+		ExpressionAttributeNames:{
+			"#a": "article"
+		},
+		ExpressionAttributeValues: {
+			":article": articleTitle
 		}
 	};
+	docClient.query(params).promise().then(
+		successResult => {
+			var params = {
+				TableName : "reactions",
+				Item:{
+					"article": articleTitle,
+					"username": username,
+					"date": successResult.Items[0].date
+				}
+			}
+			docClient.put(params).promise().then(
+				successResult => {
+			try  {
+				console.log("Added item");
+				callback(null, successResult);
+				
+			} catch (err) {
+				console.log("Unable to add item.");
+				callback(err, null);
+			}
+		},
+		errResult => {
+			callback(errResult, null);
+		});
 
-	docClient.put(params).promise().then(
-			successResult => {
-		try  {
-			console.log("Added item");
-			callback(null, successResult);
 			
-		} catch (err) {
-			console.log("Unable to add item.");
-			callback(err, null);
+		},
+		errResult => {
+			console.log(errResult);
+			callback(errResult, null);
 		}
-	},
-	errResult => {
-		callback(errResult, null);
-	});
+	);
+	
 };
 
 /**
