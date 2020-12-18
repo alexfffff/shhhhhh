@@ -60,7 +60,6 @@ var checkLogin = function(req, res) {
 				res.redirect('/?message=' + 'Username_or_password_invalid._Please_try_again.');
 			} else {
 				// handle error with database
-				console.log("error with checklogin");
 				res.render('error.ejs');
 			}
 		} else {
@@ -437,7 +436,7 @@ var getWall = function(req, res) {
 			wallToVisit = req.session.username;
 		}
 		
-		// use URL /wall?wallToVisit=
+		// use the URL /wall?wallToVisit=
 		console.log("Looking at wall of: " + wallToVisit);
 
 		// check if user clicked on their own page
@@ -458,9 +457,6 @@ var getWall = function(req, res) {
 						allPostIDs.push(p.postID);
 						postsMap.set(p.postID, p);
 					}
-
-					console.log("postsMap looks like:");
-					console.log(postsMap);
 					
 					// get all of the comments for each post
 					db.getPostComments(allPostIDs, function(err1b, data1b) {
@@ -662,10 +658,6 @@ var postToWall = function(req, res) {
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on user's own wall, sends the post information
-				console.log("Successfully made post on my own wall");
-
-				console.log("579: " + content);
-				
 				if (hashtags.length > 0) {
 					res.send({
 						userName: posterName, 
@@ -697,7 +689,6 @@ var postToWall = function(req, res) {
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on someone else's wall, sends the post information
-				console.log("Successfully made post on someone else's wall");
 				res.send({
 					wallsUser: userID, 
 					posterID: posterID, 
@@ -733,9 +724,6 @@ var deleteFriend = function(req, res) {
 	// get the user sending the friend request and the user receiving the friend request (respectively)
 	var user = req.session.username;
 	var userToUnfriend = req.query.wallToVisit;
-
-	console.log("user: " + user);
-	console.log("userToUnfriend: " + userToUnfriend);
 
 	db.unfriend(user, userToUnfriend, function(err, data) {
 		if (err) {
@@ -853,12 +841,6 @@ var getHomePagePosts = function(req, res) {
 				} else {
 					var allComments = data2;
 					
-					console.log("Sending the following posts (from the last 5 seconds) to home.ejs...");
-					console.log(allPosts);
-					console.log("Sending the following comments (from the last 5 seconds) to home.ejs...");
-					console.log(allComments);
-					console.log("Everything above successfully sent to home.ejs");
-					
 					// send the data (posts and comments)
 					res.send({
 						posts: allPosts, 
@@ -878,16 +860,13 @@ var commentOnPost = function(req, res) {
 	
 	// get the postID, indicates which post is being commented on
 	var postID = req.body.postID;
-	console.log("postID: " + postID);
 	
 	// commentID is postID + commenter's username + timestamp of comment
 	var commentID = postID.concat(user).concat(timestamp);
-	console.log("commentID: " + commentID);
 
 	db.addComment(commentID, user, content, postID, timestamp, function(err, data) {
 		if (err) {
 			// error with querying database
-			console.log("addComment error with database");
 			res.render('error.ejs');
 		} else {
 			// successfully added a new comment, send the comment information
@@ -915,9 +894,6 @@ var getNews = function(req, res) {
 				res.render('error.ejs');
 			} else {
 				var myArticles = data;
-				
-				console.log("My recommended articles are");
-				console.log(myArticles);
 				
 				// render the news recommendations page for this user based on their interests
 				res.render('news.ejs', {username: req.session.username, articles: myArticles});
