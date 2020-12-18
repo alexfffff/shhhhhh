@@ -11,7 +11,7 @@
 -->
 
 <head>
-    <title>Pennbook</title>
+    <title>PennBook</title>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<!------ Include the above in your HEAD tag ---------->
 	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
@@ -54,17 +54,23 @@
 			Log Out
 		</a>
     </div>
-	<!--Search Bar-->
-	<form class="form-inline">
-		<div class="input-group">
-			<input type="text" class="form-control" placeholder="Search" aria-label="Recipient's username" aria-describedby="button-addon2" style="color:#E1E1E1;background-color:#3a3b3c;border-color:#242526">
-			<div class="input-group-append">
-				<button class="btn btn-outline-primary" type="button" id="button-addon2" style="color:#99DFFF">
-					<i class="fa fa-search"></i>
-				</button>
-			</div>
-		</div>
-	</form>
+    <!--Search Bar-->
+    <div>
+        <form class="form-inline" action="/searchforuser" method="post">
+            <div class="input-group">
+                <input type="text"  autocomplete="off" id="nameToSearch" name="nameToSearch" class="form-control" style="color:#E1E1E1;background-color:#3a3b3c;border-color:#242526">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-primary" type="submit" id="button-addon2" style="color:#99DFFF">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+        <div class="search-list">
+            <ul id="searchResult"></ul>
+            <div class="clear"></div>
+        </div>
+    </div>
  </nav>
 
 
@@ -77,7 +83,7 @@
                     <div class="card-body">
                         <!--Links to the wall-->
                         <a href="/wall?wallToVisit=<%=username%>" class="h5">@<%=username%></a>
-                        <div class="h7 text-muted">Fullname : <%=fullname%></div>
+                        <div class="h7 text-muted" style="font-size:20px">Fullname : <%=fullname%></div>
                         <div class="h7" style="color:#535353"> BIO GOES HERE</div>
                     </div>
                 </div>
@@ -103,7 +109,6 @@
                             <form>
                                     <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind, <%=username%>?" class="form-control" style="background-color:#3a3b3c;border-color:#3a3b3c;color:#E1E1E1"required></textarea>
                                     <br>
-                                   
                                     <input type="hidden" name="currentWall" value="<%=username%>">
                                     <input type="hidden" name="posterID" value="<%=username%>">
                                     <input type="hidden" name="friend" value="false">
@@ -265,28 +270,7 @@
             </div>   
 
 			<!--Right Column-->
-            <div class="col-md-3">
-                <div class="card gedf-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Card title</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
-                            card's content.</p>
-                        <a href="#" class="card-link">Card link</a>
-                        <a href="#" class="card-link">Another link</a>
-                    </div>
-                </div>
-                <div class="card gedf-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Card title</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
-                            card's content.</p>
-                        <a href="#" class="card-link">Card link</a>
-                        <a href="#" class="card-link">Another link</a>
-                    </div>
-                </div>
-            </div>
+            
         </div>
     </div>
 </body>
@@ -309,27 +293,25 @@
 
         <% for (let[postID, post] of posts) {%>
             IDsToCommentsMap.set("<%=postID%>", []);
-            console.log("WHATEVER IS HERE IN THE MAP:");
-            console.log(IDsToCommentsMap.get("<%=postID%>"));
         <% } %>
         
         <% for (var i = 0; i < comments.length; i++) { %>
-            console.log("kill me now");
+            //console.log("kill me now");
             //console.log("commentList: ");
             //console.log(commentList);
             <% for (let j = 0; j < comments[i].length; j++) { %>
             	// @@@@@@@@@@@@@@@@@@@ TODO (DI)
-	            console.log('HERE ARE ALL OF THE FUCKING FIELDS FOR A COMMENT');
-	            console.log("comment content: " + "<%=comments[i][j].comment%>");
-            	console.log("postID: " + "<%=comments[i][j].postID%>");
-            	console.log("username: " + "<%=comments[i][j].username%>");
-            	console.log("commentID: " + "<%=comments[i][j].commentID%>");
-            	console.log("fullname: " + "<%=comments[i][j].fullname%>");
-                console.log("timestamp: " + "<%=comments[i][j].timestamp%>");
+	            //console.log('HERE ARE ALL OF THE FUCKING FIELDS FOR A COMMENT');
+	            //console.log("comment content: " + "<%=comments[i][j].comment%>");
+            	//console.log("postID: " + "<%=comments[i][j].postID%>");
+            	//console.log("username: " + "<%=comments[i][j].username%>");
+            	//console.log("commentID: " + "<%=comments[i][j].commentID%>");
+            	//console.log("fullname: " + "<%=comments[i][j].fullname%>");
+                //console.log("timestamp: " + "<%=comments[i][j].timestamp%>");
 
                 var commentList = IDsToCommentsMap.get("<%=comments[i][j].postID%>");
-                console.log("commentLIst: ");
-                console.log(commentList);
+                //console.log("commentLIst: ");
+                //console.log(commentList);
 
                 var stringDiv = "<p style=\"color:#E1E1E1\">username: <%=comments[i][j].username%></p>" +
                                 "<p style=\"color:#E1E1E1\">commentID: <%=comments[i][j].commentID%></p>" +
@@ -340,9 +322,9 @@
 
         <%for (let [postID, post] of posts) { %>
             var commentList = IDsToCommentsMap.get("<%=postID%>");
-            console.log("rendering posts...");
-            console.log("comentList for post looks like thsi:");
-            console.log(commentList);
+            //console.log("rendering posts...");
+            //console.log("comentList for post looks like thsi:");
+            //console.log(commentList);
             var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
                         "<div class=\"card-header\">" +
                             "<div class=\"d-flex justify-content-between align-items-center\">" +
@@ -408,15 +390,15 @@
             container.innerHTML += content;
         <% } %>
 
-        console.log("postIDsOnClient looks like this:");
-        console.log(postIDsOnClient);
-        console.log("Ids to posts map looks like this:");
-        console.log(IDsToPostsMap);
+        //console.log("postIDsOnClient looks like this:");
+        //console.log(postIDsOnClient);
+        //console.log("Ids to posts map looks like this:");
+        //console.log(IDsToPostsMap);
 
-        for (var i = 0; i < postList.length; i++) {
+        /*for (var i = 0; i < postList.length; i++) {
             console.log("ITER: ");
             console.log(postList[i]);
-        }
+        }*/
 
         
         // TODO: HERE IS WHERE YOU SHOULD WRITE CODE THAT INITIALLY DISPLAYS EVERY POST
@@ -430,7 +412,7 @@
     	//alert("You made a new post. TODO (Di): Display the new post on the home page.");
         // get the user's inputted fields
         var postContent = $('textarea[name="content"]').val();
-        console.log("post Content:" + postContent);
+        //console.log("post Content:" + postContent);
 
         $.ajax({
             url: "/postonwall",
@@ -450,10 +432,10 @@
 					hashtags: hashtags
                 */
 
-                console.log("userid GOT: " + data.userName);
-                console.log("postID GOT: " + data.postID);
-                console.log("content GOT: " + data.content);
-                console.log("timestamp GOT: " + data.timestamp);
+                //console.log("userid GOT: " + data.userName);
+                //console.log("postID GOT: " + data.postID);
+                //console.log("content GOT: " + data.content);
+                //console.log("timestamp GOT: " + data.timestamp);
                 var container = document.getElementById("allposts");
 
                 var content = "<div class=\"card gedf-card\" style=\"background-color:#242526;border-radius:10px\">" +
@@ -499,8 +481,8 @@
                 //postsOnClient.push(data);
                 postIDsOnClient.push(data.postID);
                 IDsToPostsMap.set(data.postID, data);
-                console.log("post added to list: ");
-                console.log(data);
+                //console.log("post added to list: ");
+                //console.log(data);
                 //push comment list
 
                 //ADDS THE NEWEST POST AT THE BEGINNING OF ALL P OSTS.
@@ -516,7 +498,7 @@
     // automatic refresh every 5 seconds to update home page
     var refreshTime = function() {
         // set clock to refresh every 5000 ms
-        console.log("refresh time called");
+        //console.log("refresh time called");
         $("#clock").html((new Date()).toString());
         setTimeout(refreshTime, 5000);
         // make AJAX call to get the home page posts and compare the data from the server to the data on the client
@@ -565,8 +547,8 @@
                         }
                     }
                     
-                    console.log("440:");
-                    console.log(newPosts);
+                    //console.log("440:");
+                    //console.log(newPosts);
                         
                     // TODO: ACTUALLY DISPLAY THE NEW POSTS THAT THE SERVER HAS SENT TO THE CLIENT
 
@@ -644,5 +626,42 @@
     $(document).ready(function() {
         $("#clock").css("color", "white");
         setTimeout(refreshTime, 5000);
+    });
+
+    $(document).ready(function() {
+        $("#nameToSearch").keyup(function() {
+            var targetName = $(this).val();
+            //console.log("target name: " + targetName);
+            if (targetName != "") {
+                $.ajax({
+                    url: '/usersearch',
+                    type: 'GET',
+                    data: {
+                        nameToSearch: targetName
+                    },
+                    /*
+                    error: function(xhr, status, error) {
+                        alert("ERROR WTF");
+                    },*/
+                    success: function(data) {
+                        //alert("HERE'S AN ALERT. DATA IS");
+                        //alert(data);
+                        var len = data.length;
+                        //console.log(data);
+                        $("#searchResult").empty();
+                        var smallerLen = Math.min(len, 5);
+                        for (var i = 0; i < smallerLen; i++) {
+                            $("#searchResult").append("<li><a href=\"/wall?wallToVisit=" + data[i].username + "\">" + 
+                                data[i].fullname + "</a></li>");
+                        }
+
+                        /*$("#searchResult li").bind("click", function() {
+                            alert("CLICKED ON USER");
+                        });*/
+                    }
+
+                });
+            }
+        });
     });
 </script>
