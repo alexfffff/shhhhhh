@@ -545,6 +545,9 @@ app.get('/postswith', routes.get_posts_from_hashtag);
 // SELENE'S CHAT
 app.get('/chat', routes.get_chat);
 
+// AJAX call for getting chat invitations
+app.get('/chatinvites', routes.get_chat_invites);
+
 // logs the user out of their account
 app.get('/logout', routes.log_out);
 

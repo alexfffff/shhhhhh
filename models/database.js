@@ -210,8 +210,10 @@ var create_account = function(username, password, name, email, affiliation, birt
 																 ":date": "2020-12-17"
 															}
 														};
+														console.log(newsParams);
 														docClient.query(newsParams).promise().then(
 															successResult => {
+																console.log("news");
 																console.log(successResult);
 																var params = {
 																	TableName : "reactions",

@@ -1035,6 +1035,19 @@ var getChat = function(req, res) {
 	});
 };
 
+var getChatInvites = function(req, res) {
+	chat_db.getInvites(req.session.username, function(err, data) {
+        if (err) {
+        	console.log('Problem getting invites: ' + err);
+        	res.render('error.ejs');
+        } else {
+        	console.log("data from chat invites is ");
+        	console.log(data);
+        	res.send(data);
+        }
+    });
+}
+
 var logout = function(req, res) {
 	// check if user is logged in
 	if (req.session.username === undefined) {
@@ -1098,6 +1111,7 @@ var routes = {
 	get_posts_from_hashtag: getPostsFromHashtag,
 
 	get_chat: getChat,
+	get_chat_invites: getChatInvites,
 
 	log_out: logout
 };
