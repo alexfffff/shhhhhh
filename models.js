@@ -65,8 +65,8 @@ var initTables = function(callback) {
             { AttributeName: "timestamp", AttributeType: "N" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         },
         GlobalSecondaryIndexes: [
             { 
@@ -75,8 +75,8 @@ var initTables = function(callback) {
                     ProjectionType: 'KEYS_ONLY'
                 },
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1
+                    ReadCapacityUnits: 5,
+                    WriteCapacityUnits: 5
                 },
                 KeySchema: [
                     { AttributeName: 'posterID', KeyType: 'HASH' }
@@ -106,8 +106,8 @@ var initTables = function(callback) {
             { AttributeName: "timestamp", AttributeType: "N" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -131,8 +131,8 @@ var initTables = function(callback) {
             { AttributeName: "timestamp", AttributeType: "N" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         },
         GlobalSecondaryIndexes: [
             { 
@@ -141,8 +141,8 @@ var initTables = function(callback) {
                     ProjectionType: 'KEYS_ONLY'
                 },
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1
+                    ReadCapacityUnits: 5,
+                    WriteCapacityUnits: 5
                 },
                 KeySchema: [
                     { AttributeName: 'postID', KeyType: 'HASH' }, 
@@ -173,8 +173,8 @@ var initTables = function(callback) {
             { AttributeName: "username", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         },
         GlobalSecondaryIndexes: [
             { 
@@ -183,8 +183,8 @@ var initTables = function(callback) {
                     ProjectionType: 'KEYS_ONLY'
                 },
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1
+                    ReadCapacityUnits: 5,
+                    WriteCapacityUnits: 5
                 },
                 KeySchema: [
                     { AttributeName: 'username', KeyType: 'HASH' }
@@ -213,8 +213,8 @@ var initTables = function(callback) {
             { AttributeName: "date", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 30,
+            WriteCapacityUnits: 30
         },
         GlobalSecondaryIndexes: [
             { 
@@ -223,8 +223,8 @@ var initTables = function(callback) {
                     ProjectionType: 'KEYS_ONLY'
                 },
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1
+                    ReadCapacityUnits: 5,
+                    WriteCapacityUnits: 5
                 },
                 KeySchema: [
                     { AttributeName: 'date', KeyType: 'HASH' }
@@ -256,8 +256,8 @@ var initTables = function(callback) {
             { AttributeName: "date", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         },
         GlobalSecondaryIndexes: [
             { 
@@ -266,8 +266,8 @@ var initTables = function(callback) {
                     ProjectionType: 'KEYS_ONLY'
                 },
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1
+                    ReadCapacityUnits: 5,
+                    WriteCapacityUnits: 5
                 },
                 KeySchema: [
                     { AttributeName: 'date', KeyType: 'HASH' }
@@ -297,8 +297,8 @@ var initTables = function(callback) {
             { AttributeName: "article", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -322,8 +322,8 @@ var initTables = function(callback) {
             { AttributeName: "article", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -348,8 +348,8 @@ var initTables = function(callback) {
             { AttributeName: "username", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -372,8 +372,8 @@ var initTables = function(callback) {
             { AttributeName: "chatID", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -397,8 +397,8 @@ var initTables = function(callback) {
             { AttributeName: "username", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -422,8 +422,8 @@ var initTables = function(callback) {
             { AttributeName: "timestamp", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -448,8 +448,8 @@ var initTables = function(callback) {
             { AttributeName: "chatID", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
@@ -474,8 +474,8 @@ var initTables = function(callback) {
             { AttributeName: "fullname", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
         }
     };
 
