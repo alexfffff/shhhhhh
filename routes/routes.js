@@ -660,27 +660,15 @@ var postToWall = function(req, res) {
 				res.render('error.ejs');
 			} else {
 				// successfully made a new post on user's own wall, sends the post information
-				if (hashtags.length > 0) {
-					res.send({
-						userName: posterName, 
-						content: content, 
-						friend: false,
-						postID: id, 
-						userID: posterID,
-						timestamp: timestamp, 
-						hashtags: hashtags
-					});
-				} else {
-					res.send({
-						userName: posterName, 
-						content: content, 
-						friend: false,
-						postID: id, 
-						userID: posterID,
-						timestamp: timestamp, 
-					});
-				}
-				
+				res.send({
+					userName: posterName, 
+					content: content, 
+					friend: false,
+					postID: id, 
+					userID: posterID,
+					timestamp: timestamp, 
+					hashtags: hashtags
+				});
 			}
 		});
 	} else {
@@ -930,7 +918,7 @@ var likeArticle = function(req, res) {
 	
 	console.log("User: " + user + " just liked the article: " + article);
 	
-	db.likeArticle(user, article, function(err, data) {
+	db.likeArticle(article, user, function(err, data) {
 		if (err) {
 			// handle error with querying database
 			res.render('error.ejs');
