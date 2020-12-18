@@ -1004,6 +1004,38 @@ var searchNameSubmit = function(req, res) {
 	});
 }
 
+var getPostsFromHashtag = function(req, res) {
+	// check if the URL has the user parameter
+	if (!req.query.hashtag) {
+		// redirect to the home page if the URL has missing parameters
+		res.redirect('/home');
+	}
+	// get the hashtag that the user clicked on
+	var hashtag = req.query.hashtag;
+	
+	// get the posts with the specified hashtag
+	db.getHashtags(hashtag, function(err, data) {
+		if (err) {
+			// handle error with querying database
+			res.render('error.ejs');
+		} else {
+			var hashtagPosts = data.Items;
+			
+			// get all of the post IDs
+			var postsMap = new Map();
+			for (let p of hashtagPosts) {
+				postsMap.set(p.postID, p);
+			}
+			
+			// render the hashtags page, showing all posts under a specific hashtag
+			res.render('hashtags.ejs', {
+				username: req.session.username, 
+				wallPosts: postsMap
+			});
+		}
+	});
+}
+
 var getChat = function(req, res) {
 	chat_db.getOnlineFriends(req.session.username, function(err, data) {
 		if (err) {
@@ -1013,9 +1045,7 @@ var getChat = function(req, res) {
 	    	res.render('chat.ejs', {username: req.session.username, fullname: req.session.fullname, friends: data});
 	    }
 	});
-	
 };
-
 
 var logout = function(req, res) {
 	// check if user is logged in
@@ -1076,6 +1106,8 @@ var routes = {
 	
 	search_user: searchName,
 	search_user_submit: searchNameSubmit,
+	
+	get_posts_from_hashtag: getPostsFromHashtag,
 
 	get_chat: getChat,
 

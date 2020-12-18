@@ -16,7 +16,7 @@
    var db = require('./models/database.js');
    var uuid = require('uuid/v4');
    app.use(express.urlencoded());
-   //avoid MIME type mismatch errors for the external CSS
+   // avoid MIME type mismatch errors for the external CSS
    app.use(express.static('public'));
    
    // handle sessions and cookies for users
@@ -29,7 +29,7 @@
 	   }));
    app.use(cookieParser());
    
-   //FROM DI AND PHILIP
+   // FROM DI AND PHILIP
    const path = require('path');
    const stemmer = require('stemmer');
    var serveStatic = require('serve-static');
@@ -201,7 +201,7 @@ function myFunction( array,items, array2, aff) {
 
 }
 
-//SELENE'S CHAT
+// SELENE'S CHAT
 var users = {};		// username -> socketID
 var sockets = {};   // sockets(rooms) that user is a part of. socketID -> username
 var userFullNames = {}; // username -> fullname
@@ -539,7 +539,10 @@ app.get('/usersearch', routes.search_user);
 // results from searching for users
 app.post('/searchforuser', routes.search_user_submit);
 
-//SELENE'S CHAT
+// shows all posts under a certain hashtag
+app.get('/postswith', routes.get_posts_from_hashtag);
+
+// SELENE'S CHAT
 app.get('/chat', routes.get_chat);
 
 // logs the user out of their account
@@ -552,8 +555,6 @@ app.get('/logout', routes.log_out);
  */
 app.get('/createaccount', routes.get_home);
 app.get('/checklogin', routes.get_home);
-
-
 
 app.get('/updateemail', routes.get_login);
 app.get('/updatepassword', routes.get_login);
@@ -574,5 +575,5 @@ console.log('Authors: Philip Kaw (ph163k8), Selene Li (seleneli), Alex Dong (ado
 //app.listen(8080);
 //console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!');
 http.listen(8080, function() {
-	console.log('listening on localhost:3000');
+	console.log('Server running on port 8080. Now open http://localhost:8080/ in your browser!');
  });
